@@ -48,10 +48,13 @@ Pour l'installer comme une application, ouvrir **Réglages → Application** :
   « Sur l'écran d'accueil »), iOS ne proposant pas d'installation directe.
 
 Après un déploiement, la nouvelle version (nouveau topo compris) est
-téléchargée en arrière-plan ; un bandeau « Nouvelle version disponible »
-propose alors de recharger (« Mettre à jour ») ou d'attendre le prochain
-lancement (« Plus tard »). L'application vérifie les mises à jour à chaque
-retour au premier plan et toutes les heures. Les voies cochées, en
+téléchargée en arrière-plan. Si elle arrive dans les 15 secondes qui suivent
+l'ouverture de la page ou le retour sur l'application, elle est appliquée
+tout de suite (rechargement automatique) : un simple rafraîchissement suffit
+donc. Sinon, en cours d'utilisation, un bandeau « Nouvelle version
+disponible » propose de recharger (« Mettre à jour ») ou d'attendre
+(« Plus tard »). L'application vérifie les mises à jour à chaque retour au
+premier plan et toutes les heures. Les voies cochées, en
 `localStorage`, sont conservées.
 
 Les icônes PNG (`public/pwa-*.png`, `maskable-icon-512x512.png`,
