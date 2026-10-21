@@ -5,9 +5,11 @@ export default defineConfig({
   plugins: [
     // Application installable et utilisable hors ligne : tout le build (dont
     // les données du topo, intégrées au JS) est mis en cache par le service
-    // worker. Une nouvelle version déployée est prise au lancement suivant.
+    // worker. Une nouvelle version déployée est signalée par un bandeau
+    // (voir src/main.ts et lardy-update-banner).
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
+      injectRegister: false,
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
         id: '/',
@@ -33,6 +35,9 @@ export default defineConfig({
         // Image source des icônes, inutile à l'application.
         globIgnores: ['logo-assga.png'],
         cleanupOutdatedCaches: true,
+        // Contrôle la page dès la première visite (hors ligne immédiatement) et
+        // permet au bouton « Mettre à jour » de recharger sur la nouvelle version.
+        clientsClaim: true,
       },
     }),
   ],

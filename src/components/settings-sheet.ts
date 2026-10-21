@@ -2,6 +2,7 @@ import { LitElement, css, html } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { copyText } from '../lib/clipboard';
 import { progressStore, type ImportResult, type ProgressStore } from '../lib/progress-store';
+import { PwaController, pwaState, type InstallMode, type PwaState } from '../lib/pwa';
 import type { Theme } from '../lib/theme';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
@@ -16,11 +17,14 @@ const THEME_OPTIONS: { value: Theme; label: string }[] = [
   { value: 'dark', label: 'Sombre' },
 ];
 
+/** Dépôt du code source, pour le lien « Contribuer ». */
+export const REPO_URL = 'https://github.com/romgere/mur_assga';
+
 /** Délai pendant lequel le bouton « Tout effacer » attend la confirmation. */
 export const CLEAR_CONFIRM_MS = 4000;
 
 /**
- * Réglages : thème, sauvegarde (texte JSON à copier), restauration (texte
+ * Réglages : thème, installation de l'application, sauvegarde (texte JSON à copier), restauration (texte
  * collé et validé) et effacement complet en deux temps.
  */
 @customElement('lardy-settings-sheet')
@@ -103,8 +107,28 @@ export class SettingsSheet extends LitElement {
         color: var(--danger);
       }
 
+      ol {
+        margin: 0;
+        padding-left: 22px;
+        font-size: 14px;
+      }
+
+      ol li + li {
+        margin-top: 4px;
+      }
+
       .about {
         font-size: 13px;
+        text-align: center;
+      }
+
+      .about p {
+        margin: 0 0 4px;
+      }
+
+      a {
+        color: var(--accent);
+        font-weight: 600;
       }
     `,
   ];
@@ -112,6 +136,7 @@ export class SettingsSheet extends LitElement {
   @property({ type: Boolean }) open = false;
   @property() theme: Theme = 'auto';
   @property({ attribute: false }) store: ProgressStore = progressStore;
+  @property({ attribute: false }) pwa: PwaState = pwaState;
 
   @state() private exportText = '';
   @state() private copyFeedback = '';
@@ -123,6 +148,11 @@ export class SettingsSheet extends LitElement {
   @query('textarea.export') private exportField?: HTMLTextAreaElement;
 
   private clearTimer = 0;
+
+  constructor() {
+    super();
+    new PwaController(this, () => this.pwa);
+  }
 
   protected willUpdate(changed: Map<string, unknown>): void {
     if (changed.has('open') && this.open) {
@@ -164,6 +194,35 @@ export class SettingsSheet extends LitElement {
     }
   }
 
+  private renderInstall() {
+    const mode = this.pwa.installMode;
+    if (mode === 'installed') {
+      return html`<p class="install-status">L’application est installée sur cet appareil.</p>`;
+    }
+    return html`<p class="install-intro">Installez l’application pour l’utiliser hors ligne (optionnel).</p>
+      ${this.renderInstallSteps(mode)}`;
+  }
+
+  private renderInstallSteps(mode: InstallMode) {
+    switch (mode) {
+      case 'prompt':
+        return html`<button class="btn primary install" @click=${() => this.pwa.install()}>
+          Installer l’application
+        </button>`;
+      case 'ios':
+        return html`<ol class="ios-steps">
+          <li>Ouvrez cette page dans <strong>Safari</strong>.</li>
+          <li>Touchez le bouton <strong>Partager</strong> (le carré avec une flèche vers le haut).</li>
+          <li>Choisissez <strong>« Sur l’écran d’accueil »</strong>, puis <strong>Ajouter</strong>.</li>
+        </ol>`;
+      default:
+        return html`<p class="install-manual">
+          Utilisez le menu de votre navigateur : <strong>« Installer l’application »</strong> ou
+          <strong>« Ajouter à l’écran d’accueil »</strong>.
+        </p>`;
+    }
+  }
+
   /** Premier appui : demande de confirmation ; second appui : effacement. */
   private clear() {
     if (!this.confirmingClear) {
@@ -200,6 +259,11 @@ export class SettingsSheet extends LitElement {
               </button>`,
           )}
         </div>
+      </section>
+
+      <section>
+        <h3>Application</h3>
+        ${this.renderInstall()}
       </section>
 
       <section>
@@ -257,9 +321,10 @@ export class SettingsSheet extends LitElement {
       </section>
 
       <section class="about">
-        <p>
-          ${this.store.topo.club} · ${this.store.topo.title} (topo du
-          ${new Date(this.store.topo.updated).toLocaleDateString('fr-FR')}).
+        <p>${this.store.topo.club} · ${this.store.topo.title}</p>
+        <p class="credits">
+          Vibe codé avec <span role="img" aria-label="amour">❤️</span> par Jérôme -
+          <a href=${REPO_URL} target="_blank" rel="noopener">Contribuer</a>
         </p>
       </section>
     </lardy-sheet>`;

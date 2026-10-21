@@ -1,6 +1,7 @@
 import type { LitElement } from 'lit';
-import { afterEach } from 'vitest';
+import { afterEach, vi } from 'vitest';
 import { ProgressStore } from '../lib/progress-store';
+import { PwaState } from '../lib/pwa';
 import { createStorage, type KeyValueStorage } from '../lib/storage';
 import { buildTopo, type Topo, type TopoData } from '../lib/topo';
 
@@ -98,4 +99,27 @@ export async function settle(...els: LitElement[]): Promise<void> {
     await Promise.all(els.map((e) => e.updateComplete));
     await new Promise((r) => setTimeout(r, 0));
   }
+}
+
+/** Fausse fenêtre pour PwaState : navigateur, mode d'affichage et événements. */
+export function fakeWindow(options: { userAgent?: string; standalone?: boolean } = {}): Window {
+  const win = new EventTarget() as EventTarget & Record<string, unknown>;
+  win.navigator = { userAgent: options.userAgent ?? 'Mozilla/5.0 (Linux; Android 14)', platform: 'Linux', maxTouchPoints: 5 };
+  win.matchMedia = () => ({ matches: options.standalone === true });
+  return win as unknown as Window;
+}
+
+export function testPwa(options?: { userAgent?: string; standalone?: boolean }): PwaState {
+  const pwa = new PwaState(fakeWindow(options));
+  pwa.listen();
+  return pwa;
+}
+
+/** Simule l'événement beforeinstallprompt avec la réponse donnée. */
+export function installPrompt(outcome: 'accepted' | 'dismissed') {
+  const event = Object.assign(new Event('beforeinstallprompt', { cancelable: true }), {
+    prompt: vi.fn().mockResolvedValue(undefined),
+    userChoice: Promise.resolve({ outcome }),
+  });
+  return event;
 }

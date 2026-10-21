@@ -2,6 +2,7 @@ import { LitElement, css, html } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { keyed } from 'lit/directives/keyed.js';
 import { progressStore, type ProgressStore } from '../lib/progress-store';
+import { pwaState, type PwaState } from '../lib/pwa';
 import { storage as defaultStorage, type KeyValueStorage } from '../lib/storage';
 import { applyTheme, loadTheme, saveTheme, type Theme } from '../lib/theme';
 import type { Route } from '../lib/topo';
@@ -23,6 +24,7 @@ import './pager-dots';
 import './route-pager';
 import './settings-sheet';
 import './stats-view';
+import './update-banner';
 
 const gearIcon = html`<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
   <path
@@ -147,6 +149,7 @@ export class LardyApp extends LitElement {
 
   @property({ attribute: false }) store: ProgressStore = progressStore;
   @property({ attribute: false }) storage: KeyValueStorage = defaultStorage;
+  @property({ attribute: false }) pwa: PwaState = pwaState;
 
   @state() private ui!: UiState;
   @state() private theme: Theme = 'auto';
@@ -258,6 +261,7 @@ export class LardyApp extends LitElement {
           <button class="settings" aria-label="Réglages" @click=${() => (this.settingsOpen = true)}>${gearIcon}</button>
         </div>
         <lardy-mode-tabs .mode=${this.ui.mode} @mode-change=${this.onModeChange}></lardy-mode-tabs>
+        <lardy-update-banner .pwa=${this.pwa}></lardy-update-banner>
       </header>
       <main @open-note=${this.onOpenNote}>${this.renderView()}</main>
       ${paged
@@ -277,6 +281,7 @@ export class LardyApp extends LitElement {
         @close=${() => (this.noteRoute = null)}
       ></lardy-note-sheet>
       <lardy-settings-sheet
+        .pwa=${this.pwa}
         .open=${this.settingsOpen}
         .theme=${this.theme}
         .store=${this.store}

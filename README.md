@@ -37,15 +37,18 @@ en mémoire et le signale dans les réglages.
 L'application fonctionne sans réseau après une première visite : le service
 worker met en cache tout le site, données du topo comprises.
 
-Pour l'installer comme une application :
+Pour l'installer comme une application, ouvrir **Réglages → Application** :
 
-- **Android (Chrome)** : menu ⋮ → « Installer l'application » (ou « Ajouter à
-  l'écran d'accueil »).
-- **iPhone / iPad (Safari)** : bouton Partager → « Sur l'écran d'accueil ».
+- **Android, Chrome, Edge** : bouton « Installer l'application ».
+- **iPhone / iPad** : la marche à suivre est affichée (Safari → Partager →
+  « Sur l'écran d'accueil »), iOS ne proposant pas d'installation directe.
 
 Après un déploiement, la nouvelle version (nouveau topo compris) est
-téléchargée en arrière-plan et utilisée au lancement suivant. Les voies
-cochées, en `localStorage`, sont conservées.
+téléchargée en arrière-plan ; un bandeau « Nouvelle version disponible »
+propose alors de recharger (« Mettre à jour ») ou d'attendre le prochain
+lancement (« Plus tard »). L'application vérifie les mises à jour à chaque
+retour au premier plan et toutes les heures. Les voies cochées, en
+`localStorage`, sont conservées.
 
 Les icônes PNG (`public/pwa-*.png`, `maskable-icon-512x512.png`,
 `apple-touch-icon-180x180.png`, `favicon.ico`) sont générées depuis
@@ -114,25 +117,3 @@ src/
 
 Un clic sur une voie ne repeint que sa ligne et les compteurs : chaque composant
 s'abonne au store via `StoreController` et filtre sur l'id de la voie modifiée.
-
-## Déploiement sur Netlify
-
-La configuration est dans [`netlify.toml`](netlify.toml) (build `npm run build`,
-publication de `dist/`, Node 22).
-
-1. Sur Netlify : **Add new site → Import an existing project**, choisir GitHub
-   et le dépôt `romgere/mur_assga`, branche `main`. Les réglages de build sont
-   lus dans `netlify.toml`.
-2. **Domain management → Add a domain** : `mur-escalade-lardy.mestres.fr`.
-3. Chez l'hébergeur DNS de `mestres.fr`, créer l'enregistrement :
-
-   ```
-   mur-escalade-lardy  CNAME  <nom-du-site>.netlify.app.
-   ```
-
-4. Une fois le DNS propagé, Netlify émet automatiquement le certificat
-   Let's Encrypt (**Domain management → HTTPS**, « Verify DNS configuration »
-   puis « Provision certificate » si besoin). Activer « Force HTTPS ».
-
-Chaque push sur `main` redéploie le site ; chaque pull request obtient une
-prévisualisation.

@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { $, mount, settle, testStore } from '../test/helpers';
+import { PwaState } from '../lib/pwa';
+import { $, fakeWindow, installPrompt, mount, settle, testPwa, testStore } from '../test/helpers';
 import type { BottomSheet } from './bottom-sheet';
-import { CLEAR_CONFIRM_MS, SettingsSheet } from './settings-sheet';
+import { CLEAR_CONFIRM_MS, REPO_URL, SettingsSheet } from './settings-sheet';
 
-async function settings() {
+async function settings(pwa = testPwa()) {
   const el = new SettingsSheet();
+  el.pwa = pwa;
   el.store = testStore();
   el.store.toggle('1-VERTE', 't');
   el.open = true;
@@ -96,5 +98,40 @@ describe('lardy-settings-sheet', () => {
     el.open = true;
     await mount(el);
     expect($(el, '.warning').textContent).toContain('navigation privée');
+  });
+
+  it('affiche le bouton d’installation quand le navigateur le permet', async () => {
+    const win = fakeWindow();
+    const pwa = new PwaState(win);
+    pwa.listen();
+    const el = await settings(pwa);
+    expect(el.shadowRoot!.querySelector('button.install')).toBeNull();
+    expect($(el, '.install-manual').textContent).toContain('Installer l’application');
+    const event = installPrompt('accepted');
+    win.dispatchEvent(event);
+    await el.updateComplete;
+    $(el, 'button.install').click();
+    await settle(el);
+    expect(event.prompt).toHaveBeenCalledOnce();
+    expect($(el, '.install-status').textContent).toContain('installée');
+    expect(el.shadowRoot!.querySelector('.install-intro')).toBeNull();
+  });
+
+  it('donne la marche à suivre sur iPhone', async () => {
+    const el = await settings(testPwa({ userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)' }));
+    expect($(el, '.install-intro').textContent).toBe('Installez l’application pour l’utiliser hors ligne (optionnel).');
+    const steps = el.shadowRoot!.querySelectorAll('.ios-steps li');
+    expect(steps).toHaveLength(3);
+    expect(steps[2].textContent).toContain('Sur l’écran d’accueil');
+  });
+
+  it('crédite l’auteur avec un lien vers le dépôt', async () => {
+    const el = await settings();
+    expect($(el, '.about').textContent).not.toContain('topo du');
+    const credits = $(el, '.credits');
+    expect(credits.textContent!.replace(/\s+/g, ' ')).toContain('Vibe codé avec ❤️ par Jérôme - Contribuer');
+    const link = credits.querySelector('a')!;
+    expect(link.getAttribute('href')).toBe(REPO_URL);
+    expect(link.getAttribute('target')).toBe('_blank');
   });
 });
