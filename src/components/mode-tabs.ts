@@ -11,9 +11,10 @@ const MODES: { mode: Mode; label: string }[] = [
   { mode: 'wall', label: 'Par mur' },
   { mode: 'grade', label: 'Par difficulté' },
   { mode: 'all', label: 'Toutes' },
+  { mode: 'stats', label: 'Stats' },
 ];
 
-/** Sélecteur segmenté des trois modes d'affichage. */
+/** Sélecteur segmenté des quatre modes d'affichage. */
 @customElement('lardy-mode-tabs')
 export class ModeTabs extends LitElement {
   static styles = [
@@ -31,8 +32,10 @@ export class ModeTabs extends LitElement {
       }
 
       button {
-        flex: 1;
+        flex: 1 1 auto;
         height: 36px;
+        padding: 0 8px;
+        white-space: nowrap;
         border-radius: 9px;
         font-size: 14px;
         font-weight: 600;

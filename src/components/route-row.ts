@@ -99,7 +99,14 @@ export class RouteRow extends LitElement {
         font-size: 20px;
         font-weight: 800;
         line-height: 1.1;
+        white-space: nowrap;
         color: var(--text);
+      }
+
+      .wall-num small {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-muted);
       }
 
       .grade.g4 {
@@ -256,7 +263,7 @@ export class RouteRow extends LitElement {
       </span>
       <div class="info">
         ${this.wallFirst
-          ? html`<span class="grade wall-num">Mur ${r.wall}</span>`
+          ? html`<span class="grade wall-num"><small>Mur</small> ${r.wall}</span>`
           : html`<span class="grade g${gradeLevel(r.grade)}">${r.grade ?? '—'}</span>`}
         <span class="meta">
           ${r.competition ? html`<span class="badge comp">Compét.</span>` : nothing}

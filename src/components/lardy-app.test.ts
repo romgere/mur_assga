@@ -7,9 +7,11 @@ import { LardyApp } from './lardy-app';
 import type { ModeTabs } from './mode-tabs';
 import type { NoteSheet } from './note-sheet';
 import type { PagerDots } from './pager-dots';
+import type { ProgressCounters } from './progress-counters';
 import type { RoutePager } from './route-pager';
 import type { RouteRow } from './route-row';
 import type { SettingsSheet } from './settings-sheet';
+import type { StatsView } from './stats-view';
 
 async function app(storage: KeyValueStorage = memoryStorage()) {
   const el = new LardyApp();
@@ -73,9 +75,15 @@ describe('lardy-app', () => {
     const list = pager.shadowRoot!.querySelector('lardy-route-list')!;
     const row = list.shadowRoot!.querySelector<RouteRow>('lardy-route-row')!;
     $(row, 'button.lead').click();
-    const counters = $(el, 'lardy-progress-counters');
     await settle(el, row);
+    expect(el.shadowRoot!.querySelector('lardy-progress-counters')).toBeNull();
+    switchMode(el, 3);
+    await settle(el);
+    const stats = $<StatsView>(el, 'lardy-stats-view');
+    const counters = $<ProgressCounters>(stats, 'lardy-progress-counters');
+    await settle(el, stats, counters);
     expect($(counters, '.value').textContent).toBe('1');
+    expect(el.shadowRoot!.querySelector('lardy-pager-dots')).toBeNull();
   });
 
   it('ouvre la note demandée par une ligne', async () => {

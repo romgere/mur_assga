@@ -18,9 +18,9 @@ import './all-routes-view';
 import './mode-tabs';
 import './note-sheet';
 import './pager-dots';
-import './progress-counters';
 import './route-pager';
 import './settings-sheet';
+import './stats-view';
 
 const gearIcon = html`<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
   <path
@@ -174,6 +174,9 @@ export class LardyApp extends LitElement {
   }
 
   private renderView() {
+    if (this.ui.mode === 'stats') {
+      return html`<lardy-stats-view .store=${this.store}></lardy-stats-view>`;
+    }
     if (this.ui.mode === 'all') {
       return html`<lardy-all-routes-view
         .routes=${this.store.topo.routes}
@@ -198,13 +201,12 @@ export class LardyApp extends LitElement {
 
   render() {
     const topo = this.store.topo;
-    const paged = this.ui.mode !== 'all';
+    const paged = this.ui.mode === 'wall' || this.ui.mode === 'grade';
     return html`<header>
         <div class="title">
           <h1>Mur d'escalade de Lardy<small>${topo.club} · ${topo.title}</small></h1>
           <button class="settings" aria-label="Réglages" @click=${() => (this.settingsOpen = true)}>${gearIcon}</button>
         </div>
-        <lardy-progress-counters .store=${this.store}></lardy-progress-counters>
         <lardy-mode-tabs .mode=${this.ui.mode} @mode-change=${this.onModeChange}></lardy-mode-tabs>
       </header>
       <main @open-note=${this.onOpenNote}>${this.renderView()}</main>

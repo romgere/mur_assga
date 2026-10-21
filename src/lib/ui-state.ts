@@ -2,7 +2,7 @@ import { storage as defaultStorage, readJson, writeJson, type KeyValueStorage } 
 
 export const UI_KEY = 'lardy2026.ui';
 
-export type Mode = 'wall' | 'grade' | 'all';
+export type Mode = 'wall' | 'grade' | 'all' | 'stats';
 export type StatusFilter = 'any' | 'done' | 'todo' | 'lead' | 'toprope' | 'notlead';
 export type SortOrder = 'wall' | 'asc' | 'desc';
 
@@ -27,7 +27,7 @@ export function defaultFilters(gradeCount: number): Filters {
   return { min: 0, max: gradeCount - 1, status: 'any', favorites: false, competition: false, sort: 'wall' };
 }
 
-const MODES: Mode[] = ['wall', 'grade', 'all'];
+const MODES: Mode[] = ['wall', 'grade', 'all', 'stats'];
 const STATUSES: StatusFilter[] = ['any', 'done', 'todo', 'lead', 'toprope', 'notlead'];
 const SORTS: SortOrder[] = ['wall', 'asc', 'desc'];
 
