@@ -13,6 +13,7 @@ Production : <https://mur-escalade-lardy.mestres.fr>
 - **Toutes** : toutes les voies, avec des filtres (niveau min/max, faites ou
   non, tête, moulinette, favoris, compétition) et un tri (par mur, facile→dur,
   dur→facile).
+- **Favoris** : les voies marquées d'une étoile, avec leur mur.
 - **Stats** : compteurs de progression globaux (tête, moulinette, faites).
 - « Tête » et « Moulinette » sont cochées indépendamment ; les compteurs
   globaux et ceux de chaque page se mettent à jour.

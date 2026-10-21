@@ -11,10 +11,11 @@ const MODES: { mode: Mode; label: string }[] = [
   { mode: 'wall', label: 'Mur' },
   { mode: 'grade', label: 'Difficulté' },
   { mode: 'all', label: 'Toutes' },
+  { mode: 'favorites', label: 'Favoris' },
   { mode: 'stats', label: 'Stats' },
 ];
 
-/** Sélecteur segmenté des quatre modes d'affichage. */
+/** Sélecteur segmenté des modes d'affichage. */
 @customElement('lardy-mode-tabs')
 export class ModeTabs extends LitElement {
   static styles = [
@@ -40,6 +41,14 @@ export class ModeTabs extends LitElement {
         font-size: 14px;
         font-weight: 600;
         color: var(--text-muted);
+      }
+
+      /* Très petits écrans (320 px) : les cinq onglets doivent tenir. */
+      @media (max-width: 359px) {
+        button {
+          padding: 0 4px;
+          font-size: 13px;
+        }
       }
 
       button[aria-selected='true'] {

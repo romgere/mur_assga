@@ -15,6 +15,7 @@ import type { PageChangeDetail, RoutePager } from './route-pager';
 import type { ThemeChangeDetail } from './settings-sheet';
 import { sharedStyles } from './shared-styles';
 import './all-routes-view';
+import './favorites-view';
 import './mode-tabs';
 import './note-sheet';
 import './pager-dots';
@@ -174,6 +175,9 @@ export class LardyApp extends LitElement {
   }
 
   private renderView() {
+    if (this.ui.mode === 'favorites') {
+      return html`<lardy-favorites-view .store=${this.store}></lardy-favorites-view>`;
+    }
     if (this.ui.mode === 'stats') {
       return html`<lardy-stats-view .store=${this.store}></lardy-stats-view>`;
     }

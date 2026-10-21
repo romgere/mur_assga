@@ -3,12 +3,14 @@ import type { KeyValueStorage } from '../lib/storage';
 import { UI_KEY } from '../lib/ui-state';
 import { $, $$, memoryStorage, mount, settle, testStore } from '../test/helpers';
 import type { AllRoutesView } from './all-routes-view';
+import type { FavoritesView } from './favorites-view';
 import { LardyApp } from './lardy-app';
 import type { ModeTabs } from './mode-tabs';
 import type { NoteSheet } from './note-sheet';
 import type { PagerDots } from './pager-dots';
 import type { ProgressCounters } from './progress-counters';
 import type { RoutePager } from './route-pager';
+import type { RouteList } from './route-list';
 import type { RouteRow } from './route-row';
 import type { SettingsSheet } from './settings-sheet';
 import type { StatsView } from './stats-view';
@@ -77,12 +79,22 @@ describe('lardy-app', () => {
     $(row, 'button.lead').click();
     await settle(el, row);
     expect(el.shadowRoot!.querySelector('lardy-progress-counters')).toBeNull();
-    switchMode(el, 3);
+    switchMode(el, 4);
     await settle(el);
     const stats = $<StatsView>(el, 'lardy-stats-view');
     const counters = $<ProgressCounters>(stats, 'lardy-progress-counters');
     await settle(el, stats, counters);
     expect($(counters, '.value').textContent).toBe('1');
+    expect(el.shadowRoot!.querySelector('lardy-pager-dots')).toBeNull();
+  });
+
+  it('affiche les favoris dans l’onglet dédié, sans pastilles', async () => {
+    const el = await app();
+    el.store.toggle('2-ROUGE', 's');
+    switchMode(el, 3);
+    await settle(el);
+    const view = $<FavoritesView>(el, 'lardy-favorites-view');
+    expect($<RouteList>(view, 'lardy-route-list').routes.map((r) => r.id)).toEqual(['2-ROUGE']);
     expect(el.shadowRoot!.querySelector('lardy-pager-dots')).toBeNull();
   });
 

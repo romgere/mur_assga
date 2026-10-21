@@ -3,13 +3,13 @@ import { $$, mount } from '../test/helpers';
 import { ModeTabs } from './mode-tabs';
 
 describe('lardy-mode-tabs', () => {
-  it('affiche les quatre modes et marque le mode courant', async () => {
+  it('affiche les cinq modes et marque le mode courant', async () => {
     const el = new ModeTabs();
     el.mode = 'grade';
     await mount(el);
     const tabs = $$(el, '[role="tab"]');
-    expect(tabs.map((t) => t.textContent!.trim())).toEqual(['Mur', 'Difficulté', 'Toutes', 'Stats']);
-    expect(tabs.map((t) => t.getAttribute('aria-selected'))).toEqual(['false', 'true', 'false', 'false']);
+    expect(tabs.map((t) => t.textContent!.trim())).toEqual(['Mur', 'Difficulté', 'Toutes', 'Favoris', 'Stats']);
+    expect(tabs.map((t) => t.getAttribute('aria-selected'))).toEqual(['false', 'true', 'false', 'false', 'false']);
   });
 
   it('émet mode-change au changement, pas sur le mode courant', async () => {
