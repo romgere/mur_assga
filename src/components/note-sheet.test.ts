@@ -51,33 +51,34 @@ describe('lardy-note-sheet', () => {
 
   it('enregistre la façon de grimper et ses détails', async () => {
     const el = await noteSheet();
-    const check = (selector: string) => {
-      const input = $<HTMLInputElement>(el, selector);
-      input.checked = !input.checked;
-      input.dispatchEvent(new Event('change'));
-    };
-    check('fieldset.lead .detail-c');
-    check('fieldset.lead .detail-p');
-    check('fieldset.toprope input.mode');
+    const lead = () => $(el, '.card.lead');
+    expect(lead().querySelector('.summary')!.textContent).toBe('→ Pas faite');
+    $(el, '.card.lead .detail-c').click();
     await el.updateComplete;
-    expect($<HTMLInputElement>(el, 'fieldset.lead input.mode').checked).toBe(true);
+    // Une puce coche aussi le mode parent.
+    expect($(el, '.card.lead button.mode').getAttribute('aria-pressed')).toBe('true');
+    expect(lead().classList.contains('on')).toBe(true);
+    $(el, '.card.lead .detail-p').click();
+    $(el, '.card.toprope button.mode').click();
+    await el.updateComplete;
+    expect(lead().querySelector('.summary')!.textContent).toBe('→ Avec chute · non terminée');
+    expect($(el, '.card.toprope .summary').textContent).toBe('→ Enchaînée proprement');
+    expect($(el, '.card.lead .detail-c').getAttribute('aria-pressed')).toBe('true');
     $(el, 'button.save').click();
     expect(el.store.get(route.id)).toEqual({ t: true, tx: 'cp', m: true });
   });
 
-  it('décocher la façon de grimper efface ses détails', async () => {
+  it('décocher le mode efface ses détails', async () => {
     const el = await noteSheet();
     el.store.edit(route.id, { t: true, tx: 'r' });
     el.route = null;
     await el.updateComplete;
     el.route = route;
     await el.updateComplete;
-    expect($<HTMLInputElement>(el, 'fieldset.lead .detail-r').checked).toBe(true);
-    const mode = $<HTMLInputElement>(el, 'fieldset.lead input.mode');
-    mode.checked = false;
-    mode.dispatchEvent(new Event('change'));
+    expect($(el, '.card.lead .detail-r').getAttribute('aria-pressed')).toBe('true');
+    $(el, '.card.lead button.mode').click();
     await el.updateComplete;
-    expect($<HTMLInputElement>(el, 'fieldset.lead .detail-r').checked).toBe(false);
+    expect($(el, '.card.lead .detail-r').getAttribute('aria-pressed')).toBe('false');
     $(el, 'button.save').click();
     expect(el.store.get(route.id)).toEqual({});
   });

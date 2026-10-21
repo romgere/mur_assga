@@ -15,10 +15,22 @@ import type { Route } from '../lib/topo';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
 
-const MODES: { mode: ClimbMode; label: string }[] = [
-  { mode: 't', label: 'En tête' },
-  { mode: 'm', label: 'En moulinette' },
+const MODES: { mode: ClimbMode; label: string; cls: string }[] = [
+  { mode: 't', label: 'Tête', cls: 'lead' },
+  { mode: 'm', label: 'Moulinette', cls: 'toprope' },
 ];
+
+const SUMMARIES: Record<Detail, string> = { c: 'avec chute', r: 'avec repos', p: 'non terminée' };
+
+/** Résumé de l'ascension sous les puces (« Enchaînée proprement », « Avec chute · non terminée »). */
+function summary(a: RouteProgress, mode: ClimbMode): string {
+  if (!a[mode]) return 'Pas faite';
+  const details = a[detailsKey(mode)] ?? '';
+  const text = DETAILS.filter((d) => details.includes(d.code))
+    .map((d) => SUMMARIES[d.code])
+    .join(' · ');
+  return text ? text[0].toUpperCase() + text.slice(1) : 'Enchaînée proprement';
+}
 
 /**
  * Feuille de détails d'une voie : comment elle a été grimpée (chute, repos,
@@ -35,26 +47,103 @@ export class NoteSheet extends LitElement {
         color: var(--text-muted);
       }
 
-      fieldset {
+      .card {
+        margin: 0 0 10px;
+        padding: 8px 12px 10px;
+        border: 1px solid var(--border);
+        border-left: 5px solid var(--mode);
+        border-radius: 10px;
+      }
+
+      .card.lead {
+        --mode: var(--lead);
+        --mode-ink: var(--lead-ink);
+      }
+
+      .card.toprope {
+        --mode: var(--toprope);
+        --mode-ink: var(--toprope-ink);
+      }
+
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .card-head h3 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--mode);
+      }
+
+      .mode {
+        min-width: 84px;
+        height: 36px;
+        padding: 0 10px;
+        border-radius: 10px;
+        border: 1.5px solid var(--border);
+        background: var(--surface);
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-muted);
+      }
+
+      .mode[aria-pressed='true'] {
+        background: var(--mode);
+        border-color: var(--mode);
+        color: var(--mode-ink);
+      }
+
+      /* Les puces dépendent du mode : en retrait, et estompées tant qu'il n'est pas coché. */
+      .how {
+        margin: 6px 0 0 6px;
+        padding-left: 12px;
+        border-left: 2px solid var(--border);
+      }
+
+      .card:not(.on) .how {
+        opacity: 0.55;
+      }
+
+      .how-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      .chips {
         display: flex;
         flex-wrap: wrap;
-        align-items: center;
-        gap: 6px 12px;
-        margin: 0 0 10px;
-        padding: 0;
-        border: 0;
+        gap: 6px;
+        margin: 4px 0;
       }
 
-      fieldset label {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
+      .chip {
+        height: 34px;
+        padding: 0 14px;
+        border-radius: 17px;
+        border: 1.5px solid var(--border);
+        background: var(--surface);
         font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
       }
 
-      fieldset label.mode {
-        min-width: 120px;
-        font-weight: 700;
+      .chip[aria-pressed='true'] {
+        border-color: var(--mode);
+        background: var(--mode);
+        color: var(--mode-ink);
+      }
+
+      .summary {
+        margin: 0;
+        font-size: 13px;
+        font-style: italic;
       }
 
       textarea {
@@ -130,29 +219,37 @@ export class NoteSheet extends LitElement {
     const hasNote = !!(r && this.store.get(r.id).n);
     const a = this.ascents;
     return html`<lardy-sheet .open=${!!r} heading=${heading} @close=${this.close}>
-      ${MODES.map(
-        ({ mode, label }) => html`<fieldset class=${mode === 't' ? 'lead' : 'toprope'}>
-          <legend class="visually-hidden">${label}</legend>
-          <label class="mode"
-            ><input
-              type="checkbox"
+      ${MODES.map(({ mode, label, cls }) => {
+        const details = a[mode] ? (a[detailsKey(mode)] ?? '') : '';
+        return html`<section class="card ${cls} ${a[mode] ? 'on' : ''}" aria-label=${label}>
+          <div class="card-head">
+            <h3>${label}</h3>
+            <button
               class="mode"
-              .checked=${!!a[mode]}
-              @change=${(e: Event) => this.setMode(mode, (e.target as HTMLInputElement).checked)}
-            />${label}</label
-          >
-          ${DETAILS.map(
-            (d) => html`<label
-              ><input
-                type="checkbox"
-                class="detail-${d.code}"
-                .checked=${!!a[mode] && !!a[detailsKey(mode)]?.includes(d.code)}
-                @change=${(e: Event) => this.setDetail(mode, d.code, (e.target as HTMLInputElement).checked)}
-              />${d.label}</label
-            >`,
-          )}
-        </fieldset>`,
-      )}
+              aria-pressed=${a[mode] ? 'true' : 'false'}
+              aria-label="Faite en ${label.toLowerCase()}"
+              @click=${() => this.setMode(mode, !a[mode])}
+            >
+              ${a[mode] ? 'Faite' : 'Pas faite'}
+            </button>
+          </div>
+          <div class="how" role="group" aria-label="Comment, en ${label.toLowerCase()}">
+            <span class="how-label">Comment ?</span>
+            <div class="chips">
+              ${DETAILS.map(
+                (d) => html`<button
+                  class="chip detail-${d.code}"
+                  aria-pressed=${details.includes(d.code) ? 'true' : 'false'}
+                  @click=${() => this.setDetail(mode, d.code, !details.includes(d.code))}
+                >
+                  ${d.label}
+                </button>`,
+              )}
+            </div>
+            <p class="summary">→ ${summary(a, mode)}</p>
+          </div>
+        </section>`;
+      })}
       <p>Cotation ressentie, méthode, passage clé… Pensez aussi à l'indiquer sur le topo du club.</p>
       <label class="visually-hidden" for="note">Note</label>
       <textarea
