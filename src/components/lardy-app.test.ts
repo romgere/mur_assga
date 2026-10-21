@@ -36,6 +36,9 @@ describe('lardy-app', () => {
     expect(pager.pages.map((p) => p.title)).toEqual(['Mur 1', 'Mur 2']);
     expect($<PagerDots>(el, 'lardy-pager-dots').label).toBe('Murs');
     expect($(el, 'h1').textContent).toContain('Lardy');
+    const logos = $$<HTMLImageElement>(el, 'img.logo');
+    expect(logos.map((l) => l.getAttribute('src'))).toEqual(['/logo-header-light.png', '/logo-header-dark.png']);
+    expect(logos.every((l) => l.alt === '')).toBe(true);
   });
 
   it('passe en mode « Difficulté » puis « Toutes » et mémorise le mode', async () => {

@@ -56,7 +56,7 @@ export class LardyApp extends LitElement {
       header {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 14px;
         padding: max(10px, env(safe-area-inset-top)) var(--gutter-right) 8px var(--gutter-left);
       }
 
@@ -66,11 +66,35 @@ export class LardyApp extends LitElement {
         gap: 8px;
       }
 
+      /* Logo du club : version verte en clair, blanche en sombre (tokens). */
+      .logo {
+        flex: none;
+        height: 44px;
+        width: auto;
+      }
+
+      .logo.light {
+        display: var(--logo-light-display);
+      }
+
+      .logo.dark {
+        display: var(--logo-dark-display);
+      }
+
       h1 {
         flex: 1;
+        min-width: 0;
         margin: 0;
         font-size: 18px;
         line-height: 1.2;
+        text-align: center;
+      }
+
+      h1,
+      h1 small {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       h1 small {
@@ -78,6 +102,17 @@ export class LardyApp extends LitElement {
         font-size: 12px;
         font-weight: 600;
         color: var(--text-muted);
+      }
+
+      /* Très petits écrans (320 px) : titre et sous-titre sur une ligne. */
+      @media (max-width: 359px) {
+        h1 {
+          font-size: 16px;
+        }
+
+        h1 small {
+          font-size: 11px;
+        }
       }
 
       .settings {
@@ -217,6 +252,8 @@ export class LardyApp extends LitElement {
     const paged = this.ui.mode === 'wall' || this.ui.mode === 'grade';
     return html`<header>
         <div class="title">
+          <img class="logo light" src="/logo-header-light.png" alt="" width="38" height="44" />
+          <img class="logo dark" src="/logo-header-dark.png" alt="" width="37" height="44" />
           <h1>Mur d'escalade de Lardy<small>${topo.club} · ${topo.title}</small></h1>
           <button class="settings" aria-label="Réglages" @click=${() => (this.settingsOpen = true)}>${gearIcon}</button>
         </div>

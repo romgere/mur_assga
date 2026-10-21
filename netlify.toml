@@ -16,6 +16,24 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Le service worker et le manifeste doivent toujours être revalidés, sinon
+# les appareils restent bloqués sur une ancienne version de l'application.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/registerSW.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Cache-Control = "no-cache"
+    Content-Type = "application/manifest+json"
+
 [[headers]]
   for = "/*"
   [headers.values]

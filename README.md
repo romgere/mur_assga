@@ -32,6 +32,28 @@ Les données restent dans le navigateur (`localStorage`) :
 Si le stockage est indisponible (navigation privée…), l'application continue
 en mémoire et le signale dans les réglages.
 
+## Application installable et hors ligne (PWA)
+
+L'application fonctionne sans réseau après une première visite : le service
+worker met en cache tout le site, données du topo comprises.
+
+Pour l'installer comme une application :
+
+- **Android (Chrome)** : menu ⋮ → « Installer l'application » (ou « Ajouter à
+  l'écran d'accueil »).
+- **iPhone / iPad (Safari)** : bouton Partager → « Sur l'écran d'accueil ».
+
+Après un déploiement, la nouvelle version (nouveau topo compris) est
+téléchargée en arrière-plan et utilisée au lancement suivant. Les voies
+cochées, en `localStorage`, sont conservées.
+
+Les icônes PNG (`public/pwa-*.png`, `maskable-icon-512x512.png`,
+`apple-touch-icon-180x180.png`, `favicon.ico`) sont générées depuis
+`public/logo-assga.png` (logo du club, 512×512) : après l'avoir modifié, lancer
+`npm run generate-pwa-assets` (réglages dans
+[`pwa-assets.config.ts`](pwa-assets.config.ts)). Le manifeste est dans
+[`vite.config.ts`](vite.config.ts).
+
 ## Mettre à jour le topo
 
 Toutes les voies sont dans [`src/data/topo.json`](src/data/topo.json) :
