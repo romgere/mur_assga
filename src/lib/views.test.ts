@@ -17,7 +17,7 @@ describe('pages', () => {
   it('une page par cotation présente, plus la traversée', () => {
     const pages = gradePages(topo);
     expect(pages.map((p) => p.label)).toEqual(['4+', '5a', '6a', '7a', 'T']);
-    expect(pages.every((p) => p.showWall)).toBe(true);
+    expect(pages.every((p) => p.showWall && p.wallFirst)).toBe(true);
   });
 
   it('statut de page : aucune, en partie, toutes', () => {

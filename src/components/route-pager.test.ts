@@ -25,6 +25,7 @@ describe('lardy-route-pager', () => {
     const list = pages[0].querySelector<RouteList>('lardy-route-list')!;
     expect(list.routes.map((r) => r.id)).toEqual(['1-JAUNE']);
     expect(list.showWall).toBe(true);
+    expect(list.wallFirst).toBe(true);
   });
 
   it('se positionne sur la page initiale', async () => {

@@ -24,6 +24,7 @@ export class RouteList extends LitElement {
 
   @property({ attribute: false }) routes: Route[] = [];
   @property({ type: Boolean, attribute: 'show-wall' }) showWall = false;
+  @property({ type: Boolean, attribute: 'wall-first' }) wallFirst = false;
   @property({ attribute: false }) store: ProgressStore = progressStore;
   @property() empty = 'Aucune voie.';
 
@@ -37,7 +38,9 @@ export class RouteList extends LitElement {
     return repeat(
       this.routes,
       (r) => r.id,
-      (r) => html`<lardy-route-row .route=${r} .store=${this.store} ?show-wall=${this.showWall}></lardy-route-row>`,
+      (r) => html`<lardy-route-row .route=${r} .store=${this.store} ?show-wall=${this.showWall}
+        ?wall-first=${this.wallFirst}
+      ></lardy-route-row>`,
     );
   }
 }

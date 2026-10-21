@@ -12,6 +12,8 @@ export interface Page {
   routes: Route[];
   /** Afficher le numéro de mur dans chaque ligne. */
   showWall: boolean;
+  /** Mur en gros et cotation en petit (la cotation est celle de la page). */
+  wallFirst: boolean;
 }
 
 export function wallPages(topo: Topo): Page[] {
@@ -21,6 +23,7 @@ export function wallPages(topo: Topo): Page[] {
     title: `Mur ${w.id}`,
     routes: topo.routes.filter((r) => r.wall === w.id),
     showWall: false,
+    wallFirst: false,
   }));
 }
 
@@ -32,11 +35,12 @@ export function gradePages(topo: Topo): Page[] {
       title: `Cotation ${g}`,
       routes: topo.routes.filter((r) => r.gradeIndex === i),
       showWall: true,
+      wallFirst: true,
     }))
     .filter((p) => p.routes.length > 0);
   const ungraded = topo.routes.filter((r) => r.gradeIndex < 0);
   if (ungraded.length) {
-    pages.push({ key: 'grade-none', label: 'T', title: 'Traversée', routes: ungraded, showWall: true });
+    pages.push({ key: 'grade-none', label: 'T', title: 'Traversée', routes: ungraded, showWall: true, wallFirst: true });
   }
   return pages;
 }

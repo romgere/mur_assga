@@ -10,10 +10,12 @@ describe('lardy-route-list', () => {
     el.routes = miniTopo().routes;
     el.store = store;
     el.showWall = true;
+    el.wallFirst = true;
     await mount(el);
     const rows = $$<RouteRow>(el, 'lardy-route-row');
     expect(rows).toHaveLength(5);
     expect(rows[0].showWall).toBe(true);
+    expect(rows[0].wallFirst).toBe(true);
     expect(rows[0].store).toBe(store);
     expect(el.getAttribute('role')).toBe('list');
   });

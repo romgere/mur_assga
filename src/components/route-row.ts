@@ -199,6 +199,8 @@ export class RouteRow extends LitElement {
 
   @property({ attribute: false }) route!: Route;
   @property({ type: Boolean, attribute: 'show-wall' }) showWall = false;
+  /** Mode « Par difficulté » : le mur en gros, sans la cotation (déjà donnée par la page). */
+  @property({ type: Boolean, attribute: 'wall-first' }) wallFirst = false;
   @property({ attribute: false }) store: ProgressStore = progressStore;
 
   constructor() {
@@ -250,10 +252,12 @@ export class RouteRow extends LitElement {
     return html`<div class="row ${isDone(p) ? 'done' : ''}">
       <span class="color">
         <span class="swatch" style=${styleMap(swatch)}>${r.color}</span>
-        ${this.showWall ? html`<span class="wall">Mur ${r.wall}</span>` : nothing}
+        ${this.showWall && !this.wallFirst ? html`<span class="wall">Mur ${r.wall}</span>` : nothing}
       </span>
       <div class="info">
-        <span class="grade g${gradeLevel(r.grade)}">${r.grade ?? '—'}</span>
+        ${this.wallFirst
+          ? html`<span class="grade wall-num">Mur ${r.wall}</span>`
+          : html`<span class="grade g${gradeLevel(r.grade)}">${r.grade ?? '—'}</span>`}
         <span class="meta">
           ${r.competition ? html`<span class="badge comp">Compét.</span>` : nothing}
           ${r.traverse ? html`<span class="badge">Traversée</span>` : nothing}

@@ -144,7 +144,9 @@ export class RoutePager extends LitElement {
             <h2>${p.title}</h2>
             <lardy-progress-counters compact .routes=${p.routes} .store=${this.store}></lardy-progress-counters>
           </header>
-          <lardy-route-list .routes=${p.routes} .store=${this.store} ?show-wall=${p.showWall}></lardy-route-list>
+          <lardy-route-list .routes=${p.routes} .store=${this.store} ?show-wall=${p.showWall}
+            ?wall-first=${p.wallFirst}
+          ></lardy-route-list>
         </section>`,
       )}
     </div>`;

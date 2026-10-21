@@ -5,11 +5,12 @@ import { RouteRow } from './route-row';
 const topo = miniTopo();
 const route = (id: string) => topo.routes.find((r) => r.id === id)!;
 
-async function row(id = '1-VERTE', showWall = false) {
+async function row(id = '1-VERTE', showWall = false, wallFirst = false) {
   const el = new RouteRow();
   el.route = route(id);
   el.store = testStore();
   el.showWall = showWall;
+  el.wallFirst = wallFirst;
   return mount(el);
 }
 
@@ -30,6 +31,14 @@ describe('lardy-route-row', () => {
     expect($(trav, '.grade').textContent).toBe('—');
     expect(trav.shadowRoot!.textContent).toContain('Traversée');
     expect($(trav, '.wall').textContent).toBe('Mur 2');
+  });
+
+  it('en mode wall-first, affiche le mur en gros et pas la cotation', async () => {
+    const el = await row('2-ROUGE', true, true);
+    expect($(el, '.grade').textContent).toBe('Mur 2');
+    expect(el.shadowRoot!.querySelector('.wall')).toBeNull();
+    expect(el.shadowRoot!.querySelector('.info')!.textContent).not.toContain('7a');
+    expect(el.shadowRoot!.querySelector('.color')!.textContent).not.toContain('7a');
   });
 
   it('bascule tête et moulinette indépendamment', async () => {
