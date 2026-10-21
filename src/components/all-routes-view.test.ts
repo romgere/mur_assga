@@ -86,6 +86,14 @@ describe('lardy-all-routes-view', () => {
     expect(listed(el)).toHaveLength(5);
   });
 
+  it('affiche le tri avec un libellé visible et une icône', async () => {
+    const el = await view();
+    const label = $(el, 'label.sort');
+    expect(label.textContent).toContain('Tri');
+    expect(label.querySelector('svg')).not.toBeNull();
+    expect(label.querySelector('select[name="sort"]')).not.toBeNull();
+  });
+
   it('propose de réinitialiser les filtres', async () => {
     const el = await view();
     expect(el.shadowRoot!.querySelector('.reset')).toBeNull();

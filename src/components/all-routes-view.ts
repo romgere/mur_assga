@@ -21,6 +21,17 @@ const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: 'notlead', label: 'Pas encore en tête' },
 ];
 
+const sortIcon = html`<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+  <path
+    d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>`;
+
 const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
   { value: 'wall', label: 'Par mur' },
   { value: 'asc', label: 'Facile → dur' },
@@ -99,6 +110,22 @@ export class AllRoutesView extends LitElement {
         background: var(--accent);
         border-color: var(--accent);
         color: var(--accent-ink);
+      }
+
+      label.sort {
+        flex-direction: row;
+        align-items: center;
+        gap: 4px;
+        font-size: 14px;
+      }
+
+      label.sort svg {
+        flex: none;
+      }
+
+      label.sort select {
+        width: auto;
+        margin-left: 2px;
       }
 
       .reset {
@@ -227,15 +254,15 @@ export class AllRoutesView extends LitElement {
           >
             Compétition
           </button>
-          <label class="visually-hidden" for="sort">Tri</label>
-          <select
-            id="sort"
-            name="sort"
-            style="width:auto"
-            @change=${(e: Event) => this.change({ sort: (e.target as HTMLSelectElement).value as SortOrder })}
-          >
-            ${SORT_OPTIONS.map((o) => html`<option value=${o.value} ?selected=${o.value === f.sort}>${o.label}</option>`)}
-          </select>
+          <label class="sort"
+            >${sortIcon} Tri
+            <select
+              name="sort"
+              @change=${(e: Event) => this.change({ sort: (e.target as HTMLSelectElement).value as SortOrder })}
+            >
+              ${SORT_OPTIONS.map((o) => html`<option value=${o.value} ?selected=${o.value === f.sort}>${o.label}</option>`)}
+            </select>
+          </label>
           ${showReset
             ? html`<button class="reset" @click=${() => this.change(defaultFilters(this.grades.length))}>
                 Réinitialiser
