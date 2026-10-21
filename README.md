@@ -7,12 +7,13 @@ Production : <https://mur-escalade-lardy.mestres.fr>
 
 ## Fonctionnalités
 
-- **Par mur** (mode par défaut) : les voies d'un mur ; on passe d'un mur à
+- **Mur** (mode par défaut) : les voies d'un mur ; on passe d'un mur à
   l'autre en balayant l'écran ou avec la barre de pastilles.
-- **Par difficulté** : les voies d'une cotation, avec leur mur.
+- **Difficulté** : les voies d'une cotation, avec leur mur.
 - **Toutes** : toutes les voies, avec des filtres (niveau min/max, faites ou
   non, tête, moulinette, favoris, compétition) et un tri (par mur, facile→dur,
   dur→facile).
+- **Stats** : compteurs de progression globaux (tête, moulinette, faites).
 - « Tête » et « Moulinette » sont cochées indépendamment ; les compteurs
   globaux et ceux de chaque page se mettent à jour.
 - Favoris, notes par voie (cotation ressentie…), thème Auto / Clair / Sombre.

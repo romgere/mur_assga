@@ -28,7 +28,7 @@ function switchMode(el: LardyApp, index: number) {
 }
 
 describe('lardy-app', () => {
-  it('démarre en mode « Par mur » avec pager et pastilles', async () => {
+  it('démarre en mode « Mur » avec pager et pastilles', async () => {
     const el = await app();
     const pager = $<RoutePager>(el, 'lardy-route-pager');
     expect(pager.pages.map((p) => p.title)).toEqual(['Mur 1', 'Mur 2']);
@@ -36,7 +36,7 @@ describe('lardy-app', () => {
     expect($(el, 'h1').textContent).toContain('Lardy');
   });
 
-  it('passe en mode « Par difficulté » puis « Toutes » et mémorise le mode', async () => {
+  it('passe en mode « Difficulté » puis « Toutes » et mémorise le mode', async () => {
     const storage = memoryStorage();
     const el = await app(storage);
     switchMode(el, 1);

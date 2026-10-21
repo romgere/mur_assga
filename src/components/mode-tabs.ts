@@ -8,8 +8,8 @@ export interface ModeChangeDetail {
 }
 
 const MODES: { mode: Mode; label: string }[] = [
-  { mode: 'wall', label: 'Par mur' },
-  { mode: 'grade', label: 'Par difficulté' },
+  { mode: 'wall', label: 'Mur' },
+  { mode: 'grade', label: 'Difficulté' },
   { mode: 'all', label: 'Toutes' },
   { mode: 'stats', label: 'Stats' },
 ];

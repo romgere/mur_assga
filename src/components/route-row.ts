@@ -206,7 +206,7 @@ export class RouteRow extends LitElement {
 
   @property({ attribute: false }) route!: Route;
   @property({ type: Boolean, attribute: 'show-wall' }) showWall = false;
-  /** Mode « Par difficulté » : le mur en gros, sans la cotation (déjà donnée par la page). */
+  /** Mode « Difficulté » : le mur en gros, sans la cotation (déjà donnée par la page). */
   @property({ type: Boolean, attribute: 'wall-first' }) wallFirst = false;
   @property({ attribute: false }) store: ProgressStore = progressStore;
 

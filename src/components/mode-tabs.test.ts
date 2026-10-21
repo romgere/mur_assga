@@ -8,7 +8,7 @@ describe('lardy-mode-tabs', () => {
     el.mode = 'grade';
     await mount(el);
     const tabs = $$(el, '[role="tab"]');
-    expect(tabs.map((t) => t.textContent!.trim())).toEqual(['Par mur', 'Par difficulté', 'Toutes', 'Stats']);
+    expect(tabs.map((t) => t.textContent!.trim())).toEqual(['Mur', 'Difficulté', 'Toutes', 'Stats']);
     expect(tabs.map((t) => t.getAttribute('aria-selected'))).toEqual(['false', 'true', 'false', 'false']);
   });
 
