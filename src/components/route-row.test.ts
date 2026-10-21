@@ -81,4 +81,23 @@ describe('lardy-route-row', () => {
     expect($(el, '.note').textContent).toBe('ressentie 6a+');
     expect($(el, '.note-btn').classList.contains('has-note')).toBe(true);
   });
+
+  it('distingue une ascension avec détails et les affiche', async () => {
+    const el = await row();
+    expect(el.shadowRoot!.querySelector('.details')).toBeNull();
+    el.store.edit('1-VERTE', { t: true, tx: 'cp', m: true, mx: 'r' });
+    await el.updateComplete;
+    expect($(el, 'button.lead').getAttribute('aria-pressed')).toBe('true');
+    expect($(el, 'button.lead').classList.contains('detailed')).toBe(true);
+    expect($(el, 'button.toprope').classList.contains('detailed')).toBe(true);
+    expect($(el, '.details').textContent).toBe('Tête : chute, partiel · Moul. : repos');
+    expect($(el, '.row').classList.contains('done')).toBe(true);
+  });
+
+  it('une ascension partielle seule ne marque pas la voie faite', async () => {
+    const el = await row();
+    el.store.edit('1-VERTE', { t: true, tx: 'p' });
+    await el.updateComplete;
+    expect($(el, '.row').classList.contains('done')).toBe(false);
+  });
 });

@@ -55,6 +55,20 @@ describe('filterRoutes', () => {
     expect(run('notlead')).toHaveLength(4);
   });
 
+  it('filtre selon les détails d’ascension', () => {
+    const store = testStore();
+    store.toggle('1-VERTE', 't');
+    store.edit('1-JAUNE', { t: true, tx: 'c' });
+    store.edit('2-ROUGE', { t: true, tx: 'cp' });
+    store.edit('1-VIOLETTE', { m: true, mx: 'p' });
+    const run = (status: typeof all.status) => ids(filterRoutes(topo.routes, { ...all, status }, store, 4));
+    expect(run('done')).toEqual(['1-VERTE', '1-JAUNE']);
+    expect(run('lead')).toEqual(['1-VERTE', '1-JAUNE']);
+    expect(run('notlead')).toEqual(['1-VIOLETTE', '2-ROUGE', '2-BEIGE']);
+    expect(run('notcleanlead')).toEqual(['1-JAUNE', '1-VIOLETTE', '2-ROUGE', '2-BEIGE']);
+    expect(run('partial')).toEqual(['1-VIOLETTE', '2-ROUGE']);
+  });
+
   it('filtre favoris et compétition', () => {
     const store = testStore();
     store.toggle('2-ROUGE', 's');

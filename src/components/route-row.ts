@@ -1,7 +1,16 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
-import { isDone, progressStore, type ProgressFlag, type ProgressStore } from '../lib/progress-store';
+import {
+  DETAILS,
+  detailsKey,
+  isDone,
+  progressStore,
+  type ClimbMode,
+  type ProgressFlag,
+  type ProgressStore,
+  type RouteProgress,
+} from '../lib/progress-store';
 import { StoreController } from '../lib/store-controller';
 import { colorToken, gradeLevel, type Route } from '../lib/topo';
 import { sharedStyles } from './shared-styles';
@@ -30,9 +39,17 @@ const noteIcon = html`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidde
   />
 </svg>`;
 
+/** Libellés des détails d'une ascension (« chute, repos »), vide si propre. */
+function detailsText(p: RouteProgress, mode: ClimbMode): string {
+  const details = p[mode] ? (p[detailsKey(mode)] ?? '') : '';
+  return DETAILS.filter((d) => details.includes(d.code))
+    .map((d) => d.label.toLowerCase())
+    .join(', ');
+}
+
 /**
  * Une voie : pastille de couleur, cotation, initiales/badges, et les
- * boutons Tête / Moulinette / favori / note. Seule cette ligne se repeint
+ * boutons Tête / Moulinette / favori / détails et note. Seule cette ligne se repeint
  * quand sa voie change dans le store.
  */
 @customElement('lardy-route-row')
@@ -173,6 +190,19 @@ export class RouteRow extends LitElement {
         color: var(--toprope-ink);
       }
 
+      /* Ascension avec chute, repos ou partielle : contour seulement. */
+      .toggle.lead.detailed[aria-pressed='true'] {
+        background: var(--surface);
+        color: var(--lead);
+        border-style: dashed;
+      }
+
+      .toggle.toprope.detailed[aria-pressed='true'] {
+        background: var(--surface);
+        color: var(--toprope);
+        border-style: dashed;
+      }
+
       .icon {
         display: inline-flex;
         align-items: center;
@@ -191,7 +221,8 @@ export class RouteRow extends LitElement {
         color: var(--accent);
       }
 
-      .note {
+      .note,
+      .details {
         grid-column: 2 / -1;
         margin: 0;
         font-size: 13px;
@@ -200,6 +231,10 @@ export class RouteRow extends LitElement {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .details {
+        font-style: normal;
       }
     `,
   ];
@@ -255,6 +290,9 @@ export class RouteRow extends LitElement {
     const token = colorToken(r.color);
     const swatch = { '--sw': `var(--c-${token}, #888)`, '--sw-ink': `var(--c-${token}-ink, #fff)` };
     const label = this.label;
+    const lead = detailsText(p, 't');
+    const toprope = detailsText(p, 'm');
+    const details = [lead && `Tête : ${lead}`, toprope && `Moul. : ${toprope}`].filter(Boolean).join(' · ');
 
     return html`<div class="row ${isDone(p) ? 'done' : ''}">
       <span class="color">
@@ -273,7 +311,7 @@ export class RouteRow extends LitElement {
       </div>
       <div class="actions">
         <button
-          class="toggle lead"
+          class="toggle lead ${lead ? 'detailed' : ''}"
           aria-pressed=${p.t ? 'true' : 'false'}
           aria-label="Faite en tête, ${label}"
           @click=${() => this.toggle('t')}
@@ -281,7 +319,7 @@ export class RouteRow extends LitElement {
           Tête
         </button>
         <button
-          class="toggle toprope"
+          class="toggle toprope ${toprope ? 'detailed' : ''}"
           aria-pressed=${p.m ? 'true' : 'false'}
           aria-label="Faite en moulinette, ${label}"
           @click=${() => this.toggle('m')}
@@ -298,12 +336,13 @@ export class RouteRow extends LitElement {
         </button>
         <button
           class="icon note-btn ${p.n ? 'has-note' : ''}"
-          aria-label="${p.n ? 'Modifier la note' : 'Ajouter une note'}, ${label}"
+          aria-label="Détails et note, ${label}"
           @click=${this.openNote}
         >
           ${noteIcon}
         </button>
       </div>
+      ${details ? html`<p class="details">${details}</p>` : nothing}
       ${p.n ? html`<p class="note">${p.n}</p>` : nothing}
     </div>`;
   }

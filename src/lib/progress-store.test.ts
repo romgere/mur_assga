@@ -1,7 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
 import { buildTopo } from './topo';
 import { memoryStorage, miniTopoData, testStore } from '../test/helpers';
-import { LEGACY_PROGRESS_KEY, ProgressChangeEvent, isDone, progressKey } from './progress-store';
+import {
+  LEGACY_PROGRESS_KEY,
+  ProgressChangeEvent,
+  hasDetail,
+  isClean,
+  isCompleted,
+  isDone,
+  progressKey,
+} from './progress-store';
 
 const PROGRESS_KEY = progressKey('2026-2027');
 
@@ -96,7 +104,7 @@ describe('ProgressStore', () => {
 
   it('exporte la saison dans la sauvegarde', () => {
     const backup = JSON.parse(testStore().exportText());
-    expect(backup).toMatchObject({ app: 'lardy2026', version: 2, season: '2026-2027' });
+    expect(backup).toMatchObject({ app: 'lardy2026', version: 3, season: '2026-2027' });
   });
 
   it('accepte une sauvegarde v1 (sans saison) pour la saison 2026-2027', () => {
@@ -104,6 +112,66 @@ describe('ProgressStore', () => {
     const result = store.importText(JSON.stringify({ app: 'lardy2026', version: 1, progress: { '1-VERTE': { t: true } } }));
     expect(result.ok).toBe(true);
     expect(store.get('1-VERTE')).toEqual({ t: true });
+  });
+});
+
+describe('ProgressStore : détails d’ascension', () => {
+  it('relit les données existantes sans détails comme des ascensions propres', () => {
+    const storage = memoryStorage();
+    storage.set(PROGRESS_KEY, JSON.stringify({ '1-VERTE': { t: true, m: true, s: true, n: 'ok' } }));
+    const store = testStore(storage);
+    expect(store.get('1-VERTE')).toEqual({ t: true, m: true, s: true, n: 'ok' });
+    expect(isClean(store.get('1-VERTE'), 't')).toBe(true);
+    expect(store.counts()).toEqual({ total: 5, lead: 1, toprope: 1, done: 1 });
+  });
+
+  it('enregistre les détails normalisés et les persiste', () => {
+    const storage = memoryStorage();
+    testStore(storage).edit('1-VERTE', { t: true, tx: 'pcxc', m: true, mx: 'r' });
+    expect(JSON.parse(storage.get(PROGRESS_KEY)!)).toEqual({ '1-VERTE': { t: true, tx: 'cp', m: true, mx: 'r' } });
+    expect(testStore(storage).get('1-VERTE')).toEqual({ t: true, tx: 'cp', m: true, mx: 'r' });
+  });
+
+  it('efface les détails quand la façon de grimper est décochée', () => {
+    const store = testStore();
+    store.edit('1-VERTE', { t: true, tx: 'c' });
+    store.toggle('1-VERTE', 't');
+    expect(store.get('1-VERTE')).toEqual({});
+    store.edit('1-VERTE', { tx: 'r' });
+    expect(store.get('1-VERTE')).toEqual({});
+  });
+
+  it('ne compte pas une ascension partielle comme faite', () => {
+    const store = testStore();
+    store.edit('1-VERTE', { t: true, tx: 'cp' });
+    store.edit('1-JAUNE', { t: true, tx: 'cr', m: true, mx: 'p' });
+    expect(isDone(store.get('1-VERTE'))).toBe(false);
+    expect(isCompleted(store.get('1-JAUNE'), 't')).toBe(true);
+    expect(isCompleted(store.get('1-JAUNE'), 'm')).toBe(false);
+    expect(hasDetail(store.get('1-VERTE'), 't', 'c')).toBe(true);
+    expect(store.counts()).toEqual({ total: 5, lead: 1, toprope: 0, done: 1 });
+  });
+
+  it('exporte et réimporte les détails, ignore les lettres inconnues', () => {
+    const a = testStore();
+    a.edit('1-VERTE', { t: true, tx: 'c', m: true, mx: 'pr' });
+    const b = testStore();
+    expect(b.importText(a.exportText()).ok).toBe(true);
+    expect(b.get('1-VERTE')).toEqual({ t: true, tx: 'c', m: true, mx: 'rp' });
+    expect(b.importText(JSON.stringify({ '1-VERTE': { t: true, tx: 'zc' } })).ok).toBe(true);
+    expect(b.get('1-VERTE')).toEqual({ t: true, tx: 'c' });
+  });
+
+  it('accepte une sauvegarde v2 (sans détails)', () => {
+    const store = testStore();
+    const v2 = { app: 'lardy2026', version: 2, season: '2026-2027', progress: { '1-VERTE': { t: true, m: true } } };
+    expect(store.importText(JSON.stringify(v2)).ok).toBe(true);
+    expect(store.get('1-VERTE')).toEqual({ t: true, m: true });
+  });
+
+  it('rejette des détails qui ne sont pas du texte', () => {
+    const result = testStore().importText('{"1-VERTE": {"t": true, "tx": 3}}');
+    expect(result).toMatchObject({ ok: false, message: expect.stringMatching(/« tx » invalides/) });
   });
 });
 

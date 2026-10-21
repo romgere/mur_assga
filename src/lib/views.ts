@@ -1,4 +1,4 @@
-import { isDone, type ProgressStore } from './progress-store';
+import { hasDetail, isClean, isCompleted, isDone, type ProgressStore } from './progress-store';
 import type { Route, Topo } from './topo';
 import type { Filters } from './ui-state';
 
@@ -74,11 +74,15 @@ export function filterRoutes(routes: Route[], filters: Filters, store: ProgressS
       case 'todo':
         return !isDone(p);
       case 'lead':
-        return !!p.t;
+        return isCompleted(p, 't');
       case 'toprope':
-        return !!p.m;
+        return isCompleted(p, 'm');
       case 'notlead':
-        return !p.t;
+        return !isCompleted(p, 't');
+      case 'notcleanlead':
+        return !isClean(p, 't');
+      case 'partial':
+        return hasDetail(p, 't', 'p') || hasDetail(p, 'm', 'p');
       default:
         return true;
     }

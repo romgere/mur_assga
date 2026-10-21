@@ -19,6 +19,8 @@ const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: 'lead', label: 'Faites en tête' },
   { value: 'toprope', label: 'Faites en moulinette' },
   { value: 'notlead', label: 'Pas encore en tête' },
+  { value: 'notcleanlead', label: 'Pas encore enchaînées en tête' },
+  { value: 'partial', label: 'Partielles (à finir)' },
 ];
 
 const sortIcon = html`<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">

@@ -49,6 +49,39 @@ describe('lardy-note-sheet', () => {
     expect(el.store.get(route.id)).toEqual({});
   });
 
+  it('enregistre la façon de grimper et ses détails', async () => {
+    const el = await noteSheet();
+    const check = (selector: string) => {
+      const input = $<HTMLInputElement>(el, selector);
+      input.checked = !input.checked;
+      input.dispatchEvent(new Event('change'));
+    };
+    check('fieldset.lead .detail-c');
+    check('fieldset.lead .detail-p');
+    check('fieldset.toprope input.mode');
+    await el.updateComplete;
+    expect($<HTMLInputElement>(el, 'fieldset.lead input.mode').checked).toBe(true);
+    $(el, 'button.save').click();
+    expect(el.store.get(route.id)).toEqual({ t: true, tx: 'cp', m: true });
+  });
+
+  it('décocher la façon de grimper efface ses détails', async () => {
+    const el = await noteSheet();
+    el.store.edit(route.id, { t: true, tx: 'r' });
+    el.route = null;
+    await el.updateComplete;
+    el.route = route;
+    await el.updateComplete;
+    expect($<HTMLInputElement>(el, 'fieldset.lead .detail-r').checked).toBe(true);
+    const mode = $<HTMLInputElement>(el, 'fieldset.lead input.mode');
+    mode.checked = false;
+    mode.dispatchEvent(new Event('change'));
+    await el.updateComplete;
+    expect($<HTMLInputElement>(el, 'fieldset.lead .detail-r').checked).toBe(false);
+    $(el, 'button.save').click();
+    expect(el.store.get(route.id)).toEqual({});
+  });
+
   it('n’enregistre rien si on ferme sans valider', async () => {
     const el = await noteSheet('initiale');
     textarea(el).value = 'modifiée';
