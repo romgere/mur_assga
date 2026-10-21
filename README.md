@@ -19,7 +19,8 @@ test
 - **Stats** : compteurs de progression globaux (tête, moulinette, faites).
 - « Tête » et « Moulinette » sont cochées indépendamment ; les compteurs
   globaux et ceux de chaque page se mettent à jour.
-- Détails d'ascension (bouton crayon) : pour la tête et la moulinette, avec
+- Détails d'ascension (appui long ou clic droit sur Tête / Moul. pour un
+  menu rapide, ou bouton crayon) : pour la tête et la moulinette, avec
   **chute**, avec **repos** et/ou **partiel** (non terminée). Une voie
   cochée sans détail est enchaînée proprement ; une ascension partielle ne
   compte pas comme faite. Le bouton d'une ascension avec détails est en

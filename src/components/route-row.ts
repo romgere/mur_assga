@@ -1,12 +1,14 @@
 import { LitElement, css, html, nothing } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import {
   DETAILS,
   detailsKey,
   isDone,
+  normalizeDetails,
   progressStore,
   type ClimbMode,
+  type Detail,
   type ProgressFlag,
   type ProgressStore,
   type RouteProgress,
@@ -39,6 +41,9 @@ const noteIcon = html`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidde
   />
 </svg>`;
 
+/** Durée d'appui sur Tête / Moul. avant d'ouvrir le menu des détails. */
+export const LONG_PRESS_MS = 500;
+
 /** Libellés des détails d'une ascension (« chute, repos »), vide si propre. */
 function detailsText(p: RouteProgress, mode: ClimbMode): string {
   const details = p[mode] ? (p[detailsKey(mode)] ?? '') : '';
@@ -49,7 +54,8 @@ function detailsText(p: RouteProgress, mode: ClimbMode): string {
 
 /**
  * Une voie : pastille de couleur, cotation, initiales/badges, et les
- * boutons Tête / Moulinette / favori / détails et note. Seule cette ligne se repeint
+ * boutons Tête / Moulinette / favori / détails et note. Un appui long (ou
+ * clic droit) sur Tête / Moul. ouvre un petit menu des détails. Seule cette ligne se repeint
  * quand sa voie change dans le store.
  */
 @customElement('lardy-route-row')
@@ -62,6 +68,7 @@ export class RouteRow extends LitElement {
       }
 
       .row {
+        position: relative;
         display: grid;
         grid-template-columns: 62px minmax(0, 1fr) auto;
         align-items: center;
@@ -191,6 +198,12 @@ export class RouteRow extends LitElement {
       }
 
       /* Ascension avec chute, repos ou partielle : contour seulement. */
+      .toggle {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
       .toggle.lead.detailed[aria-pressed='true'] {
         background: var(--surface);
         color: var(--lead);
@@ -236,6 +249,35 @@ export class RouteRow extends LitElement {
       .details {
         font-style: normal;
       }
+
+      .menu {
+        position: absolute;
+        top: calc(100% - 6px);
+        right: 8px;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .menu .title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+      }
+
+      .menu label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 36px;
+        font-size: 15px;
+      }
     `,
   ];
 
@@ -244,6 +286,12 @@ export class RouteRow extends LitElement {
   /** Mode « Difficulté » : le mur en gros, sans la cotation (déjà donnée par la page). */
   @property({ type: Boolean, attribute: 'wall-first' }) wallFirst = false;
   @property({ attribute: false }) store: ProgressStore = progressStore;
+
+  /** Façon de grimper dont le menu des détails est ouvert. */
+  @state() private menu: ClimbMode | null = null;
+  private pressTimer?: ReturnType<typeof setTimeout>;
+  /** Un appui long vient d'ouvrir le menu : le clic qui suit ne bascule pas. */
+  private skipClick = false;
 
   constructor() {
     super();
@@ -259,8 +307,99 @@ export class RouteRow extends LitElement {
     this.setAttribute('role', 'listitem');
   }
 
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.closeMenu();
+    this.cancelPress();
+  }
+
   private toggle(flag: ProgressFlag) {
     this.store.toggle(this.route.id, flag);
+  }
+
+  private clickMode(mode: ClimbMode) {
+    if (this.skipClick) {
+      this.skipClick = false;
+      return;
+    }
+    this.toggle(mode);
+  }
+
+  private startPress(mode: ClimbMode, e: PointerEvent) {
+    if (e.button !== 0) return;
+    this.skipClick = false;
+    this.cancelPress();
+    this.pressTimer = setTimeout(() => {
+      this.skipClick = true;
+      this.openMenu(mode);
+    }, LONG_PRESS_MS);
+  }
+
+  private cancelPress() {
+    clearTimeout(this.pressTimer);
+    this.pressTimer = undefined;
+  }
+
+  /** Clic droit, ou appui long sur Android qui déclenche aussi contextmenu. */
+  private onContextMenu(mode: ClimbMode, e: Event) {
+    e.preventDefault();
+    this.cancelPress();
+    this.skipClick = true;
+    this.openMenu(mode);
+  }
+
+  private openMenu(mode: ClimbMode) {
+    if (this.menu === mode) return;
+    this.menu = mode;
+    document.addEventListener('pointerdown', this.onOutside, true);
+    document.addEventListener('keydown', this.onKey);
+    this.updateComplete.then(() => this.renderRoot.querySelector<HTMLInputElement>('.menu input')?.focus());
+  }
+
+  private closeMenu(restoreFocus = false) {
+    const mode = this.menu;
+    if (!mode) return;
+    this.menu = null;
+    document.removeEventListener('pointerdown', this.onOutside, true);
+    document.removeEventListener('keydown', this.onKey);
+    if (restoreFocus) {
+      this.renderRoot.querySelector<HTMLElement>(mode === 't' ? 'button.lead' : 'button.toprope')?.focus();
+    }
+  }
+
+  private onOutside = (e: Event) => {
+    const menu = this.renderRoot.querySelector('.menu');
+    if (menu && !e.composedPath().includes(menu)) this.closeMenu();
+  };
+
+  private onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') this.closeMenu(true);
+  };
+
+  /** Cocher un détail coche aussi la façon de grimper ; appliqué tout de suite. */
+  private setDetail(mode: ClimbMode, detail: Detail, on: boolean) {
+    const key = detailsKey(mode);
+    const current = this.store.get(this.route.id)[key] ?? '';
+    const details = normalizeDetails(on ? current + detail : current.replace(detail, ''));
+    this.store.edit(this.route.id, { [key]: details, ...(on ? { [mode]: true } : {}) });
+  }
+
+  private renderMenu(p: RouteProgress, mode: ClimbMode) {
+    const title = mode === 't' ? 'En tête' : 'En moulinette';
+    const details = p[mode] ? (p[detailsKey(mode)] ?? '') : '';
+    return html`<div class="menu" role="dialog" aria-label="Détails ${title.toLowerCase()}, ${this.label}">
+      <span class="title">${title}</span>
+      ${DETAILS.map(
+        (d) => html`<label
+          ><input
+            type="checkbox"
+            class="detail-${d.code}"
+            .checked=${details.includes(d.code)}
+            @change=${(e: Event) => this.setDetail(mode, d.code, (e.target as HTMLInputElement).checked)}
+          />${d.label}</label
+        >`,
+      )}
+    </div>`;
   }
 
   private openNote() {
@@ -314,7 +453,12 @@ export class RouteRow extends LitElement {
           class="toggle lead ${lead ? 'detailed' : ''}"
           aria-pressed=${p.t ? 'true' : 'false'}
           aria-label="Faite en tête, ${label}"
-          @click=${() => this.toggle('t')}
+          @click=${() => this.clickMode('t')}
+          @pointerdown=${(e: PointerEvent) => this.startPress('t', e)}
+          @pointerup=${this.cancelPress}
+          @pointerleave=${this.cancelPress}
+          @pointercancel=${this.cancelPress}
+          @contextmenu=${(e: Event) => this.onContextMenu('t', e)}
         >
           Tête
         </button>
@@ -322,7 +466,12 @@ export class RouteRow extends LitElement {
           class="toggle toprope ${toprope ? 'detailed' : ''}"
           aria-pressed=${p.m ? 'true' : 'false'}
           aria-label="Faite en moulinette, ${label}"
-          @click=${() => this.toggle('m')}
+          @click=${() => this.clickMode('m')}
+          @pointerdown=${(e: PointerEvent) => this.startPress('m', e)}
+          @pointerup=${this.cancelPress}
+          @pointerleave=${this.cancelPress}
+          @pointercancel=${this.cancelPress}
+          @contextmenu=${(e: Event) => this.onContextMenu('m', e)}
         >
           Moul.
         </button>
@@ -342,6 +491,7 @@ export class RouteRow extends LitElement {
           ${noteIcon}
         </button>
       </div>
+      ${this.menu ? this.renderMenu(p, this.menu) : nothing}
       ${details ? html`<p class="details">${details}</p>` : nothing}
       ${p.n ? html`<p class="note">${p.n}</p>` : nothing}
     </div>`;
