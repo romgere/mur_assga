@@ -34,6 +34,7 @@ export class FakeStorage implements Storage {
 
 /** Petit topo de test : 2 murs, une traversée. */
 export const miniTopoData: TopoData = {
+  season: '2026-2027',
   title: 'Topo test',
   club: 'Club test',
   updated: '2026-04-03',

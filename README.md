@@ -23,11 +23,15 @@ Production : <https://mur-escalade-lardy.mestres.fr>
 
 Les données restent dans le navigateur (`localStorage`) :
 
-| Clé               | Contenu                                                  |
-| ----------------- | -------------------------------------------------------- |
-| `lardy2026.v1`    | `{"mur-COULEUR": {t, m, s, n}}` : tête, moulinette, favori, note |
-| `lardy2026.ui`    | mode, page courante de chaque mode, filtres              |
-| `lardy2026.theme` | `auto`, `light` ou `dark`                                 |
+| Clé                        | Contenu                                                          |
+| -------------------------- | ---------------------------------------------------------------- |
+| `lardy.progress.<saison>`  | `{"mur-COULEUR": {t, m, s, n}}` : tête, moulinette, favori, note |
+| `lardy2026.ui`             | mode, page courante de chaque mode, filtres, filtre des stats    |
+| `lardy2026.theme`          | `auto`, `light` ou `dark`                                         |
+
+La progression est rangée par saison (`lardy.progress.2026-2027`…). L'ancienne
+clé de la V1, `lardy2026.v1`, est reprise automatiquement dans la saison
+2026-2027 au premier lancement.
 
 Si le stockage est indisponible (navigation privée…), l'application continue
 en mémoire et le signale dans les réglages.
@@ -65,6 +69,7 @@ Toutes les voies sont dans [`src/data/topo.json`](src/data/topo.json) :
 { "color": "VERTE", "grade": "6a", "setter": "BC" }
 { "color": "VIOLETTE", "grade": "5a+", "competition": true }
 { "color": "BEIGE", "traverse": true }
+{ "color": "ROUGE", "grade": "6c", "setter": "L", "rev": 2 }
 ```
 
 - `color` : nom de la couleur en majuscules. Une nouvelle couleur doit avoir
@@ -72,12 +77,19 @@ Toutes les voies sont dans [`src/data/topo.json`](src/data/topo.json) :
   [`src/styles/tokens.css`](src/styles/tokens.css).
 - `grade` : une valeur de la liste `grades` (sauf traversée).
 - `setter` : initiales affichées telles quelles.
-- Mettre à jour `updated` (date du topo) et `title` si la saison change.
+- `rev` (optionnel) : révision de la voie, voir ci-dessous.
 
-La progression est rattachée à la clé `mur-COULEUR` : une voie remplacée par
-une autre de même couleur sur le même mur garde la coche de l'ancienne. Pour
-une nouvelle saison, changer la clé `PROGRESS_KEY` dans
-[`src/lib/progress-store.ts`](src/lib/progress-store.ts) repart de zéro.
+La progression d'une voie est rattachée à sa clé `mur-COULEUR`, rangée par
+saison. Deux cas de renouvellement :
+
+- **Nouvelle saison** : changer `season` (par exemple `"2027-2028"`), ainsi que
+  `title` et `updated`. Tout le monde repart d'une progression vide ; celle de
+  la saison précédente reste dans le navigateur. Une sauvegarde d'une autre
+  saison est refusée à la restauration.
+- **Voie rouverte en cours de saison** (même couleur, même mur) : ajouter
+  `"rev": 2` à la voie (puis 3, 4… aux réouvertures suivantes). Sa clé
+  devient `mur-COULEUR~2` : elle repart de zéro, les autres voies gardent leur
+  progression. Retirer `rev` en début de saison suivante.
 
 Le fichier est vérifié au chargement (cotation inconnue, voie en double…) et
 par les tests : lancer `npm test` après chaque modification.

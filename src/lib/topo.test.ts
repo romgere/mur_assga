@@ -8,6 +8,10 @@ describe('topo.json', () => {
     expect(topo.routes).toHaveLength(65);
   });
 
+  it('indique la saison 2026-2027', () => {
+    expect(topo.season).toBe('2026-2027');
+  });
+
   it('a une échelle de cotations croissante de 4+ à 7c', () => {
     expect(topo.grades[0]).toBe('4+');
     expect(topo.grades.at(-1)).toBe('7c');
@@ -37,6 +41,32 @@ describe('buildTopo', () => {
     const bad = structuredClone(miniTopoData);
     bad.walls[0].routes.push({ color: 'VERTE', grade: '5a' });
     expect(() => buildTopo(bad)).toThrow(/double/);
+  });
+
+  it('exige une saison', () => {
+    const bad = structuredClone(miniTopoData);
+    bad.season = '';
+    expect(() => buildTopo(bad)).toThrow(/season/);
+  });
+
+  it('ajoute la révision à l’identifiant, sauf pour la première', () => {
+    const data = structuredClone(miniTopoData);
+    data.walls[0].routes[0].rev = 2;
+    data.walls[0].routes[1].rev = 1;
+    const ids = buildTopo(data).routes.map((r) => r.id);
+    expect(ids.slice(0, 2)).toEqual(['1-VERTE~2', '1-JAUNE']);
+  });
+
+  it('rejette une révision invalide', () => {
+    const bad = structuredClone(miniTopoData);
+    bad.walls[0].routes[0].rev = 1.5;
+    expect(() => buildTopo(bad)).toThrow(/rev/);
+  });
+
+  it('rejette deux voies de même couleur sur un mur, même de révisions différentes', () => {
+    const bad = structuredClone(miniTopoData);
+    bad.walls[0].routes.push({ color: 'VERTE', grade: '5a', rev: 2 });
+    expect(() => buildTopo(bad)).toThrow(/double 1-VERTE/);
   });
 
   it('rejette une voie sans cotation qui n’est pas une traversée', () => {

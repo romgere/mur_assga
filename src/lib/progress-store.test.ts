@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { memoryStorage, testStore } from '../test/helpers';
-import { PROGRESS_KEY, ProgressChangeEvent, isDone } from './progress-store';
+import { buildTopo } from './topo';
+import { memoryStorage, miniTopoData, testStore } from '../test/helpers';
+import { LEGACY_PROGRESS_KEY, ProgressChangeEvent, isDone, progressKey } from './progress-store';
+
+const PROGRESS_KEY = progressKey('2026-2027');
 
 describe('ProgressStore', () => {
   it('bascule tête et moulinette indépendamment', () => {
@@ -13,7 +16,7 @@ describe('ProgressStore', () => {
     expect(store.get('1-VERTE')).toEqual({ m: true });
   });
 
-  it('persiste sous lardy2026.v1 et relit au démarrage', () => {
+  it('persiste sous la clé de la saison et relit au démarrage', () => {
     const storage = memoryStorage();
     const a = testStore(storage);
     a.toggle('1-VERTE', 's');
@@ -89,5 +92,69 @@ describe('ProgressStore', () => {
     const storage = memoryStorage();
     storage.set(PROGRESS_KEY, '{"1-VERTE": {"t": 42}}');
     expect(testStore(storage).get('1-VERTE')).toEqual({});
+  });
+
+  it('exporte la saison dans la sauvegarde', () => {
+    const backup = JSON.parse(testStore().exportText());
+    expect(backup).toMatchObject({ app: 'lardy2026', version: 2, season: '2026-2027' });
+  });
+
+  it('accepte une sauvegarde v1 (sans saison) pour la saison 2026-2027', () => {
+    const store = testStore();
+    const result = store.importText(JSON.stringify({ app: 'lardy2026', version: 1, progress: { '1-VERTE': { t: true } } }));
+    expect(result.ok).toBe(true);
+    expect(store.get('1-VERTE')).toEqual({ t: true });
+  });
+});
+
+function seasonTopo(season: string) {
+  return buildTopo({ ...structuredClone(miniTopoData), season });
+}
+
+describe('ProgressStore : saisons', () => {
+  it('reprend la progression de la V1 sous la clé 2026-2027', () => {
+    const storage = memoryStorage();
+    storage.set(LEGACY_PROGRESS_KEY, JSON.stringify({ '1-VERTE': { t: true } }));
+    const store = testStore(storage);
+    expect(store.get('1-VERTE')).toEqual({ t: true });
+    expect(storage.get(LEGACY_PROGRESS_KEY)).toBeNull();
+    expect(JSON.parse(storage.get(PROGRESS_KEY)!)).toEqual({ '1-VERTE': { t: true } });
+  });
+
+  it('ne remplace pas une progression 2026-2027 déjà migrée', () => {
+    const storage = memoryStorage();
+    storage.set(PROGRESS_KEY, JSON.stringify({ '2-ROUGE': { m: true } }));
+    storage.set(LEGACY_PROGRESS_KEY, JSON.stringify({ '1-VERTE': { t: true } }));
+    expect(testStore(storage).get('2-ROUGE')).toEqual({ m: true });
+  });
+
+  it('démarre une nouvelle saison à zéro sans toucher à la précédente', () => {
+    const storage = memoryStorage();
+    testStore(storage).toggle('1-VERTE', 't');
+    const next = testStore(storage, seasonTopo('2027-2028'));
+    expect(next.get('1-VERTE')).toEqual({});
+    next.toggle('2-ROUGE', 'm');
+    expect(JSON.parse(storage.get(progressKey('2027-2028'))!)).toEqual({ '2-ROUGE': { m: true } });
+    expect(JSON.parse(storage.get(PROGRESS_KEY)!)).toEqual({ '1-VERTE': { t: true } });
+  });
+
+  it('refuse une sauvegarde d’une autre saison', () => {
+    const old = testStore().exportText();
+    const next = testStore(memoryStorage(), seasonTopo('2027-2028'));
+    const result = next.importText(old);
+    expect(result.ok).toBe(false);
+    expect(result.message).toMatch(/saison 2026-2027.*saison 2027-2028/);
+  });
+
+  it('remet à zéro une seule voie quand sa révision change', () => {
+    const storage = memoryStorage();
+    const store = testStore(storage);
+    store.toggle('1-VERTE', 't');
+    store.toggle('2-ROUGE', 'm');
+    const data = structuredClone(miniTopoData);
+    data.walls[0].routes[0].rev = 2;
+    const reopened = testStore(storage, buildTopo(data));
+    expect(reopened.get('1-VERTE~2')).toEqual({});
+    expect(reopened.get('2-ROUGE')).toEqual({ m: true });
   });
 });

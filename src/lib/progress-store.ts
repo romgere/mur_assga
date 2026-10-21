@@ -1,9 +1,18 @@
 import { storage as defaultStorage, readJson, writeJson, type KeyValueStorage } from './storage';
 import { topo as defaultTopo, type Route, type Topo } from './topo';
 
-export const PROGRESS_KEY = 'lardy2026.v1';
 export const BACKUP_APP = 'lardy2026';
-export const BACKUP_VERSION = 1;
+/** v2 : la sauvegarde indique sa saison. */
+export const BACKUP_VERSION = 2;
+
+/** Clé et saison de la V1, avant que la progression soit rangée par saison. */
+export const LEGACY_PROGRESS_KEY = 'lardy2026.v1';
+export const LEGACY_SEASON = '2026-2027';
+
+/** Chaque saison a sa propre progression : un nouveau topo repart de zéro. */
+export function progressKey(season: string): string {
+  return `lardy.progress.${season}`;
+}
 export const MAX_NOTE_LENGTH = 2000;
 
 /** État d'une voie : t = tête, m = moulinette, s = favori (star), n = note. */
@@ -65,9 +74,24 @@ export class ProgressStore extends EventTarget {
     readonly topo: Topo = defaultTopo,
   ) {
     super();
-    const saved = readJson<unknown>(storage, PROGRESS_KEY);
+    this.migrateLegacy();
+    const saved = readJson<unknown>(storage, this.key);
     const parsed = saved === null ? null : this.validate(saved);
     this.data = parsed && parsed.ok ? parsed.data : {};
+  }
+
+  /** Clé de stockage de la saison affichée. */
+  get key(): string {
+    return progressKey(this.topo.season);
+  }
+
+  /** Reprend la progression de la V1 (saison 2026-2027) sous sa nouvelle clé. */
+  private migrateLegacy(): void {
+    const legacy = this.storage.get(LEGACY_PROGRESS_KEY);
+    if (legacy === null) return;
+    const target = progressKey(LEGACY_SEASON);
+    if (this.storage.get(target) === null) this.storage.set(target, legacy);
+    this.storage.remove(LEGACY_PROGRESS_KEY);
   }
 
   get persistent(): boolean {
@@ -102,7 +126,7 @@ export class ProgressStore extends EventTarget {
 
   clear(): void {
     this.data = {};
-    this.storage.remove(PROGRESS_KEY);
+    this.storage.remove(this.key);
     this.dispatchEvent(new ProgressChangeEvent());
   }
 
@@ -111,6 +135,7 @@ export class ProgressStore extends EventTarget {
       {
         app: BACKUP_APP,
         version: BACKUP_VERSION,
+        season: this.topo.season,
         exportedAt: new Date().toISOString(),
         progress: this.data,
       },
@@ -147,11 +172,12 @@ export class ProgressStore extends EventTarget {
   }
 
   private persist(): void {
-    writeJson(this.storage, PROGRESS_KEY, this.data);
+    writeJson(this.storage, this.key, this.data);
   }
 
   /**
-   * Accepte soit une sauvegarde complète ({app, version, progress}), soit
+   * Accepte soit une sauvegarde complète ({app, version, season, progress}) de
+   * la saison affichée, soit
    * directement la table {"mur-COULEUR": {t, m, s, n}}. Les voies qui
    * n'existent plus dans le topo sont ignorées ; un type invalide rejette tout.
    */
@@ -168,6 +194,14 @@ export class ProgressStore extends EventTarget {
       }
       if (typeof map.version === 'number' && map.version > BACKUP_VERSION) {
         return { ok: false, message: 'Sauvegarde créée par une version plus récente de l’application.' };
+      }
+      // Les sauvegardes v1, sans saison, datent toutes de la saison 2026-2027.
+      const season = typeof map.season === 'string' ? map.season : LEGACY_SEASON;
+      if (season !== this.topo.season) {
+        return {
+          ok: false,
+          message: `Cette sauvegarde concerne la saison ${season} ; l’application affiche la saison ${this.topo.season}.`,
+        };
       }
       const progress = map.progress;
       if (typeof progress !== 'object' || progress === null || Array.isArray(progress)) {
