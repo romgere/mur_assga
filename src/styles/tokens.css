@@ -1,0 +1,165 @@
+/*
+ * Tous les états visuels passent par ces tokens : un bloc clair, puis le
+ * même bloc sombre deux fois (thème « Auto » sur système sombre, et thème
+ * « Sombre » forcé). Les composants Lit les lisent via var(--…), les
+ * propriétés personnalisées traversant le shadow DOM.
+ */
+:root {
+  color-scheme: light;
+  --bg: #f4f5f2;
+  --surface: #ffffff;
+  --surface-2: #eceee9;
+  --text: #1b1f1a;
+  --text-muted: #5d655b;
+  --border: #d5d9d1;
+  --accent: #3f7d1d;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2efd7;
+  --focus: #2f6fd6;
+  --danger: #b3261e;
+  --danger-ink: #ffffff;
+  --overlay: rgb(0 0 0 / 0.4);
+  --shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+
+  --done-bg: #eaf4e2;
+  --lead: #1f6f3f;
+  --lead-ink: #ffffff;
+  --toprope: #285f9e;
+  --toprope-ink: #ffffff;
+  --star: #d69a00;
+  --dot-complete: #3f7d1d;
+  --dot-partial: #d69a00;
+
+  /* Couleurs des niveaux, reprises de l'échelle du topo. */
+  --g4: #1c8fc4;
+  --g5: #2e8b2e;
+  --g6: #c77700;
+  --g7: #d0261d;
+
+  /* Couleurs des prises. */
+  --c-verte: #00a651;
+  --c-verte-ink: #ffffff;
+  --c-jaune: #ffeb00;
+  --c-jaune-ink: #1b1f1a;
+  --c-violette: #7030a0;
+  --c-violette-ink: #ffffff;
+  --c-rouge: #ff0000;
+  --c-rouge-ink: #ffffff;
+  --c-rose: #ff9fd0;
+  --c-rose-ink: #1b1f1a;
+  --c-bleue: #7a8fae;
+  --c-bleue-ink: #ffffff;
+  --c-noire: #111111;
+  --c-noire-ink: #ffffff;
+  --c-orange: #ffb000;
+  --c-orange-ink: #1b1f1a;
+  --c-blanche: #ffffff;
+  --c-blanche-ink: #1b1f1a;
+  --c-grise: #9e9e9e;
+  --c-grise-ink: #ffffff;
+  --c-beige: #f8cfae;
+  --c-beige-ink: #1b1f1a;
+  --swatch-border: rgb(0 0 0 / 0.25);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #121411;
+    --surface: #1c1f1b;
+    --surface-2: #262a25;
+    --text: #e8ebe5;
+    --text-muted: #a0a89c;
+    --border: #353a33;
+    --accent: #8cc65e;
+    --accent-ink: #10200a;
+    --accent-soft: #2a3a20;
+    --focus: #7fb0ff;
+    --danger: #ff8a80;
+    --danger-ink: #2a0705;
+    --overlay: rgb(0 0 0 / 0.6);
+    --shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+
+    --done-bg: #1f2b1a;
+    --lead: #4fbf7b;
+    --lead-ink: #08200f;
+    --toprope: #6fa8ec;
+    --toprope-ink: #08182b;
+    --star: #ffc93c;
+    --dot-complete: #8cc65e;
+    --dot-partial: #ffc93c;
+
+    --g4: #5cc4f2;
+    --g5: #6fd16f;
+    --g6: #ffad3b;
+    --g7: #ff6b5e;
+
+    --c-noire: #000000;
+    --c-blanche: #f2f2f2;
+    --swatch-border: rgb(255 255 255 / 0.35);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #121411;
+  --surface: #1c1f1b;
+  --surface-2: #262a25;
+  --text: #e8ebe5;
+  --text-muted: #a0a89c;
+  --border: #353a33;
+  --accent: #8cc65e;
+  --accent-ink: #10200a;
+  --accent-soft: #2a3a20;
+  --focus: #7fb0ff;
+  --danger: #ff8a80;
+  --danger-ink: #2a0705;
+  --overlay: rgb(0 0 0 / 0.6);
+  --shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+
+  --done-bg: #1f2b1a;
+  --lead: #4fbf7b;
+  --lead-ink: #08200f;
+  --toprope: #6fa8ec;
+  --toprope-ink: #08182b;
+  --star: #ffc93c;
+  --dot-complete: #8cc65e;
+  --dot-partial: #ffc93c;
+
+  --g4: #5cc4f2;
+  --g5: #6fd16f;
+  --g6: #ffad3b;
+  --g7: #ff6b5e;
+
+  --c-noire: #000000;
+  --c-blanche: #f2f2f2;
+  --swatch-border: rgb(255 255 255 / 0.35);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.35;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+lardy-app {
+  height: 100%;
+}

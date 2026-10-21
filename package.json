@@ -1,0 +1,23 @@
+{
+  "name": "mur-escalade-lardy",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Topo interactif du mur d'escalade de Lardy (ASSGA Escalade 2026-2027)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "happy-dom": "^21.0.4",
+    "typescript": "~5.9.3",
+    "vite": "^8.0.0",
+    "vitest": "^5.0.0"
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "title": "Topo Lardy 2026-2027",
+  "club": "ASSGA Escalade",
+  "updated": "2026-04-03",
+  "grades": ["4+", "5a", "5a+", "5b", "5b+", "5c", "6a", "6b", "6b+", "6c", "6c+", "7a", "7a+", "7b", "7b+", "7c"],
+  "walls": [
+    {
+      "id": 1,
+      "routes": [
+        { "color": "VERTE", "grade": "6a", "setter": "BC" },
+        { "color": "JAUNE", "grade": "4+", "setter": "GF" },
+        { "color": "VIOLETTE", "grade": "5a+", "competition": true },
+        { "color": "ROUGE", "grade": "6b+", "setter": "GM" }
+      ]
+    },
+    {
+      "id": 2,
+      "routes": [
+        { "color": "ROSE", "grade": "6a", "setter": "L" },
+        { "color": "BLEUE", "grade": "7a", "setter": "L" },
+        { "color": "NOIRE", "grade": "5b", "setter": "MC" },
+        { "color": "ORANGE", "grade": "6b+", "competition": true }
+      ]
+    },
+    {
+      "id": 3,
+      "routes": [
+        { "color": "VERTE", "grade": "7b", "setter": "L" },
+        { "color": "JAUNE", "grade": "5c", "setter": "L" },
+        { "color": "VIOLETTE", "grade": "5a", "setter": "LD" },
+        { "color": "BLANCHE", "grade": "6b+", "competition": true }
+      ]
+    },
+    {
+      "id": 4,
+      "routes": [
+        { "color": "ROUGE", "grade": "6c", "setter": "MC" },
+        { "color": "BLEUE", "grade": "6b", "setter": "JDC" },
+        { "color": "NOIRE", "grade": "5a", "setter": "MV" },
+        { "color": "ROSE", "grade": "5c", "competition": true }
+      ]
+    },
+    {
+      "id": 5,
+      "routes": [
+        { "color": "VERTE", "grade": "5a", "setter": "JDC" },
+        { "color": "JAUNE", "grade": "6b", "competition": true },
+        { "color": "VIOLETTE", "grade": "5c", "setter": "BC" },
+        { "color": "GRISE", "grade": "6a", "setter": "MV" }
+      ]
+    },
+    {
+      "id": 6,
+      "routes": [
+        { "color": "ROUGE", "grade": "6c", "setter": "L" },
+        { "color": "BLEUE", "grade": "6a", "setter": "L" },
+        { "color": "NOIRE", "grade": "7b+", "competition": true },
+        { "color": "ORANGE", "grade": "5c", "setter": "L" }
+      ]
+    },
+    {
+      "id": 7,
+      "routes": [
+        { "color": "VERTE", "grade": "6c", "setter": "V" },
+        { "color": "JAUNE", "grade": "7b", "competition": true },
+        { "color": "VIOLETTE", "grade": "5c", "setter": "JDC" },
+        { "color": "BLANCHE", "grade": "6c", "setter": "V" }
+      ]
+    },
+    {
+      "id": 8,
+      "routes": [
+        { "color": "ROUGE", "grade": "7a", "setter": "V" },
+        { "color": "BLEUE", "grade": "7c", "competition": true },
+        { "color": "NOIRE", "grade": "6c", "setter": "CB" },
+        { "color": "GRISE", "grade": "6b", "setter": "V" }
+      ]
+    },
+    {
+      "id": 9,
+      "routes": [
+        { "color": "VERTE", "grade": "7a+", "competition": true },
+        { "color": "JAUNE", "grade": "6b", "setter": "L" },
+        { "color": "VIOLETTE", "grade": "6a", "setter": "DH" },
+        { "color": "ROSE", "grade": "6c", "setter": "L" }
+      ]
+    },
+    {
+      "id": 10,
+      "routes": [
+        { "color": "ROUGE", "grade": "7a", "setter": "L" },
+        { "color": "BLEUE", "grade": "5c", "setter": "L" },
+        { "color": "NOIRE", "grade": "6b", "competition": true },
+        { "color": "GRISE", "grade": "6a", "setter": "RF" }
+      ]
+    },
+    {
+      "id": 11,
+      "routes": [
+        { "color": "VERTE", "grade": "6b", "setter": "V" },
+        { "color": "JAUNE", "grade": "6c+", "competition": true },
+        { "color": "VIOLETTE", "grade": "7a", "setter": "V" },
+        { "color": "BLANCHE", "grade": "5b+", "setter": "V" }
+      ]
+    },
+    {
+      "id": 12,
+      "routes": [
+        { "color": "ROUGE", "grade": "6c+", "competition": true },
+        { "color": "BLEUE", "grade": "5b", "setter": "LL" },
+        { "color": "NOIRE", "grade": "6b", "setter": "BT" },
+        { "color": "ORANGE", "grade": "6a", "setter": "MC" }
+      ]
+    },
+    {
+      "id": 13,
+      "routes": [
+        { "color": "VERTE", "grade": "5a", "setter": "MT" },
+        { "color": "JAUNE", "grade": "6c", "setter": "L" },
+        { "color": "VIOLETTE", "grade": "7a", "setter": "L" },
+        { "color": "BLANCHE", "grade": "6a", "competition": true }
+      ]
+    },
+    {
+      "id": 14,
+      "routes": [
+        { "color": "BLEUE", "grade": "5c", "competition": true },
+        { "color": "NOIRE", "grade": "7a", "setter": "L" },
+        { "color": "ROSE", "grade": "6a", "setter": "L" },
+        { "color": "GRISE", "grade": "5b", "setter": "BC" }
+      ]
+    },
+    {
+      "id": 15,
+      "routes": [
+        { "color": "ROUGE", "grade": "6b", "setter": "L" },
+        { "color": "VERTE", "grade": "5b+", "competition": true },
+        { "color": "JAUNE", "grade": "4+", "setter": "GC" },
+        { "color": "BLANCHE", "grade": "6c", "setter": "L" }
+      ]
+    },
+    {
+      "id": 16,
+      "routes": [
+        { "color": "NOIRE", "grade": "5a", "setter": "CB" },
+        { "color": "VIOLETTE", "grade": "5b", "competition": true },
+        { "color": "ORANGE", "grade": "7a", "setter": "B" },
+        { "color": "BLEUE", "grade": "6a", "setter": "B" },
+        { "color": "BEIGE", "traverse": true }
+      ]
+    }
+  ]
+}
