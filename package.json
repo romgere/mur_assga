@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "Topo interactif du mur d'escalade de Lardy (ASSGA Escalade 2026-2027)",
   "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

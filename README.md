@@ -57,7 +57,11 @@ par les tests : lancer `npm test` après chaque modification.
 
 ## Développement
 
+Prérequis : Node.js 20.19+ ou 22.12+ (exigé par Vite 8). Avec nvm : `nvm use`
+(lit [`.nvmrc`](.nvmrc)).
+
 ```sh
+nvm use
 npm install
 npm run dev      # serveur de développement
 npm test         # tests unitaires (Vitest + happy-dom)
