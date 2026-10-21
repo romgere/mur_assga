@@ -5,6 +5,8 @@ export const UI_KEY = 'lardy2026.ui';
 export type Mode = 'wall' | 'grade' | 'all' | 'favorites' | 'stats';
 export type StatusFilter = 'any' | 'done' | 'todo' | 'lead' | 'toprope' | 'notlead';
 export type SortOrder = 'wall' | 'asc' | 'desc';
+/** Ce que comptent les cartes « Par niveau » de l'onglet Stats. */
+export type StatsCount = 'done' | 'toprope' | 'lead';
 
 export interface Filters {
   /** Bornes de cotation (index dans l'échelle), incluses. */
@@ -21,6 +23,7 @@ export interface UiState {
   wallPage: number;
   gradePage: number;
   filters: Filters;
+  statsCount: StatsCount;
 }
 
 export function defaultFilters(gradeCount: number): Filters {
@@ -30,6 +33,7 @@ export function defaultFilters(gradeCount: number): Filters {
 const MODES: Mode[] = ['wall', 'grade', 'all', 'favorites', 'stats'];
 const STATUSES: StatusFilter[] = ['any', 'done', 'todo', 'lead', 'toprope', 'notlead'];
 const SORTS: SortOrder[] = ['wall', 'asc', 'desc'];
+const STATS_COUNTS: StatsCount[] = ['done', 'toprope', 'lead'];
 
 function clampInt(value: unknown, min: number, max: number, fallback: number): number {
   return typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max ? value : fallback;
@@ -54,6 +58,7 @@ export function loadUiState(gradeCount: number, store: KeyValueStorage = default
       competition: f.competition === true,
       sort: SORTS.includes(f.sort as SortOrder) ? (f.sort as SortOrder) : defaults.sort,
     },
+    statsCount: STATS_COUNTS.includes(saved.statsCount as StatsCount) ? (saved.statsCount as StatsCount) : 'done',
   };
 }
 

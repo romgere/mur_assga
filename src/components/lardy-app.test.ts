@@ -86,6 +86,9 @@ describe('lardy-app', () => {
     await settle(el, stats, counters);
     expect($(counters, '.value').textContent).toBe('1');
     expect(el.shadowRoot!.querySelector('lardy-pager-dots')).toBeNull();
+    stats.dispatchEvent(new CustomEvent('count-change', { detail: { count: 'lead' } }));
+    await settle(el);
+    expect(stats.count).toBe('lead');
   });
 
   it('affiche les favoris dans l’onglet dédié, sans pastilles', async () => {

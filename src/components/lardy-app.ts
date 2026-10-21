@@ -13,6 +13,7 @@ import type { PageSelectDetail } from './pager-dots';
 import type { OpenNoteDetail } from './route-row';
 import type { PageChangeDetail, RoutePager } from './route-pager';
 import type { ThemeChangeDetail } from './settings-sheet';
+import type { StatsCountChangeDetail } from './stats-view';
 import { sharedStyles } from './shared-styles';
 import './all-routes-view';
 import './favorites-view';
@@ -160,6 +161,10 @@ export class LardyApp extends LitElement {
     this.pager?.goTo(e.detail.index);
   }
 
+  private onStatsCountChange(e: CustomEvent<StatsCountChangeDetail>) {
+    this.persistUi({ ...this.ui, statsCount: e.detail.count });
+  }
+
   private onFiltersChange(e: CustomEvent<FiltersChangeDetail>) {
     this.persistUi({ ...this.ui, filters: e.detail.filters });
   }
@@ -179,7 +184,11 @@ export class LardyApp extends LitElement {
       return html`<lardy-favorites-view .store=${this.store}></lardy-favorites-view>`;
     }
     if (this.ui.mode === 'stats') {
-      return html`<lardy-stats-view .store=${this.store}></lardy-stats-view>`;
+      return html`<lardy-stats-view
+        .store=${this.store}
+        count=${this.ui.statsCount}
+        @count-change=${this.onStatsCountChange}
+      ></lardy-stats-view>`;
     }
     if (this.ui.mode === 'all') {
       return html`<lardy-all-routes-view

@@ -9,12 +9,19 @@ describe('état d’interface', () => {
       wallPage: 0,
       gradePage: 0,
       filters: defaultFilters(16),
+      statsCount: 'done',
     });
   });
 
   it('relit ce qui a été sauvegardé', () => {
     const storage = memoryStorage();
-    const state = { mode: 'all' as const, wallPage: 3, gradePage: 5, filters: { ...defaultFilters(16), min: 4, favorites: true } };
+    const state = {
+      mode: 'all' as const,
+      wallPage: 3,
+      gradePage: 5,
+      filters: { ...defaultFilters(16), min: 4, favorites: true },
+      statsCount: 'lead' as const,
+    };
     saveUiState(state, storage);
     expect(loadUiState(16, storage)).toEqual(state);
   });
@@ -25,6 +32,7 @@ describe('état d’interface', () => {
     const ui = loadUiState(16, storage);
     expect(ui.mode).toBe('wall');
     expect(ui.wallPage).toBe(0);
+    expect(ui.statsCount).toBe('done');
     expect(ui.filters).toMatchObject({ min: 10, max: 15, status: 'any', sort: 'wall' });
   });
 });
