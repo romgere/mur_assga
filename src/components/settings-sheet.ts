@@ -146,9 +146,18 @@ export class SettingsSheet extends LitElement {
         margin: 0 0 4px;
       }
 
-      a {
+      a,
+      .link {
         color: var(--accent);
         font-weight: 600;
+      }
+
+      /* Ouvre une feuille : un bouton, mais présenté comme un lien. */
+      .link {
+        padding: 0;
+        font-size: 14px;
+        text-align: left;
+        text-decoration: underline;
       }
     `,
   ];
@@ -283,7 +292,7 @@ export class SettingsSheet extends LitElement {
 
       <section>
         <h3>Aide</h3>
-        <button class="btn help" @click=${() => requestHelp(this)}>
+        <button class="link help" @click=${() => requestHelp(this)}>
           États d’une voie : tête, moulinette, à vue, chute…
         </button>
       </section>
