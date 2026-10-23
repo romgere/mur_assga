@@ -210,6 +210,27 @@ describe('lardy-app', () => {
     expect(settings.open).toBe(false);
   });
 
+  it('ouvre les étapes dédiées d’une note de version sans marquer la prise en main vue', async () => {
+    const storage = memoryStorage();
+    storage.set(SEEN_VERSION_KEY, '0.0.1');
+    storage.set(TUTORIAL_KEY, '1');
+    const el = await app(storage);
+    storage.remove(TUTORIAL_KEY);
+    const notesSheet = $<ReleaseNotesSheet>(el, 'lardy-release-notes-sheet');
+    expect(notesSheet.open).toBe(true);
+    notesSheet.dispatchEvent(new CustomEvent('open-tutorial', { detail: { steps: ['favoris'] }, bubbles: true, composed: true }));
+    await settle(el);
+    const tutorial = $<TutorialSheet>(el, 'lardy-tutorial-sheet');
+    expect(notesSheet.open).toBe(false);
+    expect(tutorial.open).toBe(true);
+    expect(tutorial.steps).toEqual(['favoris']);
+    expect(tutorial.finishLabel).toBe('Compris');
+    tutorial.dispatchEvent(new CustomEvent('close'));
+    await settle(el);
+    expect(tutorial.open).toBe(false);
+    expect(storage.get(TUTORIAL_KEY)).toBeNull();
+  });
+
   it('ouvre l’aide demandée depuis une ligne ou les réglages', async () => {
     const el = await app();
     const help = () => $<HelpSheet>(el, 'lardy-help-sheet');

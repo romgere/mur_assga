@@ -10,6 +10,8 @@ import {
   SEEN_VERSION_KEY,
   compareVersions,
   fetchUpdateNotes,
+  lineText,
+  lineTutorial,
   notesAfter,
   takeUnseenNotes,
   type ReleaseNote,
@@ -66,10 +68,26 @@ describe('fetchUpdateNotes', () => {
     expect(notes).toEqual([NOTES[0]]);
   });
 
+  it('accepte les nouveautés qui renvoient vers le tutoriel', async () => {
+    const withTutorial = { version: '2.0.0', date: '2026-12-01', notes: ['Texte', { text: 'Tags', tutorial: ['tags'] }] };
+    const broken = { version: '2.1.0', date: '2026-12-02', notes: [{ text: 'Oups', tutorial: 'tags' }] };
+    expect(await fetchUpdateNotes('1.0.0', respond([broken, withTutorial]))).toEqual([withTutorial]);
+  });
+
   it('renvoie une liste vide hors ligne ou en erreur', async () => {
     expect(await fetchUpdateNotes('1.0.0', vi.fn().mockRejectedValue(new TypeError('offline')))).toEqual([]);
     expect(await fetchUpdateNotes('1.0.0', respond(NOTES, false))).toEqual([]);
     expect(await fetchUpdateNotes('1.0.0', respond({ oups: true }))).toEqual([]);
+  });
+});
+
+describe('lineText / lineTutorial', () => {
+  it('lisent une nouveauté texte ou objet', () => {
+    expect(lineText('Texte')).toBe('Texte');
+    expect(lineTutorial('Texte')).toEqual([]);
+    expect(lineText({ text: 'Tags', tutorial: ['tags'] })).toBe('Tags');
+    expect(lineTutorial({ text: 'Tags', tutorial: ['tags'] })).toEqual(['tags']);
+    expect(lineTutorial({ text: 'Tags' })).toEqual([]);
   });
 });
 

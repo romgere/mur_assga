@@ -93,6 +93,19 @@ récente à la plus ancienne :
 { "version": "1.2.0", "date": "2026-11-02", "notes": ["Nouvelles voies au mur 3."] }
 ```
 
+Une nouveauté peut aussi renvoyer vers des étapes du tutoriel pour présenter
+la fonctionnalité : un lien « Voir comment ça marche » ouvre ces étapes seules.
+
+```json
+{ "text": "Ajout des tags sur les voies.", "tutorial": ["tags"] }
+```
+
+Les étapes sont définies par identifiant dans `TUTORIAL_STEPS`
+([`tutorial-sheet.ts`](src/components/tutorial-sheet.ts)) ; `ONBOARDING` liste
+celles de la prise en main. Une étape dédiée n'a pas à en faire partie. Un test
+vérifie que chaque étape citée par les notes existe. Dans le bandeau de mise à
+jour, une étape que la version installée ne connaît pas encore n'a pas de lien.
+
 Pour publier une version (application ou topo), ajouter une entrée en tête du
 fichier et reporter le même numéro dans `version` de `package.json` (vérifié
 par les tests). La version la plus récente du fichier est celle de

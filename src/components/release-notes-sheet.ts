@@ -1,7 +1,8 @@
-import { LitElement, css, html } from 'lit';
+import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { ReleaseNote } from '../lib/release-notes';
+import { lineText, lineTutorial, type ReleaseNote } from '../lib/release-notes';
 import { sharedStyles } from './shared-styles';
+import { knownSteps, requestTutorial } from './tutorial-sheet';
 import './bottom-sheet';
 
 /** Icône (i) des boutons qui ouvrent les notes de version. */
@@ -61,6 +62,15 @@ export class ReleaseNotesSheet extends LitElement {
         margin-top: 4px;
       }
 
+      .link {
+        display: block;
+        margin-top: 2px;
+        color: var(--accent);
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: underline;
+      }
+
       .actions {
         display: flex;
         justify-content: flex-end;
@@ -84,7 +94,14 @@ export class ReleaseNotesSheet extends LitElement {
         (n) => html`<section class="release">
           <h3>Version ${n.version}<small>${formatDate(n.date)}</small></h3>
           <ul>
-            ${n.notes.map((line) => html`<li>${line}</li>`)}
+            ${n.notes.map((line) => {
+              // Étapes inconnues (notes d'une version pas encore installée) : pas de lien.
+              const steps = knownSteps(lineTutorial(line));
+              const link = steps.length
+                ? html`<button class="link tutorial" @click=${() => requestTutorial(this, steps)}>Voir comment ça marche</button>`
+                : nothing;
+              return html`<li>${lineText(line)}${link}</li>`;
+            })}
           </ul>
         </section>`,
       )}

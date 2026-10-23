@@ -2,10 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { $, $$, mount, settle } from '../test/helpers';
 import type { BottomSheet } from './bottom-sheet';
 import { OPEN_HELP } from './help-sheet';
-import { TutorialSheet } from './tutorial-sheet';
+import { RELEASE_NOTES, lineTutorial } from '../lib/release-notes';
+import { ONBOARDING, TUTORIAL_STEPS, TutorialSheet, knownSteps } from './tutorial-sheet';
 
-async function sheet() {
+async function sheet(steps?: string[]) {
   const el = new TutorialSheet();
+  if (steps) el.steps = steps;
   el.open = true;
   await mount(el);
   await settle(el, $<BottomSheet>(el, 'lardy-sheet'));
@@ -70,6 +72,36 @@ describe('lardy-tutorial-sheet', () => {
     step.dispatchEvent(new PointerEvent('pointerup', { clientX: 200 }));
     await settle(el);
     expect(heading(el)).toBe('Bienvenue !');
+  });
+
+  it('montre une étape seule sans pastilles ni « Passer »', async () => {
+    const el = await sheet(['favoris']);
+    el.finishLabel = 'Compris';
+    await settle(el);
+    const close = vi.fn();
+    el.addEventListener('close', close);
+    expect(heading(el)).toBe('Favoris et notes');
+    expect($$(el, '.dots button')).toHaveLength(0);
+    expect(el.shadowRoot!.querySelector('button.skip')).toBeNull();
+    expect($(el, 'button.next').textContent!.trim()).toBe('Compris');
+    $(el, 'button.next').click();
+    expect(close).toHaveBeenCalledOnce();
+  });
+
+  it('ignore les étapes inconnues', async () => {
+    expect(knownSteps(['tags', 'cocher', 'toString'])).toEqual(['cocher']);
+    const el = await sheet(['inconnue', 'cocher', 'favoris']);
+    expect($$(el, '.dots button')).toHaveLength(2);
+    expect(heading(el)).toBe('Cocher une voie');
+  });
+
+  it('connaît toutes les étapes de la prise en main et des notes de version', () => {
+    expect(knownSteps(ONBOARDING)).toEqual(ONBOARDING);
+    for (const release of RELEASE_NOTES) {
+      for (const line of release.notes) {
+        for (const id of lineTutorial(line)) expect(Object.keys(TUTORIAL_STEPS), `${release.version} : ${id}`).toContain(id);
+      }
+    }
   });
 
   it('ouvre l’aide sur les états d’une voie', async () => {

@@ -30,7 +30,7 @@ import './release-notes-sheet';
 import './route-pager';
 import './settings-sheet';
 import './stats-view';
-import { OPEN_TUTORIAL } from './tutorial-sheet';
+import { ONBOARDING, OPEN_TUTORIAL, type OpenTutorialDetail } from './tutorial-sheet';
 import './update-banner';
 
 /**
@@ -154,7 +154,8 @@ export class LardyApp extends LitElement {
   @state() private settingsOpen = false;
   @state() private releaseNotes: ShowReleaseNotesDetail | null = null;
   @state() private helpOpen = false;
-  @state() private tutorialOpen = false;
+  /** Tutoriel ouvert : ses étapes, et s'il s'agit de la prise en main. */
+  @state() private tutorial: { steps: string[]; onboarding: boolean } | null = null;
 
   @query('lardy-route-pager') private pager?: RoutePager;
 
@@ -174,7 +175,7 @@ export class LardyApp extends LitElement {
     const unseen = takeUnseenNotes(this.storage);
     // Tutoriel à tous ceux qui ne l'ont pas vu, anciens utilisateurs compris. Il
     // présente déjà l'application : les nouveautés (déjà marquées vues) attendent.
-    if (!tutorialSeen(this.storage)) this.tutorialOpen = true;
+    if (!tutorialSeen(this.storage)) this.tutorial = { steps: ONBOARDING, onboarding: true };
     else if (unseen.length) this.releaseNotes = { heading: 'Application mise à jour', notes: unseen };
     // L'aide peut être demandée de partout : lignes, détails d'une voie, réglages, tutoriel.
     this.addEventListener(OPEN_HELP, this.onOpenHelp);
@@ -191,15 +192,18 @@ export class LardyApp extends LitElement {
     this.helpOpen = true;
   };
 
-  private onOpenTutorial = () => {
+  /** Depuis les réglages (prise en main) ou une note de version (étapes dédiées). */
+  private onOpenTutorial = (e: Event) => {
+    const steps = (e as CustomEvent<OpenTutorialDetail>).detail?.steps;
     this.settingsOpen = false;
-    this.tutorialOpen = true;
+    this.releaseNotes = null;
+    this.tutorial = steps ? { steps, onboarding: false } : { steps: ONBOARDING, onboarding: true };
   };
 
-  /** Passé ou terminé, le tutoriel ne se rouvre plus tout seul. */
+  /** Passée ou terminée, la prise en main ne se rouvre plus toute seule. */
   private onTutorialClose() {
-    this.tutorialOpen = false;
-    markTutorialSeen(this.storage);
+    if (this.tutorial?.onboarding) markTutorialSeen(this.storage);
+    this.tutorial = null;
   }
 
   private get pages(): Page[] {
@@ -337,7 +341,12 @@ export class LardyApp extends LitElement {
         .notes=${this.releaseNotes?.notes ?? []}
         @close=${() => (this.releaseNotes = null)}
       ></lardy-release-notes-sheet>
-      <lardy-tutorial-sheet .open=${this.tutorialOpen} @close=${this.onTutorialClose}></lardy-tutorial-sheet>
+      <lardy-tutorial-sheet
+        .open=${!!this.tutorial}
+        .steps=${this.tutorial?.steps ?? ONBOARDING}
+        finishLabel=${this.tutorial?.onboarding === false ? 'Compris' : 'C’est parti !'}
+        @close=${this.onTutorialClose}
+      ></lardy-tutorial-sheet>
       <lardy-help-sheet .open=${this.helpOpen} @close=${() => (this.helpOpen = false)}></lardy-help-sheet>`;
   }
 }

@@ -8,8 +8,15 @@ import './bottom-sheet';
 /** Événement qui demande l'ouverture du tutoriel, écouté par l'application. */
 export const OPEN_TUTORIAL = 'open-tutorial';
 
-export function requestTutorial(from: Element): void {
-  from.dispatchEvent(new Event(OPEN_TUTORIAL, { bubbles: true, composed: true }));
+/** Étapes à montrer ; sans étapes, c'est le tutoriel de prise en main. */
+export interface OpenTutorialDetail {
+  steps?: string[];
+}
+
+export function requestTutorial(from: Element, steps?: string[]): void {
+  from.dispatchEvent(
+    new CustomEvent<OpenTutorialDetail>(OPEN_TUTORIAL, { detail: { steps }, bubbles: true, composed: true }),
+  );
 }
 
 /** Distance horizontale (px) d'un glissement qui change d'étape. */
@@ -22,15 +29,20 @@ interface Step {
   body: (sheet: TutorialSheet) => TemplateResult;
 }
 
-const STEPS: Step[] = [
-  {
+/**
+ * Toutes les étapes, par identifiant. Une note de version peut renvoyer vers
+ * n'importe laquelle (voir release-notes.json), qu'elle fasse partie de la
+ * prise en main ou non.
+ */
+export const TUTORIAL_STEPS: Record<string, Step> = {
+  bienvenue: {
     title: 'Bienvenue !',
     art: html`<img class="logo light" src="/logo-header-light.png" alt="" width="38" height="44" />
       <img class="logo dark" src="/logo-header-dark.png" alt="" width="37" height="44" />`,
     body: () => html`<p>Ce topo liste toutes les voies du mur de Lardy pour la saison.</p>
       <p>Cochez celles que vous avez faites et suivez votre progression. Tout reste sur votre téléphone, même hors connexion.</p>`,
   },
-  {
+  navigation: {
     title: 'Parcourir les voies',
     art: html`<span class="tabs"
       ><span class="on">Mur</span><span>Difficulté</span><span>Toutes</span><span>Favoris</span><span>Stats</span></span
@@ -38,7 +50,7 @@ const STEPS: Step[] = [
     body: () => html`<p>Choisissez l’affichage en haut : par mur, par difficulté, toutes les voies (avec filtres et tri), vos favoris ou vos statistiques.</p>
       <p>Par mur ou par difficulté, glissez à gauche ou à droite pour changer de page. Les pastilles du bas montrent où vous en êtes.</p>`,
   },
-  {
+  cocher: {
     title: 'Cocher une voie',
     art: html`<span class="demo"><span class="toggle lead">Tête</span><small>Appui court</small></span>
       <span class="demo"><span class="toggle toprope detailed">Moul.</span><small>Appui long</small></span>`,
@@ -46,24 +58,32 @@ const STEPS: Step[] = [
       <p>Un appui long (ou clic droit) précise comment : à vue, flash, chute, repos ou partielle.</p>
       <button class="link help" @click=${() => requestHelp(sheet)}>Ce que veut dire chaque état</button>`,
   },
-  {
+  favoris: {
     title: 'Favoris et notes',
     art: html`<span class="icon star">${starIcon(true)}</span><span class="icon">${noteIcon}</span>`,
     body: () => html`<p>L’étoile ajoute la voie à vos favoris, pour garder vos projets sous la main.</p>
       <p>Le crayon ouvre tous les détails de la voie et une note personnelle (cotation ressentie, méthode, passage clé…).</p>`,
   },
-  {
+  reglages: {
     title: 'Réglages',
     art: html`<span class="icon gear">${gearIcon}</span>`,
     body: () => html`<p>La roue dentée, en haut à droite : thème clair ou sombre, installation de l’application, sauvegarde et restauration de votre progression.</p>
       <p>Vous pourrez aussi y revoir ce tutoriel.</p>`,
   },
-];
+};
+
+/** Tutoriel de prise en main, montré au premier lancement. */
+export const ONBOARDING: string[] = ['bienvenue', 'navigation', 'cocher', 'favoris', 'reglages'];
+
+/** Identifiants connus de cette version, dans l'ordre donné. */
+export function knownSteps(ids: string[]): string[] {
+  return ids.filter((id) => Object.hasOwn(TUTORIAL_STEPS, id));
+}
 
 /**
- * Tutoriel de prise en main : quelques étapes qu'on parcourt avec Suivant, les
- * pastilles ou un glissement. « Passer », la croix, le fond ou Échap le
- * ferment à tout moment. Émet « close ».
+ * Tutoriel : quelques étapes qu'on parcourt avec Suivant, les pastilles ou un
+ * glissement. « Passer », la croix, le fond ou Échap le ferment à tout
+ * moment. Une étape seule n'a ni pastilles ni « Passer ». Émet « close ».
  */
 @customElement('lardy-tutorial-sheet')
 export class TutorialSheet extends LitElement {
@@ -233,13 +253,21 @@ export class TutorialSheet extends LitElement {
   ];
 
   @property({ type: Boolean }) open = false;
+  /** Identifiants des étapes à parcourir (inconnus ignorés). */
+  @property({ attribute: false }) steps: string[] = ONBOARDING;
+  /** Libellé du bouton de la dernière étape. */
+  @property() finishLabel = 'C’est parti !';
   @state() index = 0;
+
+  private get shown(): Step[] {
+    return knownSteps(this.steps).map((id) => TUTORIAL_STEPS[id]);
+  }
 
   private startX: number | null = null;
 
   protected willUpdate(changed: Map<string, unknown>): void {
     // Chaque ouverture repart de la première étape.
-    if (changed.has('open') && this.open) this.index = 0;
+    if ((changed.has('open') || changed.has('steps')) && this.open) this.index = 0;
   }
 
   private close() {
@@ -248,11 +276,11 @@ export class TutorialSheet extends LitElement {
   }
 
   private go(index: number) {
-    this.index = Math.max(0, Math.min(STEPS.length - 1, index));
+    this.index = Math.max(0, Math.min(this.shown.length - 1, index));
   }
 
   private next() {
-    if (this.index === STEPS.length - 1) this.close();
+    if (this.index >= this.shown.length - 1) this.close();
     else this.go(this.index + 1);
   }
 
@@ -268,8 +296,11 @@ export class TutorialSheet extends LitElement {
   }
 
   render() {
-    const step = STEPS[this.index];
-    const last = this.index === STEPS.length - 1;
+    const steps = this.shown;
+    const step = steps[this.index];
+    if (!step) return nothing;
+    const last = this.index === steps.length - 1;
+    const single = steps.length === 1;
     return html`<lardy-sheet .open=${this.open} heading=${step.title} @close=${this.close}>
       <div
         class="step"
@@ -283,16 +314,18 @@ export class TutorialSheet extends LitElement {
       <nav aria-label="Étapes du tutoriel">
         ${last ? nothing : html`<button class="skip" @click=${this.close}>Passer</button>`}
         <span class="dots">
-          ${STEPS.map(
-            (s, i) =>
-              html`<button
-                aria-label="Étape ${i + 1} sur ${STEPS.length} : ${s.title}"
-                aria-current=${i === this.index ? 'step' : 'false'}
-                @click=${() => this.go(i)}
-              ></button>`,
-          )}
+          ${single
+            ? nothing
+            : steps.map(
+                (s, i) =>
+                  html`<button
+                    aria-label="Étape ${i + 1} sur ${steps.length} : ${s.title}"
+                    aria-current=${i === this.index ? 'step' : 'false'}
+                    @click=${() => this.go(i)}
+                  ></button>`,
+              )}
         </span>
-        <button class="btn primary next" @click=${this.next}>${last ? 'C’est parti !' : 'Suivant'}</button>
+        <button class="btn primary next" @click=${this.next}>${last ? this.finishLabel : 'Suivant'}</button>
       </nav>
     </lardy-sheet>`;
   }
