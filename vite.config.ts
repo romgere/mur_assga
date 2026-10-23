@@ -1,8 +1,33 @@
+import { readFileSync } from 'node:fs';
+import type { Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
 
+const RELEASE_NOTES_SOURCE = new URL('./src/data/release-notes.json', import.meta.url);
+
+/**
+ * Publie src/data/release-notes.json à la racine du site : une version déjà
+ * installée y lit les nouveautés de la mise à jour qui l'attend (le fichier
+ * n'est pas mis en cache par le service worker, voir globPatterns).
+ */
+function releaseNotes(): Plugin {
+  return {
+    name: 'release-notes',
+    configureServer(server) {
+      server.middlewares.use('/release-notes.json', (_req, res) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.end(readFileSync(RELEASE_NOTES_SOURCE));
+      });
+    },
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'release-notes.json', source: readFileSync(RELEASE_NOTES_SOURCE) });
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
+    releaseNotes(),
     // Application installable et utilisable hors ligne : tout le build (dont
     // les données du topo, intégrées au JS) est mis en cache par le service
     // worker. Une nouvelle version déployée est signalée par un bandeau

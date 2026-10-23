@@ -1,0 +1,20 @@
+[
+  {
+    "version": "1.1.0",
+    "date": "2026-10-23",
+    "notes": [
+      "Notes de version : un bouton (i) à côté de « Mettre à jour » montre les nouveautés avant de mettre à jour.",
+      "Après une mise à jour, les nouveautés s'affichent une fois au lancement.",
+      "Réglages : bouton « Voir les nouveautés » pour relire les notes de la version installée."
+    ]
+  },
+  {
+    "version": "1.0.0",
+    "date": "2026-10-21",
+    "notes": [
+      "Topo interactif du mur de Lardy, saison 2026-2027.",
+      "Modes Mur, Difficulté, Toutes, Favoris et Stats.",
+      "Application installable et utilisable hors ligne, avec mise à jour automatique."
+    ]
+  }
+]

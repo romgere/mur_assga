@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PwaState } from '../lib/pwa';
 import { $, fakeWindow, installPrompt, mount, settle, testPwa, testStore } from '../test/helpers';
 import type { BottomSheet } from './bottom-sheet';
+import { APP_VERSION, RELEASE_NOTES } from '../lib/release-notes';
 import { CLEAR_CONFIRM_MS, REPO_URL, SettingsSheet } from './settings-sheet';
 
 async function settings(pwa = testPwa()) {
@@ -133,5 +134,14 @@ describe('lardy-settings-sheet', () => {
     const link = credits.querySelector('a')!;
     expect(link.getAttribute('href')).toBe(REPO_URL);
     expect(link.getAttribute('target')).toBe('_blank');
+  });
+
+  it('affiche les nouveautés de la version installée', async () => {
+    const el = await settings();
+    expect(el.shadowRoot!.textContent).toContain(`Version ${APP_VERSION} installée.`);
+    const shown = vi.fn();
+    el.addEventListener('show-release-notes', (e) => shown((e as CustomEvent).detail));
+    $(el, 'button.release-notes').click();
+    expect(shown).toHaveBeenCalledWith({ heading: 'Nouveautés', notes: [RELEASE_NOTES[0]] });
   });
 });

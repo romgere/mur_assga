@@ -32,4 +32,18 @@ describe('lardy-update-banner', () => {
     await el.updateComplete;
     expect(el.shadowRoot!.querySelector('.banner')).toBeNull();
   });
+
+  it('montre un bouton (i) avec les nouveautés de la mise à jour', async () => {
+    const el = await banner();
+    el.pwa.setUpdateAvailable(vi.fn());
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector('button.info')).toBeNull();
+    const notes = [{ version: '9.0.0', date: '2026-12-01', notes: ['Nouveau'] }];
+    el.pwa.setUpdateNotes(notes);
+    await el.updateComplete;
+    const shown = vi.fn();
+    el.addEventListener('show-release-notes', (e) => shown((e as CustomEvent).detail));
+    $(el, 'button.info').click();
+    expect(shown).toHaveBeenCalledWith({ heading: 'Nouveautés de la mise à jour', notes });
+  });
 });

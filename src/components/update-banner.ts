@@ -1,7 +1,14 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { PwaController, pwaState, type PwaState } from '../lib/pwa';
+import { showReleaseNotesEvent } from './release-notes-sheet';
 import { sharedStyles } from './shared-styles';
+
+const infoIcon = html`<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+  <circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+  <path d="M12 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+  <circle cx="12" cy="7.6" r="1.2" fill="currentColor" />
+</svg>`;
 
 /**
  * Bandeau « Nouvelle version disponible » : affiché quand le service worker
@@ -46,6 +53,16 @@ export class UpdateBanner extends LitElement {
         font-size: 14px;
       }
 
+      .info {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 18px;
+        color: var(--accent);
+      }
+
       .later {
         background: transparent;
         border-color: transparent;
@@ -61,11 +78,20 @@ export class UpdateBanner extends LitElement {
     new PwaController(this, () => this.pwa);
   }
 
+  private showNotes() {
+    this.dispatchEvent(showReleaseNotesEvent({ heading: 'Nouveautés de la mise à jour', notes: this.pwa.updateNotes }));
+  }
+
   render() {
     if (!this.pwa.needRefresh) return nothing;
     return html`<div class="banner" role="status">
       <p>Nouvelle version disponible (topo ou application mis à jour).</p>
       <div class="actions">
+        ${this.pwa.updateNotes.length
+          ? html`<button class="info" aria-label="Voir les nouveautés" title="Voir les nouveautés" @click=${this.showNotes}>
+              ${infoIcon}
+            </button>`
+          : nothing}
         <button class="btn later" @click=${() => this.pwa.dismissUpdate()}>Plus tard</button>
         <button class="btn primary update" @click=${() => this.pwa.update()}>Mettre à jour</button>
       </div>

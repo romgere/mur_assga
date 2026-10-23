@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { KeyValueStorage } from '../lib/storage';
+import { RELEASE_NOTES, SEEN_VERSION_KEY } from '../lib/release-notes';
 import { UI_KEY } from '../lib/ui-state';
 import { $, $$, memoryStorage, mount, settle, testStore } from '../test/helpers';
 import type { AllRoutesView } from './all-routes-view';
@@ -7,6 +8,7 @@ import type { FavoritesView } from './favorites-view';
 import { LardyApp } from './lardy-app';
 import type { ModeTabs } from './mode-tabs';
 import type { NoteSheet } from './note-sheet';
+import type { ReleaseNotesSheet } from './release-notes-sheet';
 import type { PagerDots } from './pager-dots';
 import type { ProgressCounters } from './progress-counters';
 import type { RoutePager } from './route-pager';
@@ -123,5 +125,46 @@ describe('lardy-app', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
     expect(storage.get('lardy2026.theme')).toBe('dark');
     document.documentElement.removeAttribute('data-theme');
+  });
+
+  it('n’affiche pas de nouveautés à la première visite', async () => {
+    const el = await app();
+    expect($<ReleaseNotesSheet>(el, 'lardy-release-notes-sheet').open).toBe(false);
+  });
+
+  it('affiche une fois les nouveautés après une mise à jour', async () => {
+    const storage = memoryStorage();
+    storage.set(SEEN_VERSION_KEY, '0.0.1');
+    const el = await app(storage);
+    const sheet = $<ReleaseNotesSheet>(el, 'lardy-release-notes-sheet');
+    expect(sheet.open).toBe(true);
+    expect(sheet.heading).toBe('Application mise à jour');
+    expect(sheet.notes).toEqual(RELEASE_NOTES);
+    sheet.dispatchEvent(new CustomEvent('close'));
+    await el.updateComplete;
+    expect(sheet.open).toBe(false);
+    el.remove();
+    const again = await app(storage);
+    expect($<ReleaseNotesSheet>(again, 'lardy-release-notes-sheet').open).toBe(false);
+  });
+
+  it('ouvre les nouveautés demandées depuis les réglages ou le bandeau', async () => {
+    const el = await app();
+    $(el, 'button.settings').click();
+    await settle(el);
+    const notes = [RELEASE_NOTES[0]];
+    const settings = $<SettingsSheet>(el, 'lardy-settings-sheet');
+    settings.dispatchEvent(new CustomEvent('show-release-notes', { detail: { heading: 'Nouveautés', notes } }));
+    await settle(el);
+    expect(settings.open).toBe(false);
+    const sheet = $<ReleaseNotesSheet>(el, 'lardy-release-notes-sheet');
+    expect(sheet.open).toBe(true);
+    expect(sheet.notes).toEqual(notes);
+    sheet.dispatchEvent(new CustomEvent('close'));
+    await settle(el);
+    $(el, 'lardy-update-banner').dispatchEvent(new CustomEvent('show-release-notes', { detail: { heading: 'Maj', notes } }));
+    await settle(el);
+    expect(sheet.heading).toBe('Maj');
+    expect(sheet.open).toBe(true);
   });
 });
