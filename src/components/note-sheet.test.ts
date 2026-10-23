@@ -17,6 +17,13 @@ async function noteSheet(note?: string) {
 
 const textarea = (el: NoteSheet) => el.shadowRoot!.querySelector('textarea')!;
 
+/** Coche ou décoche une case de détail, comme un appui. */
+function check(el: NoteSheet, selector: string) {
+  const input = $<HTMLInputElement>(el, selector);
+  input.checked = !input.checked;
+  input.dispatchEvent(new Event('change'));
+}
+
 describe('lardy-note-sheet', () => {
   it('est fermée sans voie', async () => {
     const el = await mount(new NoteSheet());
@@ -53,32 +60,32 @@ describe('lardy-note-sheet', () => {
     const el = await noteSheet();
     const lead = () => $(el, '.card.lead');
     expect(lead().querySelector('.summary')!.textContent).toBe('→ Pas faite');
-    $(el, '.card.lead .detail-chute').click();
+    check(el, '.card.lead .detail-chute');
     await el.updateComplete;
     // Une puce coche aussi le mode parent.
     expect($(el, '.card.lead button.mode').getAttribute('aria-pressed')).toBe('true');
     expect(lead().classList.contains('on')).toBe(true);
-    $(el, '.card.lead .detail-partiel').click();
+    check(el, '.card.lead .detail-partiel');
     $(el, '.card.toprope button.mode').click();
     await el.updateComplete;
     expect(lead().querySelector('.summary')!.textContent).toBe('→ Avec chute · non terminée');
     expect($(el, '.card.toprope .summary').textContent).toBe('→ Enchaînée proprement');
-    expect($(el, '.card.lead .detail-chute').getAttribute('aria-pressed')).toBe('true');
+    expect($<HTMLInputElement>(el, '.card.lead .detail-chute').checked).toBe(true);
     $(el, 'button.save').click();
     expect(el.store.get(route.id)).toEqual({ t: true, tx: ['chute', 'partiel'], m: true });
   });
 
   it('à vue remplace chute et repos, et inversement', async () => {
     const el = await noteSheet();
-    $(el, '.card.lead .detail-chute').click();
+    check(el, '.card.lead .detail-chute');
     await el.updateComplete;
-    $(el, '.card.lead .detail-avue').click();
+    check(el, '.card.lead .detail-avue');
     await el.updateComplete;
-    expect($(el, '.card.lead .detail-chute').getAttribute('aria-pressed')).toBe('false');
+    expect($<HTMLInputElement>(el, '.card.lead .detail-chute').checked).toBe(false);
     expect($(el, '.card.lead .summary').textContent).toBe('→ Enchaînée à vue');
-    $(el, '.card.lead .detail-repos').click();
+    check(el, '.card.lead .detail-repos');
     await el.updateComplete;
-    expect($(el, '.card.lead .detail-avue').getAttribute('aria-pressed')).toBe('false');
+    expect($<HTMLInputElement>(el, '.card.lead .detail-avue').checked).toBe(false);
     $(el, 'button.save').click();
     expect(el.store.get(route.id)).toEqual({ t: true, tx: ['repos'] });
   });
@@ -98,10 +105,10 @@ describe('lardy-note-sheet', () => {
     await el.updateComplete;
     el.route = route;
     await el.updateComplete;
-    expect($(el, '.card.lead .detail-repos').getAttribute('aria-pressed')).toBe('true');
+    expect($<HTMLInputElement>(el, '.card.lead .detail-repos').checked).toBe(true);
     $(el, '.card.lead button.mode').click();
     await el.updateComplete;
-    expect($(el, '.card.lead .detail-repos').getAttribute('aria-pressed')).toBe('false');
+    expect($<HTMLInputElement>(el, '.card.lead .detail-repos').checked).toBe(false);
     $(el, 'button.save').click();
     expect(el.store.get(route.id)).toEqual({});
   });

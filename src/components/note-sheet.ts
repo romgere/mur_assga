@@ -110,28 +110,29 @@ export class NoteSheet extends LitElement {
         color: var(--text-muted);
       }
 
-      .chips {
+      /* Mêmes cases que le menu de l'appui long sur Tête / Moul. */
+      .checks {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
-        margin: 4px 0;
+        gap: 0 18px;
       }
 
-      .chip {
-        height: 34px;
-        padding: 0 14px;
-        border-radius: 17px;
-        border: 1.5px solid var(--border);
-        background: var(--surface);
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text);
+      .checks.flaw {
+        margin-top: 2px;
+        padding-top: 2px;
+        border-top: 1px solid var(--border);
       }
 
-      .chip[aria-pressed='true'] {
-        border-color: var(--mode);
-        background: var(--mode);
-        color: var(--mode-ink);
+      .checks label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 36px;
+        font-size: 15px;
+      }
+
+      .checks input {
+        accent-color: var(--mode);
       }
 
       .summary {
@@ -229,15 +230,16 @@ export class NoteSheet extends LitElement {
           <div class="how" role="group" aria-label="Comment, en ${label.toLowerCase()}">
             <span class="how-label">Comment ? ${helpButton(this)}</span>
             ${(['clean', 'flaw'] as const).map(
-              (kind) => html`<div class="chips ${kind}">
+              (kind) => html`<div class="checks ${kind}">
                 ${DETAILS.filter((d) => d.kind === kind).map(
-                  (d) => html`<button
-                    class="chip detail-${d.code}"
-                    aria-pressed=${details.includes(d.code) ? 'true' : 'false'}
-                    @click=${() => this.setDetail(mode, d.code, !details.includes(d.code))}
-                  >
-                    ${d.label}
-                  </button>`,
+                  (d) => html`<label
+                    ><input
+                      type="checkbox"
+                      class="detail-${d.code}"
+                      .checked=${details.includes(d.code)}
+                      @change=${(e: Event) => this.setDetail(mode, d.code, (e.target as HTMLInputElement).checked)}
+                    />${d.label}</label
+                  >`,
                 )}
               </div>`,
             )}
