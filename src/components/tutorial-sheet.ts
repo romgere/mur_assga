@@ -50,7 +50,7 @@ const STEPS: Step[] = [
     title: 'Favoris et notes',
     art: html`<span class="icon star">${starIcon(true)}</span><span class="icon">${noteIcon}</span>`,
     body: () => html`<p>L’étoile ajoute la voie à vos favoris, pour garder vos projets sous la main.</p>
-      <p>Le crayon ouvre tous les détails de la voie et une note personnelle (méthode, prise piège…).</p>`,
+      <p>Le crayon ouvre tous les détails de la voie et une note personnelle (cotation ressentie, méthode, passage clé…).</p>`,
   },
   {
     title: 'Réglages',
