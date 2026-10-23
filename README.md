@@ -13,10 +13,14 @@ test
   l'autre en balayant l'écran ou avec la barre de pastilles.
 - **Difficulté** : les voies d'une cotation, avec leur mur.
 - **Toutes** : toutes les voies, avec des filtres (niveau min/max, faites ou
-  non, tête, moulinette, pas encore enchaînées en tête, partielles, favoris,
-  compétition) et un tri (par mur, facile→dur, dur→facile).
+  non, tête, moulinette, à vue, flash, enchaînées, à retravailler, partielles,
+  favoris, compétition) et un tri (par mur, facile→dur, dur→facile).
 - **Favoris** : les voies marquées d'une étoile, avec leur mur.
-- **Stats** : compteurs de progression globaux (tête, moulinette, faites).
+- **Stats** : compteurs de progression globaux (tête, moulinette, faites),
+  niveau max par style (à vue, flash, tête et moulinette propres),
+  répartition des ascensions par style, voies à retravailler (partielles,
+  tête avec chute ou repos, moulinette pas encore en tête) et progression par
+  niveau. Tuiles et raccourcis ouvrent « Toutes » sur le filtre correspondant.
 - « Tête » et « Moulinette » sont cochées indépendamment ; les compteurs
   globaux et ceux de chaque page se mettent à jour.
 - Détails d'ascension (appui long ou clic droit sur Tête / Moul. pour un

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { miniTopo, testStore } from '../test/helpers';
 import { defaultFilters } from './ui-state';
-import { filterRoutes, gradePages, pageStatus, wallPages } from './views';
+import { ascentBreakdown, filterRoutes, gradePages, maxGrade, pageStatus, wallPages } from './views';
 
 const topo = miniTopo();
 const ids = (routes: { id: string }[]) => routes.map((r) => r.id);
@@ -93,5 +93,45 @@ describe('filterRoutes', () => {
       '1-JAUNE',
       '2-BEIGE',
     ]);
+  });
+});
+
+describe('stats des détails d’ascension', () => {
+  const topo = miniTopo();
+
+  function store() {
+    const s = testStore();
+    s.edit('1-VERTE', { t: true, tx: ['avue'] }); // 6a
+    s.edit('1-JAUNE', { t: true, m: true, mx: ['flash'] }); // 4+
+    s.edit('2-ROUGE', { t: true, tx: ['chute'], m: true, mx: ['partiel'] }); // 7a
+    s.edit('2-BEIGE', { t: true, tx: ['avue'] }); // traversée
+    return s;
+  }
+
+  it('niveau max par statut, traversées exclues', () => {
+    const s = store();
+    expect(maxGrade(topo.routes, s, 'avue')).toEqual({ grade: '6a', count: 1 });
+    expect(maxGrade(topo.routes, s, 'flash')).toEqual({ grade: '4+', count: 1 });
+    expect(maxGrade(topo.routes, s, 'cleanlead')).toEqual({ grade: '6a', count: 1 });
+    expect(maxGrade(topo.routes, s, 'lead')).toEqual({ grade: '7a', count: 1 });
+    expect(maxGrade(topo.routes, testStore(), 'avue')).toBeNull();
+  });
+
+  it('répartition par style', () => {
+    const s = store();
+    expect(ascentBreakdown(topo.routes, s, 't')).toEqual({ avue: 2, flash: 0, clean: 1, flaw: 1, partial: 0, none: 1 });
+    expect(ascentBreakdown(topo.routes, s, 'm')).toEqual({ avue: 0, flash: 1, clean: 0, flaw: 0, partial: 1, none: 3 });
+  });
+
+  it('filtres des raccourcis', () => {
+    const s = store();
+    const ids = (status: Parameters<typeof filterRoutes>[1]['status']) =>
+      filterRoutes(topo.routes, { min: 0, max: 3, status, favorites: false, competition: false, sort: 'wall' }, s, 4).map(
+        (r) => r.id,
+      );
+    expect(ids('leadflaw')).toEqual(['2-ROUGE']);
+    expect(ids('topropenotlead')).toEqual([]);
+    expect(ids('cleantoprope')).toEqual(['1-JAUNE']);
+    expect(ids('avue')).toEqual(['1-VERTE', '2-BEIGE']);
   });
 });

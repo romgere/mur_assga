@@ -3,7 +3,21 @@ import { storage as defaultStorage, readJson, writeJson, type KeyValueStorage } 
 export const UI_KEY = 'lardy2026.ui';
 
 export type Mode = 'wall' | 'grade' | 'all' | 'favorites' | 'stats';
-export type StatusFilter = 'any' | 'done' | 'todo' | 'lead' | 'toprope' | 'notlead' | 'notcleanlead' | 'partial';
+export type StatusFilter =
+  | 'any'
+  | 'done'
+  | 'todo'
+  | 'lead'
+  | 'toprope'
+  | 'notlead'
+  | 'notcleanlead'
+  | 'partial'
+  | 'avue'
+  | 'flash'
+  | 'cleanlead'
+  | 'cleantoprope'
+  | 'leadflaw'
+  | 'topropenotlead';
 export type SortOrder = 'wall' | 'asc' | 'desc';
 /** Ce que comptent les cartes « Par niveau » de l'onglet Stats. */
 export type StatsCount = 'done' | 'toprope' | 'lead';
@@ -31,7 +45,22 @@ export function defaultFilters(gradeCount: number): Filters {
 }
 
 const MODES: Mode[] = ['wall', 'grade', 'all', 'favorites', 'stats'];
-const STATUSES: StatusFilter[] = ['any', 'done', 'todo', 'lead', 'toprope', 'notlead', 'notcleanlead', 'partial'];
+const STATUSES: StatusFilter[] = [
+  'any',
+  'done',
+  'todo',
+  'lead',
+  'toprope',
+  'notlead',
+  'notcleanlead',
+  'partial',
+  'avue',
+  'flash',
+  'cleanlead',
+  'cleantoprope',
+  'leadflaw',
+  'topropenotlead',
+];
 const SORTS: SortOrder[] = ['wall', 'asc', 'desc'];
 const STATS_COUNTS: StatsCount[] = ['done', 'toprope', 'lead'];
 

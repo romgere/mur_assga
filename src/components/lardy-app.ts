@@ -7,7 +7,7 @@ import { takeUnseenNotes } from '../lib/release-notes';
 import { storage as defaultStorage, type KeyValueStorage } from '../lib/storage';
 import { applyTheme, loadTheme, saveTheme, type Theme } from '../lib/theme';
 import type { Route } from '../lib/topo';
-import { loadUiState, saveUiState, type UiState } from '../lib/ui-state';
+import { defaultFilters, loadUiState, saveUiState, type UiState } from '../lib/ui-state';
 import { gradePages, wallPages, type Page } from '../lib/views';
 import type { FiltersChangeDetail } from './all-routes-view';
 import type { ModeChangeDetail } from './mode-tabs';
@@ -16,7 +16,7 @@ import type { OpenNoteDetail } from './route-row';
 import type { ShowReleaseNotesDetail } from './release-notes-sheet';
 import type { PageChangeDetail, RoutePager } from './route-pager';
 import type { ThemeChangeDetail } from './settings-sheet';
-import type { StatsCountChangeDetail } from './stats-view';
+import type { ShowRoutesDetail, StatsCountChangeDetail } from './stats-view';
 import { sharedStyles } from './shared-styles';
 import './all-routes-view';
 import './favorites-view';
@@ -223,6 +223,12 @@ export class LardyApp extends LitElement {
     this.persistUi({ ...this.ui, statsCount: e.detail.count });
   }
 
+  /** Raccourci des stats : « Toutes », filtré sur le statut, du plus dur au plus facile. */
+  private onShowRoutes(e: CustomEvent<ShowRoutesDetail>) {
+    const filters = { ...defaultFilters(this.store.topo.grades.length), status: e.detail.status, sort: 'desc' as const };
+    this.persistUi({ ...this.ui, mode: 'all', filters });
+  }
+
   private onFiltersChange(e: CustomEvent<FiltersChangeDetail>) {
     this.persistUi({ ...this.ui, filters: e.detail.filters });
   }
@@ -251,6 +257,7 @@ export class LardyApp extends LitElement {
         .store=${this.store}
         count=${this.ui.statsCount}
         @count-change=${this.onStatsCountChange}
+        @show-routes=${this.onShowRoutes}
       ></lardy-stats-view>`;
     }
     if (this.ui.mode === 'all') {

@@ -21,6 +21,12 @@ const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: 'notlead', label: 'Pas encore en tête' },
   { value: 'notcleanlead', label: 'Pas encore enchaînées en tête' },
   { value: 'partial', label: 'Partielles (à finir)' },
+  { value: 'avue', label: 'Faites à vue' },
+  { value: 'flash', label: 'Faites en flash' },
+  { value: 'cleanlead', label: 'Enchaînées en tête' },
+  { value: 'cleantoprope', label: 'Enchaînées en moulinette' },
+  { value: 'leadflaw', label: 'En tête avec chute ou repos' },
+  { value: 'topropenotlead', label: 'En moulinette, pas encore en tête' },
 ];
 
 const sortIcon = html`<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">

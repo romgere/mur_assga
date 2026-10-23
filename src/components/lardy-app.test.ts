@@ -187,4 +187,16 @@ describe('lardy-app', () => {
     await settle(el);
     expect(help().open).toBe(true);
   });
+
+  it('un raccourci des stats ouvre « Toutes » filtré, du plus dur au plus facile', async () => {
+    const el = await app();
+    switchMode(el, 4);
+    await settle(el);
+    $(el, 'lardy-stats-view').dispatchEvent(
+      new CustomEvent('show-routes', { detail: { status: 'partial' }, bubbles: true, composed: true }),
+    );
+    await settle(el);
+    const view = $<AllRoutesView>(el, 'lardy-all-routes-view');
+    expect(view.filters).toMatchObject({ status: 'partial', sort: 'desc', min: 0, favorites: false });
+  });
 });
