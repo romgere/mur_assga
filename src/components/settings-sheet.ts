@@ -23,6 +23,7 @@ const THEME_OPTIONS: { value: Theme; label: string }[] = [
 
 /** Dépôt du code source, pour le lien « Contribuer ». */
 export const REPO_URL = 'https://github.com/romgere/mur_assga';
+export const AUTHOR_URL = 'https://mestres.fr';
 
 /** Délai pendant lequel le bouton « Tout effacer » attend la confirmation. */
 export const CLEAR_CONFIRM_MS = 4000;
@@ -392,7 +393,8 @@ export class SettingsSheet extends LitElement {
       <section class="about">
         <p>${this.store.topo.club} · ${this.store.topo.title}</p>
         <p class="credits">
-          Vibe codé avec <span role="img" aria-label="amour">❤️</span> par Jérôme -
+          Vibe codé avec <span role="img" aria-label="amour">❤️</span> par
+          <a href=${AUTHOR_URL} target="_blank" rel="noopener">Jérôme</a> -
           <a href=${REPO_URL} target="_blank" rel="noopener">Contribuer</a>
         </p>
       </section>

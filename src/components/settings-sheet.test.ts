@@ -3,7 +3,7 @@ import { PwaState } from '../lib/pwa';
 import { $, fakeWindow, installPrompt, mount, settle, testPwa, testStore } from '../test/helpers';
 import type { BottomSheet } from './bottom-sheet';
 import { APP_VERSION, RELEASE_NOTES } from '../lib/release-notes';
-import { CLEAR_CONFIRM_MS, REPO_URL, SettingsSheet } from './settings-sheet';
+import { AUTHOR_URL, CLEAR_CONFIRM_MS, REPO_URL, SettingsSheet } from './settings-sheet';
 
 async function settings(pwa = testPwa()) {
   const el = new SettingsSheet();
@@ -126,14 +126,17 @@ describe('lardy-settings-sheet', () => {
     expect(steps[2].textContent).toContain('Sur l’écran d’accueil');
   });
 
-  it('crédite l’auteur avec un lien vers le dépôt', async () => {
+  it('crédite l’auteur avec un lien vers son site et le dépôt', async () => {
     const el = await settings();
     expect($(el, '.about').textContent).not.toContain('topo du');
     const credits = $(el, '.credits');
     expect(credits.textContent!.replace(/\s+/g, ' ')).toContain('Vibe codé avec ❤️ par Jérôme - Contribuer');
-    const link = credits.querySelector('a')!;
-    expect(link.getAttribute('href')).toBe(REPO_URL);
-    expect(link.getAttribute('target')).toBe('_blank');
+    const [author, repo] = [...credits.querySelectorAll('a')];
+    expect(author.textContent).toBe('Jérôme');
+    expect(author.getAttribute('href')).toBe(AUTHOR_URL);
+    expect(author.getAttribute('target')).toBe('_blank');
+    expect(repo.getAttribute('href')).toBe(REPO_URL);
+    expect(repo.getAttribute('target')).toBe('_blank');
   });
 
   it('affiche les nouveautés de la version installée', async () => {
