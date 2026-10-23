@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.2.0",
+    "date": "2026-10-23",
+    "notes": ["Détails d’ascension : chute, repos, à vue, flash…"]
+  },
+  {
     "version": "1.1.0",
     "date": "2026-10-23",
     "notes": ["Gestion des notes de version."]
