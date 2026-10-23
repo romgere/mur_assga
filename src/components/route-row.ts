@@ -19,31 +19,12 @@ import { StoreController } from '../lib/store-controller';
 import { colorToken, gradeLevel, type Route } from '../lib/topo';
 import { BottomSheet } from './bottom-sheet';
 import { helpButton } from './help-sheet';
+import { noteIcon, starIcon } from './icons';
 import { sharedStyles } from './shared-styles';
 
 export interface OpenNoteDetail {
   route: Route;
 }
-
-const starIcon = (filled: boolean) => html`<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-  <path
-    d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"
-    fill=${filled ? 'currentColor' : 'none'}
-    stroke="currentColor"
-    stroke-width="1.8"
-    stroke-linejoin="round"
-  />
-</svg>`;
-
-const noteIcon = html`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-  <path
-    d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.8"
-    stroke-linejoin="round"
-  />
-</svg>`;
 
 /** Durée d'appui sur Tête / Moul. avant d'ouvrir le menu des détails. */
 export const LONG_PRESS_MS = 500;

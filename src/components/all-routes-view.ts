@@ -5,6 +5,7 @@ import { StoreController } from '../lib/store-controller';
 import type { Route } from '../lib/topo';
 import { defaultFilters, type Filters, type SortOrder, type StatusFilter } from '../lib/ui-state';
 import { filterRoutes } from '../lib/views';
+import { sortIcon } from './icons';
 import { sharedStyles } from './shared-styles';
 import './route-list';
 
@@ -28,17 +29,6 @@ const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: 'leadflaw', label: 'En tête avec chute ou repos' },
   { value: 'topropenotlead', label: 'En moulinette, pas encore en tête' },
 ];
-
-const sortIcon = html`<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-  <path
-    d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.8"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-</svg>`;
 
 const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
   { value: 'wall', label: 'Par mur' },

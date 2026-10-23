@@ -1,7 +1,8 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { PwaController, pwaState, type PwaState } from '../lib/pwa';
-import { infoIcon, showReleaseNotesEvent } from './release-notes-sheet';
+import { infoIcon } from './icons';
+import { showReleaseNotesEvent } from './release-notes-sheet';
 import { sharedStyles } from './shared-styles';
 
 /**
@@ -83,7 +84,7 @@ export class UpdateBanner extends LitElement {
       <div class="actions">
         ${this.pwa.updateNotes.length
           ? html`<button class="info" aria-label="Voir les nouveautés" title="Voir les nouveautés" @click=${this.showNotes}>
-              ${infoIcon}
+              ${infoIcon(22)}
             </button>`
           : nothing}
         <button class="btn later" @click=${() => this.pwa.dismissUpdate()}>Plus tard</button>

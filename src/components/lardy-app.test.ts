@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { KeyValueStorage } from '../lib/storage';
 import { RELEASE_NOTES, SEEN_VERSION_KEY } from '../lib/release-notes';
+import { TUTORIAL_KEY } from '../lib/tutorial';
 import { UI_KEY } from '../lib/ui-state';
 import { $, $$, memoryStorage, mount, settle, testStore } from '../test/helpers';
 import type { AllRoutesView } from './all-routes-view';
@@ -17,6 +18,7 @@ import type { RouteList } from './route-list';
 import type { RouteRow } from './route-row';
 import type { SettingsSheet } from './settings-sheet';
 import type { StatsView } from './stats-view';
+import type { TutorialSheet } from './tutorial-sheet';
 
 async function app(storage: KeyValueStorage = memoryStorage()) {
   const el = new LardyApp();
@@ -136,6 +138,7 @@ describe('lardy-app', () => {
   it('affiche une fois les nouveautés après une mise à jour', async () => {
     const storage = memoryStorage();
     storage.set(SEEN_VERSION_KEY, '0.0.1');
+    storage.set(TUTORIAL_KEY, '1');
     const el = await app(storage);
     const sheet = $<ReleaseNotesSheet>(el, 'lardy-release-notes-sheet');
     expect(sheet.open).toBe(true);
@@ -167,6 +170,65 @@ describe('lardy-app', () => {
     await settle(el);
     expect(sheet.heading).toBe('Maj');
     expect(sheet.open).toBe(true);
+  });
+
+  it('ouvre le tutoriel à la première visite, une seule fois', async () => {
+    const storage = memoryStorage();
+    const el = await app(storage);
+    const tutorial = $<TutorialSheet>(el, 'lardy-tutorial-sheet');
+    expect(tutorial.open).toBe(true);
+    tutorial.dispatchEvent(new CustomEvent('close'));
+    await settle(el);
+    expect(tutorial.open).toBe(false);
+    expect(storage.get(TUTORIAL_KEY)).toBe('1');
+    const again = await app(storage);
+    expect($<TutorialSheet>(again, 'lardy-tutorial-sheet').open).toBe(false);
+  });
+
+  it('montre le tutoriel plutôt que les nouveautés à un utilisateur existant qui ne l’a pas vu', async () => {
+    const storage = memoryStorage();
+    storage.set(SEEN_VERSION_KEY, '0.0.1');
+    const el = await app(storage);
+    expect($<TutorialSheet>(el, 'lardy-tutorial-sheet').open).toBe(true);
+    expect($<ReleaseNotesSheet>(el, 'lardy-release-notes-sheet').open).toBe(false);
+    expect(storage.get(SEEN_VERSION_KEY)).toBe(RELEASE_NOTES[0].version);
+  });
+
+  it('rouvre le tutoriel depuis les réglages', async () => {
+    const storage = memoryStorage();
+    storage.set(TUTORIAL_KEY, '1');
+    const el = await app(storage);
+    const tutorial = $<TutorialSheet>(el, 'lardy-tutorial-sheet');
+    expect(tutorial.open).toBe(false);
+    $(el, 'button.settings').click();
+    await settle(el);
+    const settings = $<SettingsSheet>(el, 'lardy-settings-sheet');
+    await settle(settings);
+    $(settings, 'button.tutorial').click();
+    await settle(el);
+    expect(tutorial.open).toBe(true);
+    expect(settings.open).toBe(false);
+  });
+
+  it('ouvre les étapes dédiées d’une note de version sans marquer la prise en main vue', async () => {
+    const storage = memoryStorage();
+    storage.set(SEEN_VERSION_KEY, '0.0.1');
+    storage.set(TUTORIAL_KEY, '1');
+    const el = await app(storage);
+    storage.remove(TUTORIAL_KEY);
+    const notesSheet = $<ReleaseNotesSheet>(el, 'lardy-release-notes-sheet');
+    expect(notesSheet.open).toBe(true);
+    notesSheet.dispatchEvent(new CustomEvent('open-tutorial', { detail: { steps: ['favoris'] }, bubbles: true, composed: true }));
+    await settle(el);
+    const tutorial = $<TutorialSheet>(el, 'lardy-tutorial-sheet');
+    expect(notesSheet.open).toBe(false);
+    expect(tutorial.open).toBe(true);
+    expect(tutorial.steps).toEqual(['favoris']);
+    expect(tutorial.finishLabel).toBe('Compris');
+    tutorial.dispatchEvent(new CustomEvent('close'));
+    await settle(el);
+    expect(tutorial.open).toBe(false);
+    expect(storage.get(TUTORIAL_KEY)).toBeNull();
   });
 
   it('ouvre l’aide demandée depuis une ligne ou les réglages', async () => {

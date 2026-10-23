@@ -7,6 +7,7 @@ import { StoreController } from '../lib/store-controller';
 import { gradeLevel } from '../lib/topo';
 import type { StatsCount, StatusFilter } from '../lib/ui-state';
 import { ASCENT_STYLES, ascentBreakdown, gradePages, matchesStatus, maxGrade, type AscentStyle } from '../lib/views';
+import { chevronIcon } from './icons';
 import { sharedStyles } from './shared-styles';
 import './progress-counters';
 
@@ -44,10 +45,6 @@ const REWORK: { status: StatusFilter; label: string }[] = [
   { status: 'leadflaw', label: 'En tête avec chute ou repos, à enchaîner' },
   { status: 'topropenotlead', label: 'Faites en moulinette, pas encore en tête' },
 ];
-
-const chevron = html`<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-  <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-</svg>`;
 
 const COUNT_OPTIONS: { value: StatsCount; label: string }[] = [
   { value: 'done', label: 'Toutes' },
@@ -390,7 +387,7 @@ export class StatsView extends LitElement {
         return html`<button data-status=${status} ?disabled=${!count} @click=${() => this.showRoutes(status)}>
           <span class="label">${label}</span>
           <span class="count">${count}</span>
-          ${chevron}
+          ${chevronIcon}
         </button>`;
       })}
     </div>`;

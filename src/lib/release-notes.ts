@@ -3,16 +3,31 @@ import { storage as defaultStorage, type KeyValueStorage } from './storage';
 import { THEME_KEY } from './theme';
 import { UI_KEY } from './ui-state';
 
+/**
+ * Une nouveauté : du texte, ou un objet qui renvoie aussi vers des étapes du
+ * tutoriel (identifiants de TUTORIAL_STEPS) pour présenter la fonctionnalité.
+ */
+export type ReleaseNoteLine = string | { text: string; tutorial?: string[] };
+
 /** Une version publiée et ses nouveautés (src/data/release-notes.json). */
 export interface ReleaseNote {
   version: string;
   /** Date de publication, AAAA-MM-JJ. */
   date: string;
-  notes: string[];
+  notes: ReleaseNoteLine[];
 }
 
 /** Notes de la version en cours d'exécution, de la plus récente à la plus ancienne. */
 export const RELEASE_NOTES: ReleaseNote[] = releaseNotesData;
+
+export function lineText(line: ReleaseNoteLine): string {
+  return typeof line === 'string' ? line : line.text;
+}
+
+/** Étapes du tutoriel citées par une nouveauté, vide s'il n'y en a pas. */
+export function lineTutorial(line: ReleaseNoteLine): string[] {
+  return typeof line === 'string' ? [] : (line.tutorial ?? []);
+}
 
 /** Version de l'application : la plus récente des notes embarquées. */
 export const APP_VERSION = RELEASE_NOTES[0].version;
@@ -42,14 +57,19 @@ export function notesAfter(notes: ReleaseNote[], version: string): ReleaseNote[]
   return notes.filter((n) => compareVersions(n.version, version) > 0);
 }
 
+function isLine(value: unknown): value is ReleaseNoteLine {
+  if (typeof value === 'string') return true;
+  const line = value as { text?: unknown; tutorial?: unknown };
+  return (
+    typeof line?.text === 'string' &&
+    (line.tutorial === undefined ||
+      (Array.isArray(line.tutorial) && line.tutorial.every((id) => typeof id === 'string')))
+  );
+}
+
 function isReleaseNote(value: unknown): value is ReleaseNote {
   const n = value as ReleaseNote;
-  return (
-    typeof n?.version === 'string' &&
-    typeof n.date === 'string' &&
-    Array.isArray(n.notes) &&
-    n.notes.every((line) => typeof line === 'string')
-  );
+  return typeof n?.version === 'string' && typeof n.date === 'string' && Array.isArray(n.notes) && n.notes.every(isLine);
 }
 
 /**

@@ -5,8 +5,10 @@ import { progressStore, type ImportResult, type ProgressStore } from '../lib/pro
 import { PwaController, pwaState, type InstallMode, type PwaState } from '../lib/pwa';
 import { APP_VERSION, RELEASE_NOTES } from '../lib/release-notes';
 import type { Theme } from '../lib/theme';
-import { infoIcon as helpIcon, requestHelp } from './help-sheet';
-import { infoIcon, showReleaseNotesEvent } from './release-notes-sheet';
+import { requestHelp } from './help-sheet';
+import { infoIcon } from './icons';
+import { requestTutorial } from './tutorial-sheet';
+import { showReleaseNotesEvent } from './release-notes-sheet';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
 
@@ -22,6 +24,7 @@ const THEME_OPTIONS: { value: Theme; label: string }[] = [
 
 /** Dépôt du code source, pour le lien « Contribuer ». */
 export const REPO_URL = 'https://github.com/romgere/mur_assga';
+export const AUTHOR_URL = 'https://mestres.fr';
 
 /** Délai pendant lequel le bouton « Tout effacer » attend la confirmation. */
 export const CLEAR_CONFIRM_MS = 4000;
@@ -169,6 +172,11 @@ export class SettingsSheet extends LitElement {
       .link svg {
         flex: none;
       }
+
+      .link.tutorial {
+        display: flex;
+        margin-top: 10px;
+      }
     `,
   ];
 
@@ -303,7 +311,10 @@ export class SettingsSheet extends LitElement {
       <section>
         <h3>Aide</h3>
         <button class="link help" @click=${() => requestHelp(this)}>
-          ${helpIcon}<span>États d’une voie : tête, moulinette, à vue, chute…</span>
+          ${infoIcon()}<span>États d’une voie : tête, moulinette, à vue, chute…</span>
+        </button>
+        <button class="link tutorial" @click=${() => requestTutorial(this)}>
+          ${infoIcon()}<span>Revoir le tutoriel de prise en main</span>
         </button>
       </section>
 
@@ -321,7 +332,7 @@ export class SettingsSheet extends LitElement {
             title="Voir les nouveautés"
             @click=${() => this.dispatchEvent(showReleaseNotesEvent({ heading: 'Nouveautés', notes: RELEASE_NOTES.slice(0, 1) }))}
           >
-            ${infoIcon}
+            ${infoIcon(22)}
           </button>
         </p>
       </section>
@@ -383,7 +394,8 @@ export class SettingsSheet extends LitElement {
       <section class="about">
         <p>${this.store.topo.club} · ${this.store.topo.title}</p>
         <p class="credits">
-          Vibe codé avec <span role="img" aria-label="amour">❤️</span> par Jérôme -
+          Vibe codé avec <span role="img" aria-label="amour">❤️</span> par
+          <a href=${AUTHOR_URL} target="_blank" rel="noopener">Jérôme</a> -
           <a href=${REPO_URL} target="_blank" rel="noopener">Contribuer</a>
         </p>
       </section>
