@@ -11,7 +11,7 @@ export function requestHelp(from: Element): void {
   from.dispatchEvent(new Event(OPEN_HELP, { bubbles: true, composed: true }));
 }
 
-const infoIcon = html`<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+export const infoIcon = html`<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
   <circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.8" />
   <path d="M12 10.5v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
   <circle cx="12" cy="7.4" r="1.2" fill="currentColor" />
