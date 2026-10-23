@@ -6,6 +6,7 @@ import { PwaController, pwaState, type InstallMode, type PwaState } from '../lib
 import { APP_VERSION, RELEASE_NOTES } from '../lib/release-notes';
 import type { Theme } from '../lib/theme';
 import { infoIcon as helpIcon, requestHelp } from './help-sheet';
+import { requestTutorial } from './tutorial-sheet';
 import { infoIcon, showReleaseNotesEvent } from './release-notes-sheet';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
@@ -169,6 +170,11 @@ export class SettingsSheet extends LitElement {
       .link svg {
         flex: none;
       }
+
+      .link.tutorial {
+        display: flex;
+        margin-top: 10px;
+      }
     `,
   ];
 
@@ -304,6 +310,9 @@ export class SettingsSheet extends LitElement {
         <h3>Aide</h3>
         <button class="link help" @click=${() => requestHelp(this)}>
           ${helpIcon}<span>États d’une voie : tête, moulinette, à vue, chute…</span>
+        </button>
+        <button class="link tutorial" @click=${() => requestTutorial(this)}>
+          ${helpIcon}<span>Revoir le tutoriel de prise en main</span>
         </button>
       </section>
 

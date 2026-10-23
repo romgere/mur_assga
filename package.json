@@ -1,7 +1,7 @@
 {
   "name": "mur-escalade-lardy",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Topo interactif du mur d'escalade de Lardy (ASSGA Escalade 2026-2027)",
   "type": "module",
   "engines": {

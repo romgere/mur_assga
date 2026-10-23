@@ -6,6 +6,7 @@ import { pwaState, type PwaState } from '../lib/pwa';
 import { takeUnseenNotes } from '../lib/release-notes';
 import { storage as defaultStorage, type KeyValueStorage } from '../lib/storage';
 import { applyTheme, loadTheme, saveTheme, type Theme } from '../lib/theme';
+import { markTutorialSeen, tutorialSeen } from '../lib/tutorial';
 import type { Route } from '../lib/topo';
 import { defaultFilters, loadUiState, saveUiState, type UiState } from '../lib/ui-state';
 import { gradePages, wallPages, type Page } from '../lib/views';
@@ -22,23 +23,15 @@ import './all-routes-view';
 import './favorites-view';
 import './mode-tabs';
 import { OPEN_HELP } from './help-sheet';
+import { gearIcon } from './icons';
 import './note-sheet';
 import './pager-dots';
 import './release-notes-sheet';
 import './route-pager';
 import './settings-sheet';
 import './stats-view';
+import { OPEN_TUTORIAL } from './tutorial-sheet';
 import './update-banner';
-
-const gearIcon = html`<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-  <path
-    d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zm7.4-2.5.1-1-.1-1 2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11l-.1 1 .1 1-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.4z"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.6"
-    stroke-linejoin="round"
-  />
-</svg>`;
 
 /**
  * Racine de l'application : en-tête (compteurs, modes, réglages), vue
@@ -161,6 +154,7 @@ export class LardyApp extends LitElement {
   @state() private settingsOpen = false;
   @state() private releaseNotes: ShowReleaseNotesDetail | null = null;
   @state() private helpOpen = false;
+  @state() private tutorialOpen = false;
 
   @query('lardy-route-pager') private pager?: RoutePager;
 
@@ -178,19 +172,35 @@ export class LardyApp extends LitElement {
     this.theme = loadTheme(this.storage);
     // Avant tout enregistrement : takeUnseenNotes reconnaît un nouvel utilisateur à son stockage vide.
     const unseen = takeUnseenNotes(this.storage);
-    if (unseen.length) this.releaseNotes = { heading: 'Application mise à jour', notes: unseen };
-    // L'aide peut être demandée de partout : lignes, détails d'une voie, réglages.
+    // Tutoriel à tous ceux qui ne l'ont pas vu, anciens utilisateurs compris. Il
+    // présente déjà l'application : les nouveautés (déjà marquées vues) attendent.
+    if (!tutorialSeen(this.storage)) this.tutorialOpen = true;
+    else if (unseen.length) this.releaseNotes = { heading: 'Application mise à jour', notes: unseen };
+    // L'aide peut être demandée de partout : lignes, détails d'une voie, réglages, tutoriel.
     this.addEventListener(OPEN_HELP, this.onOpenHelp);
+    this.addEventListener(OPEN_TUTORIAL, this.onOpenTutorial);
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.removeEventListener(OPEN_HELP, this.onOpenHelp);
+    this.removeEventListener(OPEN_TUTORIAL, this.onOpenTutorial);
   }
 
   private onOpenHelp = () => {
     this.helpOpen = true;
   };
+
+  private onOpenTutorial = () => {
+    this.settingsOpen = false;
+    this.tutorialOpen = true;
+  };
+
+  /** Passé ou terminé, le tutoriel ne se rouvre plus tout seul. */
+  private onTutorialClose() {
+    this.tutorialOpen = false;
+    markTutorialSeen(this.storage);
+  }
 
   private get pages(): Page[] {
     return this.ui.mode === 'grade' ? this.gradePages : this.wallPages;
@@ -327,6 +337,7 @@ export class LardyApp extends LitElement {
         .notes=${this.releaseNotes?.notes ?? []}
         @close=${() => (this.releaseNotes = null)}
       ></lardy-release-notes-sheet>
+      <lardy-tutorial-sheet .open=${this.tutorialOpen} @close=${this.onTutorialClose}></lardy-tutorial-sheet>
       <lardy-help-sheet .open=${this.helpOpen} @close=${() => (this.helpOpen = false)}></lardy-help-sheet>`;
   }
 }

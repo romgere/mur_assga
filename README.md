@@ -32,6 +32,9 @@ test
   pointillés.
 - Aide « États d'une voie » : bouton (i) à côté des détails, ou Réglages →
   Aide. Elle décrit chaque état et indique s'il compte comme fait.
+- Tutoriel de prise en main au premier lancement (y compris pour les
+  utilisateurs d'avant le tutoriel), qu'on peut passer, et à revoir depuis
+  Réglages → Aide.
 - Favoris, notes par voie (cotation ressentie…), thème Auto / Clair / Sombre.
 - Sauvegarde et restauration par copier-coller d'un texte JSON, et effacement
   complet avec confirmation.
@@ -44,6 +47,7 @@ Les données restent dans le navigateur (`localStorage`) :
 | `lardy2026.ui`             | mode, page courante de chaque mode, filtres, filtre des stats    |
 | `lardy2026.theme`          | `auto`, `light` ou `dark`                                         |
 | `lardy2026.version`        | dernière version dont les nouveautés ont été vues                |
+| `lardy2026.tutorial`       | `1` une fois le tutoriel passé ou terminé                        |
 
 Dans la progression : `t` / `m` = faite en tête / en moulinette, `tx` / `mx` =
 détails de cette ascension (liste de codes `avue`, `flash`, `chute`, `repos`,
@@ -101,7 +105,8 @@ l'application. Les notes apparaissent à trois endroits :
   plus récente (ou hors ligne), le bouton n'apparaît pas.
 - **Après une mise à jour** : les nouveautés des versions manquées s'affichent
   une fois au lancement (version vue gardée dans `lardy2026.version`). Rien à la
-  toute première visite.
+  toute première visite, ni quand le tutoriel s'ouvre (la version est quand
+  même marquée vue).
 - **Réglages → Nouveautés** : relire les notes de la version installée.
 
 Les icônes PNG (`public/pwa-*.png`, `maskable-icon-512x512.png`,
@@ -177,6 +182,8 @@ src/
     settings-sheet        thème, nouveautés, sauvegarde, restauration, effacement
     update-banner         bandeau « Nouvelle version disponible » et son bouton (i)
     release-notes-sheet   affichage des notes de version
+    tutorial-sheet        tutoriel de prise en main (étapes, pastilles, « Passer »)
+    icons                 icônes partagées (réglages, favori, crayon)
   styles/tokens.css       tokens de couleur (clair + sombre) et styles globaux
 ```
 

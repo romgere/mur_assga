@@ -1,0 +1,305 @@
+import { LitElement, css, html, nothing, type TemplateResult } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
+import { requestHelp } from './help-sheet';
+import { gearIcon, noteIcon, starIcon } from './icons';
+import { sharedStyles } from './shared-styles';
+import './bottom-sheet';
+
+/** Événement qui demande l'ouverture du tutoriel, écouté par l'application. */
+export const OPEN_TUTORIAL = 'open-tutorial';
+
+export function requestTutorial(from: Element): void {
+  from.dispatchEvent(new Event(OPEN_TUTORIAL, { bubbles: true, composed: true }));
+}
+
+/** Distance horizontale (px) d'un glissement qui change d'étape. */
+const SWIPE_PX = 50;
+
+interface Step {
+  title: string;
+  /** Petite maquette décorative de l'interface. */
+  art: TemplateResult;
+  body: (sheet: TutorialSheet) => TemplateResult;
+}
+
+const STEPS: Step[] = [
+  {
+    title: 'Bienvenue !',
+    art: html`<img class="logo light" src="/logo-header-light.png" alt="" width="38" height="44" />
+      <img class="logo dark" src="/logo-header-dark.png" alt="" width="37" height="44" />`,
+    body: () => html`<p>Ce topo liste toutes les voies du mur de Lardy pour la saison.</p>
+      <p>Cochez celles que vous avez faites et suivez votre progression. Tout reste sur votre téléphone, même hors connexion.</p>`,
+  },
+  {
+    title: 'Parcourir les voies',
+    art: html`<span class="tabs"
+      ><span class="on">Mur</span><span>Difficulté</span><span>Toutes</span><span>Favoris</span><span>Stats</span></span
+    >`,
+    body: () => html`<p>Choisissez l’affichage en haut : par mur, par difficulté, toutes les voies (avec filtres et tri), vos favoris ou vos statistiques.</p>
+      <p>Par mur ou par difficulté, glissez à gauche ou à droite pour changer de page. Les pastilles du bas montrent où vous en êtes.</p>`,
+  },
+  {
+    title: 'Cocher une voie',
+    art: html`<span class="demo"><span class="toggle lead">Tête</span><small>Appui court</small></span>
+      <span class="demo"><span class="toggle toprope detailed">Moul.</span><small>Appui long</small></span>`,
+    body: (sheet) => html`<p>Un appui court sur <strong>Tête</strong> ou <strong>Moul.</strong> coche la voie comme faite.</p>
+      <p>Un appui long (ou clic droit) précise comment : à vue, flash, chute, repos ou partielle.</p>
+      <button class="link help" @click=${() => requestHelp(sheet)}>Ce que veut dire chaque état</button>`,
+  },
+  {
+    title: 'Favoris et notes',
+    art: html`<span class="icon star">${starIcon(true)}</span><span class="icon">${noteIcon}</span>`,
+    body: () => html`<p>L’étoile ajoute la voie à vos favoris, pour garder vos projets sous la main.</p>
+      <p>Le crayon ouvre tous les détails de la voie et une note personnelle (méthode, prise piège…).</p>`,
+  },
+  {
+    title: 'Réglages',
+    art: html`<span class="icon gear">${gearIcon}</span>`,
+    body: () => html`<p>La roue dentée, en haut à droite : thème clair ou sombre, installation de l’application, sauvegarde et restauration de votre progression.</p>
+      <p>Vous pourrez aussi y revoir ce tutoriel.</p>`,
+  },
+];
+
+/**
+ * Tutoriel de prise en main : quelques étapes qu'on parcourt avec Suivant, les
+ * pastilles ou un glissement. « Passer », la croix, le fond ou Échap le
+ * ferment à tout moment. Émet « close ».
+ */
+@customElement('lardy-tutorial-sheet')
+export class TutorialSheet extends LitElement {
+  static styles = [
+    sharedStyles,
+    css`
+      .step {
+        touch-action: pan-y;
+      }
+
+      .art {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        min-height: 84px;
+        margin: 4px 0 12px;
+        padding: 12px;
+        border-radius: 14px;
+        background: var(--surface-2);
+      }
+
+      .logo {
+        height: 56px;
+        width: auto;
+      }
+
+      .logo.light {
+        display: var(--logo-light-display);
+      }
+
+      .logo.dark {
+        display: var(--logo-dark-display);
+      }
+
+      .tabs {
+        display: flex;
+        padding: 3px;
+        border-radius: 10px;
+        background: var(--bg);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      .tabs span {
+        padding: 6px 7px;
+        border-radius: 8px;
+      }
+
+      .tabs .on {
+        background: var(--surface);
+        color: var(--text);
+        box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
+      }
+
+      .demo {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .demo small {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 52px;
+        height: 40px;
+        padding: 0 8px;
+        border-radius: 10px;
+        border: 1.5px solid var(--border);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .toggle.lead {
+        background: var(--lead);
+        border-color: var(--lead);
+        color: var(--lead-ink);
+      }
+
+      .toggle.toprope.detailed {
+        background: var(--surface);
+        border-color: var(--toprope);
+        border-style: dashed;
+        color: var(--toprope);
+      }
+
+      .icon {
+        display: inline-flex;
+        color: var(--text-muted);
+      }
+
+      .icon.star {
+        color: var(--star);
+      }
+
+      .icon svg {
+        width: 32px;
+        height: 32px;
+      }
+
+      p {
+        margin: 0 0 8px;
+        font-size: 15px;
+      }
+
+      .link {
+        color: var(--accent);
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: underline;
+      }
+
+      nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      nav .skip {
+        min-height: 40px;
+        padding: 0 4px;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      .dots {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        gap: 2px;
+      }
+
+      /* Zone d'appui de 24 px autour d'une pastille de 8 px. */
+      .dots button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+      }
+
+      .dots button::after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 4px;
+        background: var(--border);
+      }
+
+      .dots button[aria-current='step']::after {
+        background: var(--accent);
+      }
+
+      nav .next {
+        min-width: 110px;
+      }
+    `,
+  ];
+
+  @property({ type: Boolean }) open = false;
+  @state() index = 0;
+
+  private startX: number | null = null;
+
+  protected willUpdate(changed: Map<string, unknown>): void {
+    // Chaque ouverture repart de la première étape.
+    if (changed.has('open') && this.open) this.index = 0;
+  }
+
+  private close() {
+    this.open = false;
+    this.dispatchEvent(new CustomEvent('close'));
+  }
+
+  private go(index: number) {
+    this.index = Math.max(0, Math.min(STEPS.length - 1, index));
+  }
+
+  private next() {
+    if (this.index === STEPS.length - 1) this.close();
+    else this.go(this.index + 1);
+  }
+
+  private onPointerDown(e: PointerEvent) {
+    this.startX = e.clientX;
+  }
+
+  private onPointerUp(e: PointerEvent) {
+    if (this.startX === null) return;
+    const dx = e.clientX - this.startX;
+    this.startX = null;
+    if (Math.abs(dx) >= SWIPE_PX) this.go(this.index + (dx < 0 ? 1 : -1));
+  }
+
+  render() {
+    const step = STEPS[this.index];
+    const last = this.index === STEPS.length - 1;
+    return html`<lardy-sheet .open=${this.open} heading=${step.title} @close=${this.close}>
+      <div
+        class="step"
+        @pointerdown=${this.onPointerDown}
+        @pointerup=${this.onPointerUp}
+        @pointercancel=${() => (this.startX = null)}
+      >
+        <div class="art" aria-hidden="true">${step.art}</div>
+        ${step.body(this)}
+      </div>
+      <nav aria-label="Étapes du tutoriel">
+        ${last ? nothing : html`<button class="skip" @click=${this.close}>Passer</button>`}
+        <span class="dots">
+          ${STEPS.map(
+            (s, i) =>
+              html`<button
+                aria-label="Étape ${i + 1} sur ${STEPS.length} : ${s.title}"
+                aria-current=${i === this.index ? 'step' : 'false'}
+                @click=${() => this.go(i)}
+              ></button>`,
+          )}
+        </span>
+        <button class="btn primary next" @click=${this.next}>${last ? 'C’est parti !' : 'Suivant'}</button>
+      </nav>
+    </lardy-sheet>`;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'lardy-tutorial-sheet': TutorialSheet;
+  }
+}
