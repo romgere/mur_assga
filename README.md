@@ -196,7 +196,7 @@ src/
     update-banner         bandeau « Nouvelle version disponible » et son bouton (i)
     release-notes-sheet   affichage des notes de version
     tutorial-sheet        tutoriel de prise en main (étapes, pastilles, « Passer »)
-    icons                 icônes partagées (réglages, favori, crayon)
+    icons                 icônes SVG partagées
   styles/tokens.css       tokens de couleur (clair + sombre) et styles globaux
 ```
 

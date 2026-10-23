@@ -1,6 +1,6 @@
 import { html } from 'lit';
 
-/** Icônes partagées entre l'interface et les illustrations du tutoriel. */
+/** Icônes SVG de l'application, partagées entre les composants et les illustrations du tutoriel. */
 
 export const gearIcon = html`<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
   <path
@@ -28,6 +28,28 @@ export const noteIcon = html`<svg viewBox="0 0 24 24" width="20" height="20" ari
     fill="none"
     stroke="currentColor"
     stroke-width="1.8"
+    stroke-linejoin="round"
+  />
+</svg>`;
+
+/** (i) des liens d'aide (18 px) et des boutons de nouveautés (22 px). */
+export const infoIcon = (size = 18) => html`<svg viewBox="0 0 24 24" width=${size} height=${size} aria-hidden="true">
+  <circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.8" />
+  <path d="M12 10.5v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+  <circle cx="12" cy="7.4" r="1.2" fill="currentColor" />
+</svg>`;
+
+export const chevronIcon = html`<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+  <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</svg>`;
+
+export const sortIcon = html`<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+  <path
+    d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
     stroke-linejoin="round"
   />
 </svg>`;

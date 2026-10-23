@@ -5,9 +5,10 @@ import { progressStore, type ImportResult, type ProgressStore } from '../lib/pro
 import { PwaController, pwaState, type InstallMode, type PwaState } from '../lib/pwa';
 import { APP_VERSION, RELEASE_NOTES } from '../lib/release-notes';
 import type { Theme } from '../lib/theme';
-import { infoIcon as helpIcon, requestHelp } from './help-sheet';
+import { requestHelp } from './help-sheet';
+import { infoIcon } from './icons';
 import { requestTutorial } from './tutorial-sheet';
-import { infoIcon, showReleaseNotesEvent } from './release-notes-sheet';
+import { showReleaseNotesEvent } from './release-notes-sheet';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
 
@@ -310,10 +311,10 @@ export class SettingsSheet extends LitElement {
       <section>
         <h3>Aide</h3>
         <button class="link help" @click=${() => requestHelp(this)}>
-          ${helpIcon}<span>États d’une voie : tête, moulinette, à vue, chute…</span>
+          ${infoIcon()}<span>États d’une voie : tête, moulinette, à vue, chute…</span>
         </button>
         <button class="link tutorial" @click=${() => requestTutorial(this)}>
-          ${helpIcon}<span>Revoir le tutoriel de prise en main</span>
+          ${infoIcon()}<span>Revoir le tutoriel de prise en main</span>
         </button>
       </section>
 
@@ -331,7 +332,7 @@ export class SettingsSheet extends LitElement {
             title="Voir les nouveautés"
             @click=${() => this.dispatchEvent(showReleaseNotesEvent({ heading: 'Nouveautés', notes: RELEASE_NOTES.slice(0, 1) }))}
           >
-            ${infoIcon}
+            ${infoIcon(22)}
           </button>
         </p>
       </section>
