@@ -40,8 +40,8 @@ export class NoteSheet extends LitElement {
       }
 
       .card {
-        margin: 0 0 10px;
-        padding: 8px 12px 10px;
+        margin: 0 0 8px;
+        padding: 6px 8px 4px 10px;
         border: 1px solid var(--border);
         border-left: 5px solid var(--mode);
         border-radius: 10px;
@@ -67,7 +67,7 @@ export class NoteSheet extends LitElement {
       .mode {
         flex: none;
         min-width: 96px;
-        height: 40px;
+        height: 34px;
         padding: 0 12px;
         border-radius: 10px;
         border: 1.5px solid var(--border);
@@ -91,30 +91,18 @@ export class NoteSheet extends LitElement {
       }
 
       .summary {
+        flex: 1;
         min-width: 0;
         font-size: 14px;
         font-style: italic;
         color: var(--text-muted);
       }
 
-      /* Les puces dépendent du mode : en retrait, et estompées tant qu'il n'est pas coché. */
+      /* Les détails dépendent du mode : en retrait sous son bouton. */
       .how {
-        margin: 6px 0 0 6px;
+        margin: 2px 0 0 6px;
         padding-left: 12px;
         border-left: 2px solid var(--border);
-      }
-
-      .card:not(.on) .how {
-        opacity: 0.55;
-      }
-
-      .how-label {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--text-muted);
       }
 
       /* Mêmes cases que le menu de l'appui long sur Tête / Moul. */
@@ -124,17 +112,11 @@ export class NoteSheet extends LitElement {
         gap: 0 18px;
       }
 
-      .checks.flaw {
-        margin-top: 2px;
-        padding-top: 2px;
-        border-top: 1px solid var(--border);
-      }
-
       .checks label {
         display: flex;
         align-items: center;
         gap: 8px;
-        min-height: 36px;
+        min-height: 32px;
         font-size: 15px;
       }
 
@@ -209,7 +191,7 @@ export class NoteSheet extends LitElement {
     return html`<lardy-sheet .open=${!!r} heading=${heading} @close=${this.close}>
       ${MODES.map(({ mode, label, cls }) => {
         const details = detailsOf(a, mode);
-        return html`<section class="card ${cls} ${a[mode] ? 'on' : ''}" aria-label=${label}>
+        return html`<section class="card ${cls}" aria-label=${label}>
           <div class="card-head">
             <button
               class="mode ${hasFlaw(a, mode) ? 'detailed' : ''}"
@@ -220,9 +202,9 @@ export class NoteSheet extends LitElement {
               ${label}
             </button>
             <span class="summary">→ ${ascentSummary(a, mode)}</span>
+            ${helpButton(this)}
           </div>
           <div class="how" role="group" aria-label="Comment, en ${label.toLowerCase()}">
-            <span class="how-label">Comment ? ${helpButton(this)}</span>
             ${(['clean', 'flaw'] as const).map(
               (kind) => html`<div class="checks ${kind}">
                 ${DETAILS.filter((d) => d.kind === kind).map(

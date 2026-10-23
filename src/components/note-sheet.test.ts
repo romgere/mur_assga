@@ -82,7 +82,6 @@ describe('lardy-note-sheet', () => {
     await el.updateComplete;
     // Une puce coche aussi le mode parent.
     expect($(el, '.card.lead button.mode').getAttribute('aria-pressed')).toBe('true');
-    expect(lead().classList.contains('on')).toBe(true);
     check(el, '.card.lead .detail-partiel');
     $(el, '.card.toprope button.mode').click();
     await el.updateComplete;
