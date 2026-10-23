@@ -5,7 +5,7 @@ import { progressStore, type ImportResult, type ProgressStore } from '../lib/pro
 import { PwaController, pwaState, type InstallMode, type PwaState } from '../lib/pwa';
 import { APP_VERSION, RELEASE_NOTES } from '../lib/release-notes';
 import type { Theme } from '../lib/theme';
-import { showReleaseNotesEvent } from './release-notes-sheet';
+import { infoIcon, showReleaseNotesEvent } from './release-notes-sheet';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
 
@@ -107,6 +107,23 @@ export class SettingsSheet extends LitElement {
         border-radius: 10px;
         border: 1px solid var(--danger);
         color: var(--danger);
+      }
+
+      .version {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin: 0;
+      }
+
+      .info {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 18px;
+        color: var(--accent);
       }
 
       ol {
@@ -269,14 +286,17 @@ export class SettingsSheet extends LitElement {
       </section>
 
       <section>
-        <h3>Nouveautés</h3>
-        <p>Version ${APP_VERSION} installée.</p>
-        <button
-          class="btn release-notes"
-          @click=${() => this.dispatchEvent(showReleaseNotesEvent({ heading: 'Nouveautés', notes: RELEASE_NOTES.slice(0, 1) }))}
-        >
-          Voir les nouveautés
-        </button>
+        <p class="version">
+          Version ${APP_VERSION} installée.
+          <button
+            class="info release-notes"
+            aria-label="Voir les nouveautés"
+            title="Voir les nouveautés"
+            @click=${() => this.dispatchEvent(showReleaseNotesEvent({ heading: 'Nouveautés', notes: RELEASE_NOTES.slice(0, 1) }))}
+          >
+            ${infoIcon}
+          </button>
+        </p>
       </section>
 
       <section>

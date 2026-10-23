@@ -4,6 +4,13 @@ import type { ReleaseNote } from '../lib/release-notes';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
 
+/** Icône (i) des boutons qui ouvrent les notes de version. */
+export const infoIcon = html`<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+  <circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+  <path d="M12 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+  <circle cx="12" cy="7.6" r="1.2" fill="currentColor" />
+</svg>`;
+
 /** Demande d'affichage de notes de version, émise par le bandeau et les réglages. */
 export interface ShowReleaseNotesDetail {
   heading: string;

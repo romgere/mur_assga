@@ -1,14 +1,8 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { PwaController, pwaState, type PwaState } from '../lib/pwa';
-import { showReleaseNotesEvent } from './release-notes-sheet';
+import { infoIcon, showReleaseNotesEvent } from './release-notes-sheet';
 import { sharedStyles } from './shared-styles';
-
-const infoIcon = html`<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-  <circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.6" />
-  <path d="M12 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-  <circle cx="12" cy="7.6" r="1.2" fill="currentColor" />
-</svg>`;
 
 /**
  * Bandeau « Nouvelle version disponible » : affiché quand le service worker
