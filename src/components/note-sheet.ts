@@ -1,11 +1,12 @@
 import { LitElement, css, html } from 'lit';
-import { customElement, property, query, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import {
   DETAILS,
   MAX_NOTE_LENGTH,
   ascentSummary,
   detailsKey,
   detailsOf,
+  hasFlaw,
   progressStore,
   withDetail,
   type ClimbMode,
@@ -59,23 +60,15 @@ export class NoteSheet extends LitElement {
       .card-head {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 8px;
+        gap: 10px;
       }
 
-      .card-head h3 {
-        margin: 0;
-        font-size: 15px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--mode);
-      }
-
+      /* Même bouton que Tête / Moul. dans la liste des voies. */
       .mode {
-        min-width: 84px;
-        height: 36px;
-        padding: 0 10px;
+        flex: none;
+        min-width: 96px;
+        height: 40px;
+        padding: 0 12px;
         border-radius: 10px;
         border: 1.5px solid var(--border);
         background: var(--surface);
@@ -88,6 +81,20 @@ export class NoteSheet extends LitElement {
         background: var(--mode);
         border-color: var(--mode);
         color: var(--mode-ink);
+      }
+
+      /* Ascension avec chute, repos ou partielle : contour en pointillés. */
+      .mode.detailed[aria-pressed='true'] {
+        background: var(--surface);
+        color: var(--mode);
+        border-style: dashed;
+      }
+
+      .summary {
+        min-width: 0;
+        font-size: 14px;
+        font-style: italic;
+        color: var(--text-muted);
       }
 
       /* Les puces dépendent du mode : en retrait, et estompées tant qu'il n'est pas coché. */
@@ -135,12 +142,6 @@ export class NoteSheet extends LitElement {
         accent-color: var(--mode);
       }
 
-      .summary {
-        margin: 0;
-        font-size: 13px;
-        font-style: italic;
-      }
-
       textarea {
         min-height: 120px;
         font-size: 16px;
@@ -165,8 +166,6 @@ export class NoteSheet extends LitElement {
   @state() private draft = '';
   /** Tête, moulinette et leurs détails, enregistrés avec la note. */
   @state() private ascents: RouteProgress = {};
-  @query('textarea') private textarea?: HTMLTextAreaElement;
-  @query('lardy-sheet') private sheet?: HTMLElement & { updateComplete: Promise<boolean> };
 
   protected willUpdate(changed: Map<string, unknown>): void {
     if (changed.has('route') && this.route) {
@@ -174,11 +173,6 @@ export class NoteSheet extends LitElement {
       this.draft = n ?? '';
       this.ascents = { t, m, tx, mx };
     }
-  }
-
-  protected updated(changed: Map<string, unknown>): void {
-    // La feuille doit d'abord s'afficher (et noter qui avait le focus).
-    if (changed.has('route') && this.route) this.sheet?.updateComplete.then(() => this.textarea?.focus());
   }
 
   private close() {
@@ -217,15 +211,15 @@ export class NoteSheet extends LitElement {
         const details = detailsOf(a, mode);
         return html`<section class="card ${cls} ${a[mode] ? 'on' : ''}" aria-label=${label}>
           <div class="card-head">
-            <h3>${label}</h3>
             <button
-              class="mode"
+              class="mode ${hasFlaw(a, mode) ? 'detailed' : ''}"
               aria-pressed=${a[mode] ? 'true' : 'false'}
               aria-label="Faite en ${label.toLowerCase()}"
               @click=${() => this.setMode(mode, !a[mode])}
             >
-              ${a[mode] ? 'Faite' : 'Pas faite'}
+              ${label}
             </button>
+            <span class="summary">→ ${ascentSummary(a, mode)}</span>
           </div>
           <div class="how" role="group" aria-label="Comment, en ${label.toLowerCase()}">
             <span class="how-label">Comment ? ${helpButton(this)}</span>
@@ -243,7 +237,6 @@ export class NoteSheet extends LitElement {
                 )}
               </div>`,
             )}
-            <p class="summary">→ ${ascentSummary(a, mode)}</p>
           </div>
         </section>`;
       })}
