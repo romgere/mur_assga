@@ -30,6 +30,7 @@ Les données restent dans le navigateur (`localStorage`) :
 | `lardy.progress.<saison>`  | `{"mur-COULEUR": {t, m, s, n}}` : tête, moulinette, favori, note |
 | `lardy2026.ui`             | mode, page courante de chaque mode, filtres, filtre des stats    |
 | `lardy2026.theme`          | `auto`, `light` ou `dark`                                         |
+| `lardy2026.version`        | dernière version dont les nouveautés ont été vues                |
 
 La progression est rangée par saison (`lardy.progress.2026-2027`…). L'ancienne
 clé de la V1, `lardy2026.v1`, est reprise automatiquement dans la saison
@@ -58,6 +59,31 @@ disponible » propose de recharger (« Mettre à jour ») ou d'attendre
 (« Plus tard »). L'application vérifie les mises à jour à chaque retour au
 premier plan et toutes les heures. Les voies cochées, en
 `localStorage`, sont conservées.
+
+### Notes de version
+
+Les nouveautés de chaque version sont dans
+[`src/data/release-notes.json`](src/data/release-notes.json), de la plus
+récente à la plus ancienne :
+
+```json
+{ "version": "1.2.0", "date": "2026-11-02", "notes": ["Nouvelles voies au mur 3."] }
+```
+
+Pour publier une version (application ou topo), ajouter une entrée en tête du
+fichier et reporter le même numéro dans `version` de `package.json` (vérifié
+par les tests). La version la plus récente du fichier est celle de
+l'application. Les notes apparaissent à trois endroits :
+
+- **Bandeau « Nouvelle version disponible »** : un bouton (i) montre les
+  nouveautés de la version en attente. Le fichier est aussi publié à la racine
+  du site (`/release-notes.json`, hors cache du service worker) : la version
+  installée le lit pour connaître celles de la version déployée. Sans entrée
+  plus récente (ou hors ligne), le bouton n'apparaît pas.
+- **Après une mise à jour** : les nouveautés des versions manquées s'affichent
+  une fois au lancement (version vue gardée dans `lardy2026.version`). Rien à la
+  toute première visite.
+- **Réglages → Nouveautés** : relire les notes de la version installée.
 
 Les icônes PNG (`public/pwa-*.png`, `maskable-icon-512x512.png`,
 `apple-touch-icon-180x180.png`, `favicon.ico`) sont générées depuis
@@ -117,6 +143,7 @@ Pile : [Vite](https://vite.dev), [Lit](https://lit.dev), TypeScript.
 ```
 src/
   data/topo.json          données du topo
+  data/release-notes.json notes de version (la plus récente = version de l'application)
   lib/                    stockage, store de progression, filtres, thème, état d'interface
   components/             composants Lit, chacun avec son fichier *.test.ts
     lardy-app             racine : en-tête, modes, vue, pastilles, feuilles
@@ -128,7 +155,9 @@ src/
     all-routes-view       mode « Toutes » : filtres, tri, liste
     bottom-sheet          feuille modale générique
     note-sheet            édition d'une note
-    settings-sheet        thème, sauvegarde, restauration, effacement
+    settings-sheet        thème, nouveautés, sauvegarde, restauration, effacement
+    update-banner         bandeau « Nouvelle version disponible » et son bouton (i)
+    release-notes-sheet   affichage des notes de version
   styles/tokens.css       tokens de couleur (clair + sombre) et styles globaux
 ```
 

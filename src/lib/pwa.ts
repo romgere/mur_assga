@@ -1,4 +1,5 @@
 import type { ReactiveController, ReactiveControllerHost } from 'lit';
+import type { ReleaseNote } from './release-notes';
 
 /** Événement Chrome/Edge/Samsung qui permet de déclencher l'installation. */
 export interface BeforeInstallPromptEvent extends Event {
@@ -33,6 +34,8 @@ export class PwaState extends EventTarget {
   installed: boolean;
   /** Une nouvelle version est téléchargée et attend d'être activée. */
   needRefresh = false;
+  /** Nouveautés de la version en attente (vide tant qu'inconnues). */
+  updateNotes: ReleaseNote[] = [];
 
   private deferredPrompt: BeforeInstallPromptEvent | null = null;
   private applyUpdate: (() => Promise<void>) | null = null;
@@ -80,6 +83,12 @@ export class PwaState extends EventTarget {
   setUpdateAvailable(apply: () => Promise<void>): void {
     this.applyUpdate = apply;
     this.needRefresh = true;
+    this.changed();
+  }
+
+  /** Nouveautés de la version en attente, lues sur le site une fois la mise à jour signalée. */
+  setUpdateNotes(notes: ReleaseNote[]): void {
+    this.updateNotes = notes;
     this.changed();
   }
 

@@ -1,6 +1,7 @@
 import { registerSW } from 'virtual:pwa-register';
 import './styles/tokens.css';
 import { pwaState } from './lib/pwa';
+import { fetchUpdateNotes } from './lib/release-notes';
 import { applyTheme, loadTheme } from './lib/theme';
 import './components/lardy-app';
 
@@ -32,7 +33,10 @@ const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
     if (performance.now() - freshSince < AUTO_APPLY_MS) void applyUpdate();
-    else pwaState.setUpdateAvailable(applyUpdate);
+    else {
+      pwaState.setUpdateAvailable(applyUpdate);
+      void fetchUpdateNotes().then((notes) => pwaState.setUpdateNotes(notes));
+    }
   },
   onRegisteredSW(_url, registration) {
     if (!registration) return;

@@ -3,6 +3,7 @@ import { customElement, property, query, state } from 'lit/decorators.js';
 import { keyed } from 'lit/directives/keyed.js';
 import { progressStore, type ProgressStore } from '../lib/progress-store';
 import { pwaState, type PwaState } from '../lib/pwa';
+import { takeUnseenNotes } from '../lib/release-notes';
 import { storage as defaultStorage, type KeyValueStorage } from '../lib/storage';
 import { applyTheme, loadTheme, saveTheme, type Theme } from '../lib/theme';
 import type { Route } from '../lib/topo';
@@ -12,6 +13,7 @@ import type { FiltersChangeDetail } from './all-routes-view';
 import type { ModeChangeDetail } from './mode-tabs';
 import type { PageSelectDetail } from './pager-dots';
 import type { OpenNoteDetail } from './route-row';
+import type { ShowReleaseNotesDetail } from './release-notes-sheet';
 import type { PageChangeDetail, RoutePager } from './route-pager';
 import type { ThemeChangeDetail } from './settings-sheet';
 import type { StatsCountChangeDetail } from './stats-view';
@@ -21,6 +23,7 @@ import './favorites-view';
 import './mode-tabs';
 import './note-sheet';
 import './pager-dots';
+import './release-notes-sheet';
 import './route-pager';
 import './settings-sheet';
 import './stats-view';
@@ -155,6 +158,7 @@ export class LardyApp extends LitElement {
   @state() private theme: Theme = 'auto';
   @state() private noteRoute: Route | null = null;
   @state() private settingsOpen = false;
+  @state() private releaseNotes: ShowReleaseNotesDetail | null = null;
 
   @query('lardy-route-pager') private pager?: RoutePager;
 
@@ -170,6 +174,9 @@ export class LardyApp extends LitElement {
     this.ui.wallPage = Math.min(this.ui.wallPage, this.wallPages.length - 1);
     this.ui.gradePage = Math.min(this.ui.gradePage, this.gradePages.length - 1);
     this.theme = loadTheme(this.storage);
+    // Avant tout enregistrement : takeUnseenNotes reconnaît un nouvel utilisateur à son stockage vide.
+    const unseen = takeUnseenNotes(this.storage);
+    if (unseen.length) this.releaseNotes = { heading: 'Application mise à jour', notes: unseen };
   }
 
   private get pages(): Page[] {
@@ -217,6 +224,11 @@ export class LardyApp extends LitElement {
     saveTheme(this.theme, this.storage);
   }
 
+  private onShowReleaseNotes(e: CustomEvent<ShowReleaseNotesDetail>) {
+    this.settingsOpen = false;
+    this.releaseNotes = e.detail;
+  }
+
   private renderView() {
     if (this.ui.mode === 'favorites') {
       return html`<lardy-favorites-view .store=${this.store}></lardy-favorites-view>`;
@@ -261,7 +273,7 @@ export class LardyApp extends LitElement {
           <button class="settings" aria-label="Réglages" @click=${() => (this.settingsOpen = true)}>${gearIcon}</button>
         </div>
         <lardy-mode-tabs .mode=${this.ui.mode} @mode-change=${this.onModeChange}></lardy-mode-tabs>
-        <lardy-update-banner .pwa=${this.pwa}></lardy-update-banner>
+        <lardy-update-banner .pwa=${this.pwa} @show-release-notes=${this.onShowReleaseNotes}></lardy-update-banner>
       </header>
       <main @open-note=${this.onOpenNote}>${this.renderView()}</main>
       ${paged
@@ -286,8 +298,15 @@ export class LardyApp extends LitElement {
         .theme=${this.theme}
         .store=${this.store}
         @theme-change=${this.onThemeChange}
+        @show-release-notes=${this.onShowReleaseNotes}
         @close=${() => (this.settingsOpen = false)}
-      ></lardy-settings-sheet>`;
+      ></lardy-settings-sheet>
+      <lardy-release-notes-sheet
+        .open=${!!this.releaseNotes}
+        heading=${this.releaseNotes?.heading ?? ''}
+        .notes=${this.releaseNotes?.notes ?? []}
+        @close=${() => (this.releaseNotes = null)}
+      ></lardy-release-notes-sheet>`;
   }
 }
 

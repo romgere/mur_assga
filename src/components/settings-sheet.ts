@@ -3,7 +3,9 @@ import { customElement, property, query, state } from 'lit/decorators.js';
 import { copyText } from '../lib/clipboard';
 import { progressStore, type ImportResult, type ProgressStore } from '../lib/progress-store';
 import { PwaController, pwaState, type InstallMode, type PwaState } from '../lib/pwa';
+import { APP_VERSION, RELEASE_NOTES } from '../lib/release-notes';
 import type { Theme } from '../lib/theme';
+import { infoIcon, showReleaseNotesEvent } from './release-notes-sheet';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
 
@@ -24,7 +26,7 @@ export const REPO_URL = 'https://github.com/romgere/mur_assga';
 export const CLEAR_CONFIRM_MS = 4000;
 
 /**
- * Réglages : thème, installation de l'application, sauvegarde (texte JSON à copier), restauration (texte
+ * Réglages : thème, installation de l'application, nouveautés de la version, sauvegarde (texte JSON à copier), restauration (texte
  * collé et validé) et effacement complet en deux temps.
  */
 @customElement('lardy-settings-sheet')
@@ -105,6 +107,23 @@ export class SettingsSheet extends LitElement {
         border-radius: 10px;
         border: 1px solid var(--danger);
         color: var(--danger);
+      }
+
+      .version {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin: 0;
+      }
+
+      .info {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 18px;
+        color: var(--accent);
       }
 
       ol {
@@ -264,6 +283,20 @@ export class SettingsSheet extends LitElement {
       <section>
         <h3>Application</h3>
         ${this.renderInstall()}
+      </section>
+
+      <section>
+        <p class="version">
+          Version ${APP_VERSION} installée.
+          <button
+            class="info release-notes"
+            aria-label="Voir les nouveautés"
+            title="Voir les nouveautés"
+            @click=${() => this.dispatchEvent(showReleaseNotesEvent({ heading: 'Nouveautés', notes: RELEASE_NOTES.slice(0, 1) }))}
+          >
+            ${infoIcon}
+          </button>
+        </p>
       </section>
 
       <section>
