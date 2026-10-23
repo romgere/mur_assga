@@ -4,11 +4,15 @@ import { memoryStorage, miniTopoData, testStore } from '../test/helpers';
 import {
   LEGACY_PROGRESS_KEY,
   ProgressChangeEvent,
+  ascentSummary,
   hasDetail,
+  hasFlaw,
   isClean,
   isCompleted,
   isDone,
+  normalizeDetails,
   progressKey,
+  withDetail,
 } from './progress-store';
 
 const PROGRESS_KEY = progressKey('2026-2027');
@@ -122,44 +126,77 @@ describe('ProgressStore : détails d’ascension', () => {
     const store = testStore(storage);
     expect(store.get('1-VERTE')).toEqual({ t: true, m: true, s: true, n: 'ok' });
     expect(isClean(store.get('1-VERTE'), 't')).toBe(true);
+    expect(ascentSummary(store.get('1-VERTE'), 't')).toBe('Enchaînée proprement');
     expect(store.counts()).toEqual({ total: 5, lead: 1, toprope: 1, done: 1 });
   });
 
   it('enregistre les détails normalisés et les persiste', () => {
     const storage = memoryStorage();
-    testStore(storage).edit('1-VERTE', { t: true, tx: 'pcxc', m: true, mx: 'r' });
-    expect(JSON.parse(storage.get(PROGRESS_KEY)!)).toEqual({ '1-VERTE': { t: true, tx: 'cp', m: true, mx: 'r' } });
-    expect(testStore(storage).get('1-VERTE')).toEqual({ t: true, tx: 'cp', m: true, mx: 'r' });
+    testStore(storage).edit('1-VERTE', {
+      t: true,
+      tx: ['partiel', 'chute', 'chute'],
+      m: true,
+      mx: ['repos'],
+    });
+    const saved = { '1-VERTE': { t: true, tx: ['chute', 'partiel'], m: true, mx: ['repos'] } };
+    expect(JSON.parse(storage.get(PROGRESS_KEY)!)).toEqual(saved);
+    expect(testStore(storage).get('1-VERTE')).toEqual(saved['1-VERTE']);
   });
 
   it('efface les détails quand la façon de grimper est décochée', () => {
     const store = testStore();
-    store.edit('1-VERTE', { t: true, tx: 'c' });
+    store.edit('1-VERTE', { t: true, tx: ['chute'] });
     store.toggle('1-VERTE', 't');
     expect(store.get('1-VERTE')).toEqual({});
-    store.edit('1-VERTE', { tx: 'r' });
+    store.edit('1-VERTE', { tx: ['repos'] });
     expect(store.get('1-VERTE')).toEqual({});
   });
 
   it('ne compte pas une ascension partielle comme faite', () => {
     const store = testStore();
-    store.edit('1-VERTE', { t: true, tx: 'cp' });
-    store.edit('1-JAUNE', { t: true, tx: 'cr', m: true, mx: 'p' });
+    store.edit('1-VERTE', { t: true, tx: ['chute', 'partiel'] });
+    store.edit('1-JAUNE', { t: true, tx: ['chute', 'repos'], m: true, mx: ['partiel'] });
     expect(isDone(store.get('1-VERTE'))).toBe(false);
     expect(isCompleted(store.get('1-JAUNE'), 't')).toBe(true);
     expect(isCompleted(store.get('1-JAUNE'), 'm')).toBe(false);
-    expect(hasDetail(store.get('1-VERTE'), 't', 'c')).toBe(true);
+    expect(hasDetail(store.get('1-VERTE'), 't', 'chute')).toBe(true);
+    expect(ascentSummary(store.get('1-VERTE'), 't')).toBe('Avec chute · non terminée');
     expect(store.counts()).toEqual({ total: 5, lead: 1, toprope: 0, done: 1 });
   });
 
-  it('exporte et réimporte les détails, ignore les lettres inconnues', () => {
+  it('à vue et flash comptent comme faites et propres', () => {
+    const store = testStore();
+    store.edit('1-VERTE', { t: true, tx: ['avue'] });
+    store.edit('1-JAUNE', { m: true, mx: ['flash'] });
+    expect(isClean(store.get('1-VERTE'), 't')).toBe(true);
+    expect(hasFlaw(store.get('1-VERTE'), 't')).toBe(false);
+    expect(ascentSummary(store.get('1-VERTE'), 't')).toBe('Enchaînée à vue');
+    expect(ascentSummary(store.get('1-JAUNE'), 'm')).toBe('Enchaînée en flash');
+    expect(store.counts()).toEqual({ total: 5, lead: 1, toprope: 1, done: 2 });
+  });
+
+  it('applique les exclusions entre détails', () => {
+    // Un défaut l'emporte sur à vue / flash, à vue sur flash.
+    expect(normalizeDetails(['avue', 'chute'])).toEqual(['chute']);
+    expect(normalizeDetails(['flash', 'avue'])).toEqual(['avue']);
+    expect(normalizeDetails(['repos', 'chute', 'zzz'])).toEqual(['chute', 'repos']);
+    // Le détail ajouté retire ceux qu'il exclut.
+    expect(withDetail(['chute', 'repos'], 'avue', true)).toEqual(['avue']);
+    expect(withDetail(['avue'], 'flash', true)).toEqual(['flash']);
+    expect(withDetail(['avue'], 'partiel', true)).toEqual(['partiel']);
+    expect(withDetail(['chute'], 'repos', true)).toEqual(['chute', 'repos']);
+    expect(withDetail(['chute', 'repos'], 'chute', false)).toEqual(['repos']);
+    expect(withDetail(undefined, 'flash', true)).toEqual(['flash']);
+  });
+
+  it('exporte et réimporte les détails, ignore les codes inconnus', () => {
     const a = testStore();
-    a.edit('1-VERTE', { t: true, tx: 'c', m: true, mx: 'pr' });
+    a.edit('1-VERTE', { t: true, tx: ['avue'], m: true, mx: ['partiel', 'repos'] });
     const b = testStore();
     expect(b.importText(a.exportText()).ok).toBe(true);
-    expect(b.get('1-VERTE')).toEqual({ t: true, tx: 'c', m: true, mx: 'rp' });
-    expect(b.importText(JSON.stringify({ '1-VERTE': { t: true, tx: 'zc' } })).ok).toBe(true);
-    expect(b.get('1-VERTE')).toEqual({ t: true, tx: 'c' });
+    expect(b.get('1-VERTE')).toEqual({ t: true, tx: ['avue'], m: true, mx: ['repos', 'partiel'] });
+    expect(b.importText(JSON.stringify({ '1-VERTE': { t: true, tx: ['zzz', 'chute', 3] } })).ok).toBe(true);
+    expect(b.get('1-VERTE')).toEqual({ t: true, tx: ['chute'] });
   });
 
   it('accepte une sauvegarde v2 (sans détails)', () => {
@@ -169,8 +206,8 @@ describe('ProgressStore : détails d’ascension', () => {
     expect(store.get('1-VERTE')).toEqual({ t: true, m: true });
   });
 
-  it('rejette des détails qui ne sont pas du texte', () => {
-    const result = testStore().importText('{"1-VERTE": {"t": true, "tx": 3}}');
+  it('rejette des détails qui ne sont pas une liste', () => {
+    const result = testStore().importText('{"1-VERTE": {"t": true, "tx": "chute"}}');
     expect(result).toMatchObject({ ok: false, message: expect.stringMatching(/« tx » invalides/) });
   });
 });

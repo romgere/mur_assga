@@ -4,9 +4,11 @@ import { styleMap } from 'lit/directives/style-map.js';
 import {
   DETAILS,
   detailsKey,
+  detailsOf,
+  hasFlaw,
   isDone,
-  normalizeDetails,
   progressStore,
+  withDetail,
   type ClimbMode,
   type Detail,
   type ProgressFlag,
@@ -15,6 +17,8 @@ import {
 } from '../lib/progress-store';
 import { StoreController } from '../lib/store-controller';
 import { colorToken, gradeLevel, type Route } from '../lib/topo';
+import { BottomSheet } from './bottom-sheet';
+import { helpButton } from './help-sheet';
 import { sharedStyles } from './shared-styles';
 
 export interface OpenNoteDetail {
@@ -44,9 +48,9 @@ const noteIcon = html`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidde
 /** Durée d'appui sur Tête / Moul. avant d'ouvrir le menu des détails. */
 export const LONG_PRESS_MS = 500;
 
-/** Libellés des détails d'une ascension (« chute, repos »), vide si propre. */
+/** Libellés des détails d'une ascension (« chute, repos », « à vue »), vide sans détail. */
 function detailsText(p: RouteProgress, mode: ClimbMode): string {
-  const details = p[mode] ? (p[detailsKey(mode)] ?? '') : '';
+  const details = detailsOf(p, mode);
   return DETAILS.filter((d) => details.includes(d.code))
     .map((d) => d.label.toLowerCase())
     .join(', ');
@@ -266,9 +270,20 @@ export class RouteRow extends LitElement {
       }
 
       .menu .title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
         font-size: 12px;
         font-weight: 700;
         color: var(--text-muted);
+      }
+
+      .menu hr {
+        width: 100%;
+        margin: 2px 0;
+        border: 0;
+        border-top: 1px solid var(--border);
       }
 
       .menu label {
@@ -373,24 +388,24 @@ export class RouteRow extends LitElement {
   };
 
   private onKey = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') this.closeMenu(true);
+    // Une feuille ouverte par-dessus (l'aide) se ferme d'abord.
+    if (e.key === 'Escape' && !BottomSheet.anyOpen()) this.closeMenu(true);
   };
 
   /** Cocher un détail coche aussi la façon de grimper ; appliqué tout de suite. */
   private setDetail(mode: ClimbMode, detail: Detail, on: boolean) {
     const key = detailsKey(mode);
-    const current = this.store.get(this.route.id)[key] ?? '';
-    const details = normalizeDetails(on ? current + detail : current.replace(detail, ''));
+    const details = withDetail(this.store.get(this.route.id)[key], detail, on);
     this.store.edit(this.route.id, { [key]: details, ...(on ? { [mode]: true } : {}) });
   }
 
   private renderMenu(p: RouteProgress, mode: ClimbMode) {
     const title = mode === 't' ? 'En tête' : 'En moulinette';
-    const details = p[mode] ? (p[detailsKey(mode)] ?? '') : '';
+    const details = detailsOf(p, mode);
     return html`<div class="menu" role="dialog" aria-label="Détails ${title.toLowerCase()}, ${this.label}">
-      <span class="title">${title}</span>
+      <span class="title">${title} ${helpButton(this, () => this.closeMenu(true))}</span>
       ${DETAILS.map(
-        (d) => html`<label
+        (d, i) => html`${i > 0 && d.kind !== DETAILS[i - 1].kind ? html`<hr />` : nothing}<label
           ><input
             type="checkbox"
             class="detail-${d.code}"
@@ -431,6 +446,9 @@ export class RouteRow extends LitElement {
     const label = this.label;
     const lead = detailsText(p, 't');
     const toprope = detailsText(p, 'm');
+    // Pointillés : ascension avec chute, repos ou partielle (pas à vue / flash).
+    const leadFlaw = hasFlaw(p, 't');
+    const topropeFlaw = hasFlaw(p, 'm');
     const details = [lead && `Tête : ${lead}`, toprope && `Moul. : ${toprope}`].filter(Boolean).join(' · ');
 
     return html`<div class="row ${isDone(p) ? 'done' : ''}">
@@ -450,7 +468,7 @@ export class RouteRow extends LitElement {
       </div>
       <div class="actions">
         <button
-          class="toggle lead ${lead ? 'detailed' : ''}"
+          class="toggle lead ${leadFlaw ? 'detailed' : ''}"
           aria-pressed=${p.t ? 'true' : 'false'}
           aria-label="Faite en tête, ${label}"
           @click=${() => this.clickMode('t')}
@@ -463,7 +481,7 @@ export class RouteRow extends LitElement {
           Tête
         </button>
         <button
-          class="toggle toprope ${toprope ? 'detailed' : ''}"
+          class="toggle toprope ${topropeFlaw ? 'detailed' : ''}"
           aria-pressed=${p.m ? 'true' : 'false'}
           aria-label="Faite en moulinette, ${label}"
           @click=${() => this.clickMode('m')}

@@ -21,6 +21,7 @@ import { sharedStyles } from './shared-styles';
 import './all-routes-view';
 import './favorites-view';
 import './mode-tabs';
+import { OPEN_HELP } from './help-sheet';
 import './note-sheet';
 import './pager-dots';
 import './release-notes-sheet';
@@ -159,6 +160,7 @@ export class LardyApp extends LitElement {
   @state() private noteRoute: Route | null = null;
   @state() private settingsOpen = false;
   @state() private releaseNotes: ShowReleaseNotesDetail | null = null;
+  @state() private helpOpen = false;
 
   @query('lardy-route-pager') private pager?: RoutePager;
 
@@ -177,7 +179,18 @@ export class LardyApp extends LitElement {
     // Avant tout enregistrement : takeUnseenNotes reconnaît un nouvel utilisateur à son stockage vide.
     const unseen = takeUnseenNotes(this.storage);
     if (unseen.length) this.releaseNotes = { heading: 'Application mise à jour', notes: unseen };
+    // L'aide peut être demandée de partout : lignes, détails d'une voie, réglages.
+    this.addEventListener(OPEN_HELP, this.onOpenHelp);
   }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.removeEventListener(OPEN_HELP, this.onOpenHelp);
+  }
+
+  private onOpenHelp = () => {
+    this.helpOpen = true;
+  };
 
   private get pages(): Page[] {
     return this.ui.mode === 'grade' ? this.gradePages : this.wallPages;
@@ -306,7 +319,8 @@ export class LardyApp extends LitElement {
         heading=${this.releaseNotes?.heading ?? ''}
         .notes=${this.releaseNotes?.notes ?? []}
         @close=${() => (this.releaseNotes = null)}
-      ></lardy-release-notes-sheet>`;
+      ></lardy-release-notes-sheet>
+      <lardy-help-sheet .open=${this.helpOpen} @close=${() => (this.helpOpen = false)}></lardy-help-sheet>`;
   }
 }
 

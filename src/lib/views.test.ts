@@ -58,14 +58,15 @@ describe('filterRoutes', () => {
   it('filtre selon les détails d’ascension', () => {
     const store = testStore();
     store.toggle('1-VERTE', 't');
-    store.edit('1-JAUNE', { t: true, tx: 'c' });
-    store.edit('2-ROUGE', { t: true, tx: 'cp' });
-    store.edit('1-VIOLETTE', { m: true, mx: 'p' });
+    store.edit('1-JAUNE', { t: true, tx: ['chute'] });
+    store.edit('2-ROUGE', { t: true, tx: ['chute', 'partiel'] });
+    store.edit('1-VIOLETTE', { m: true, mx: ['partiel'] });
+    store.edit('2-BEIGE', { t: true, tx: ['avue'] });
     const run = (status: typeof all.status) => ids(filterRoutes(topo.routes, { ...all, status }, store, 4));
-    expect(run('done')).toEqual(['1-VERTE', '1-JAUNE']);
-    expect(run('lead')).toEqual(['1-VERTE', '1-JAUNE']);
-    expect(run('notlead')).toEqual(['1-VIOLETTE', '2-ROUGE', '2-BEIGE']);
-    expect(run('notcleanlead')).toEqual(['1-JAUNE', '1-VIOLETTE', '2-ROUGE', '2-BEIGE']);
+    expect(run('done')).toEqual(['1-VERTE', '1-JAUNE', '2-BEIGE']);
+    expect(run('lead')).toEqual(['1-VERTE', '1-JAUNE', '2-BEIGE']);
+    expect(run('notlead')).toEqual(['1-VIOLETTE', '2-ROUGE']);
+    expect(run('notcleanlead')).toEqual(['1-JAUNE', '1-VIOLETTE', '2-ROUGE']);
     expect(run('partial')).toEqual(['1-VIOLETTE', '2-ROUGE']);
   });
 

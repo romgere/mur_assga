@@ -17,14 +17,14 @@ export const MAX_NOTE_LENGTH = 2000;
 
 /**
  * État d'une voie : t = tête, m = moulinette, s = favori (star), n = note.
- * tx / mx : détails de l'ascension en tête / en moulinette, lettres de
- * DETAILS (« cr » = avec chute et repos) ; absents = enchaînée proprement.
+ * tx / mx : détails de l'ascension en tête / en moulinette, codes de
+ * DETAILS (["chute", "repos"]) ; absents = enchaînée proprement.
  */
 export interface RouteProgress {
   t?: boolean;
   m?: boolean;
-  tx?: string;
-  mx?: string;
+  tx?: Detail[];
+  mx?: Detail[];
   s?: boolean;
   n?: string;
 }
@@ -33,39 +33,130 @@ export type ProgressMap = Record<string, RouteProgress>;
 export type ProgressFlag = 't' | 'm' | 's';
 /** Façon de grimper : t = tête, m = moulinette. */
 export type ClimbMode = 't' | 'm';
-export type Detail = 'c' | 'r' | 'p';
+export type Detail = 'avue' | 'flash' | 'chute' | 'repos' | 'partiel';
 
-/** Détails possibles d'une ascension, dans l'ordre où ils sont stockés. */
-export const DETAILS: readonly { code: Detail; label: string }[] = [
-  { code: 'c', label: 'Chute' },
-  { code: 'r', label: 'Repos' },
-  { code: 'p', label: 'Partiel' },
+export interface DetailInfo {
+  code: Detail;
+  label: string;
+  /** clean : ascension propre au premier essai ; flaw : chute, repos, abandon. */
+  kind: 'clean' | 'flaw';
+  /** La voie compte-t-elle comme faite avec ce détail ? */
+  done: boolean;
+  /** Pour le résumé (« Avec chute · non terminée », « Enchaînée à vue »). */
+  summary: string;
+  /** Pour l'aide. */
+  description: string;
+}
+
+/**
+ * Détails possibles d'une ascension, dans l'ordre où ils sont stockés.
+ * À vue et Flash s'excluent entre eux et avec les autres ; Chute, Repos et
+ * Partiel se cumulent.
+ */
+export const DETAILS: readonly DetailInfo[] = [
+  {
+    code: 'avue',
+    label: 'À vue',
+    kind: 'clean',
+    done: true,
+    summary: 'enchaînée à vue',
+    description: 'Enchaînée sans chute ni repos au premier essai, sans aucune information : personne vu dedans, pas de méthode.',
+  },
+  {
+    code: 'flash',
+    label: 'Flash',
+    kind: 'clean',
+    done: true,
+    summary: 'enchaînée en flash',
+    description: 'Enchaînée sans chute ni repos au premier essai, mais avec des informations : vu quelqu’un la grimper, méthode donnée.',
+  },
+  {
+    code: 'chute',
+    label: 'Chute',
+    kind: 'flaw',
+    done: true,
+    summary: 'avec chute',
+    description: 'Au moins une chute, puis la voie a été terminée jusqu’au relais.',
+  },
+  {
+    code: 'repos',
+    label: 'Repos',
+    kind: 'flaw',
+    done: true,
+    summary: 'avec repos',
+    description: 'Repos sur la corde (« sec ! ») ou en se tenant à une dégaine, puis la voie a été terminée.',
+  },
+  {
+    code: 'partiel',
+    label: 'Partiel',
+    kind: 'flaw',
+    done: false,
+    summary: 'non terminée',
+    description: 'Voie abandonnée avant le relais.',
+  },
 ];
+
+const DETAIL_INFO = new Map(DETAILS.map((d) => [d.code, d]));
+
+export function detailInfo(code: Detail): DetailInfo {
+  return DETAIL_INFO.get(code)!;
+}
 
 /** Clé des détails d'une façon de grimper : tx pour la tête, mx pour la moulinette. */
 export function detailsKey(mode: ClimbMode): 'tx' | 'mx' {
   return mode === 't' ? 'tx' : 'mx';
 }
 
-/** Ne garde que les détails connus, sans doublon, dans l'ordre de DETAILS. */
-export function normalizeDetails(details: string | undefined): string {
-  return DETAILS.map((d) => d.code)
-    .filter((code) => details?.includes(code))
-    .join('');
+/**
+ * Ne garde que les détails connus, sans doublon, dans l'ordre de DETAILS, et
+ * applique les exclusions : un défaut (chute, repos, partiel) l'emporte sur
+ * À vue / Flash, et À vue l'emporte sur Flash.
+ */
+export function normalizeDetails(details: readonly unknown[] | undefined): Detail[] {
+  const known = DETAILS.filter((d) => details?.includes(d.code));
+  const flaws = known.filter((d) => d.kind === 'flaw');
+  return (flaws.length ? flaws : known.slice(0, 1)).map((d) => d.code);
+}
+
+/** Ajoute ou retire un détail ; un détail ajouté retire ceux qu'il exclut. */
+export function withDetail(details: readonly Detail[] | undefined, detail: Detail, on: boolean): Detail[] {
+  const current = details ?? [];
+  if (!on) return normalizeDetails(current.filter((d) => d !== detail));
+  const kind = detailInfo(detail).kind;
+  const kept = kind === 'clean' ? [] : current.filter((d) => detailInfo(d).kind === 'flaw');
+  return normalizeDetails([...kept, detail]);
+}
+
+/** Détails d'une façon de grimper, vide si elle n'est pas cochée. */
+export function detailsOf(p: RouteProgress | undefined, mode: ClimbMode): Detail[] {
+  return (p && p[mode] && p[detailsKey(mode)]) || [];
 }
 
 export function hasDetail(p: RouteProgress | undefined, mode: ClimbMode, detail: Detail): boolean {
-  return !!(p && p[mode] && p[detailsKey(mode)]?.includes(detail));
+  return detailsOf(p, mode).includes(detail);
 }
 
 /** Voie terminée dans cette façon de grimper : cochée et pas « partiel ». */
 export function isCompleted(p: RouteProgress | undefined, mode: ClimbMode): boolean {
-  return !!(p && p[mode]) && !hasDetail(p, mode, 'p');
+  return !!(p && p[mode]) && detailsOf(p, mode).every((d) => detailInfo(d).done);
 }
 
-/** Voie enchaînée proprement : cochée, sans aucun détail. */
+/** Voie enchaînée proprement : cochée, sans chute, repos ni abandon. */
 export function isClean(p: RouteProgress | undefined, mode: ClimbMode): boolean {
-  return !!(p && p[mode] && !p[detailsKey(mode)]);
+  return !!(p && p[mode]) && !hasFlaw(p, mode);
+}
+
+export function hasFlaw(p: RouteProgress | undefined, mode: ClimbMode): boolean {
+  return detailsOf(p, mode).some((d) => detailInfo(d).kind === 'flaw');
+}
+
+/** Résumé d'une ascension : « Pas faite », « Enchaînée proprement », « Avec chute · non terminée »… */
+export function ascentSummary(p: RouteProgress | undefined, mode: ClimbMode): string {
+  if (!p || !p[mode]) return 'Pas faite';
+  const text = detailsOf(p, mode)
+    .map((d) => detailInfo(d).summary)
+    .join(' · ');
+  return text ? text[0].toUpperCase() + text.slice(1) : 'Enchaînée proprement';
 }
 
 export interface Counts {
@@ -104,10 +195,10 @@ function compact(p: RouteProgress): RouteProgress {
   const out: RouteProgress = {};
   if (p.t) out.t = true;
   if (p.m) out.m = true;
-  const tx = p.t ? normalizeDetails(p.tx) : '';
-  const mx = p.m ? normalizeDetails(p.mx) : '';
-  if (tx) out.tx = tx;
-  if (mx) out.mx = mx;
+  const tx = p.t ? normalizeDetails(p.tx) : [];
+  const mx = p.m ? normalizeDetails(p.mx) : [];
+  if (tx.length) out.tx = tx;
+  if (mx.length) out.mx = mx;
   if (p.s) out.s = true;
   if (p.n) out.n = p.n;
   return out;
@@ -233,8 +324,8 @@ export class ProgressStore extends EventTarget {
    * Accepte soit une sauvegarde complète ({app, version, season, progress}) de
    * la saison affichée, soit
    * directement la table {"mur-COULEUR": {t, m, tx, mx, s, n}}. Les voies qui
-   * n'existent plus dans le topo sont ignorées, comme les lettres de détail
-   * inconnues ; un type invalide rejette tout.
+   * n'existent plus dans le topo sont ignorées, comme les détails
+   * inconnus ; un type invalide rejette tout.
    */
   private validate(
     json: unknown,
@@ -278,7 +369,7 @@ export class ProgressStore extends EventTarget {
         }
       }
       for (const key of ['tx', 'mx'] as const) {
-        if (v[key] !== undefined && typeof v[key] !== 'string') {
+        if (v[key] !== undefined && !Array.isArray(v[key])) {
           return { ok: false, message: `Détails « ${key} » invalides pour la voie « ${id} ».` };
         }
       }
@@ -292,8 +383,8 @@ export class ProgressStore extends EventTarget {
       const entry = compact({
         t: v.t as boolean | undefined,
         m: v.m as boolean | undefined,
-        tx: v.tx as string | undefined,
-        mx: v.mx as string | undefined,
+        tx: v.tx as unknown[] as Detail[] | undefined,
+        mx: v.mx as unknown[] as Detail[] | undefined,
         s: v.s as boolean | undefined,
         n: typeof v.n === 'string' ? v.n.slice(0, MAX_NOTE_LENGTH) : undefined,
       });

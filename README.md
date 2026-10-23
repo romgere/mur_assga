@@ -20,11 +20,14 @@ test
 - « Tête » et « Moulinette » sont cochées indépendamment ; les compteurs
   globaux et ceux de chaque page se mettent à jour.
 - Détails d'ascension (appui long ou clic droit sur Tête / Moul. pour un
-  menu rapide, ou bouton crayon) : pour la tête et la moulinette, avec
-  **chute**, avec **repos** et/ou **partiel** (non terminée). Une voie
-  cochée sans détail est enchaînée proprement ; une ascension partielle ne
-  compte pas comme faite. Le bouton d'une ascension avec détails est en
+  menu rapide, ou bouton crayon) : pour la tête et la moulinette, **à vue**
+  ou **flash** (premier essai, sans ou avec informations), ou bien avec
+  **chute**, avec **repos** et/ou **partiel** (non terminée). Une voie cochée
+  sans détail est enchaînée proprement ; une ascension partielle ne compte pas
+  comme faite. Le bouton d'une ascension avec chute, repos ou partielle est en
   pointillés.
+- Aide « États d'une voie » : bouton (i) à côté des détails, ou Réglages →
+  Aide. Elle décrit chaque état et indique s'il compte comme fait.
 - Favoris, notes par voie (cotation ressentie…), thème Auto / Clair / Sombre.
 - Sauvegarde et restauration par copier-coller d'un texte JSON, et effacement
   complet avec confirmation.
@@ -39,8 +42,8 @@ Les données restent dans le navigateur (`localStorage`) :
 | `lardy2026.version`        | dernière version dont les nouveautés ont été vues                |
 
 Dans la progression : `t` / `m` = faite en tête / en moulinette, `tx` / `mx` =
-détails de cette ascension (lettres `c` chute, `r` repos, `p` partiel ;
-absent = propre), `s` = favori, `n` = note. Les détails sont des champs
+détails de cette ascension (liste de codes `avue`, `flash`, `chute`, `repos`,
+`partiel` ; absent = enchaînée proprement), `s` = favori, `n` = note. Les détails sont des champs
 ajoutés : les données sans détails restent valides telles quelles. Les
 sauvegardes sont en version 3 ; les versions 1 et 2 s'importent toujours.
 

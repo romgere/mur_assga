@@ -6,6 +6,7 @@ import { PwaController, pwaState, type InstallMode, type PwaState } from '../lib
 import { APP_VERSION, RELEASE_NOTES } from '../lib/release-notes';
 import type { Theme } from '../lib/theme';
 import { infoIcon, showReleaseNotesEvent } from './release-notes-sheet';
+import { requestHelp } from './help-sheet';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
 
@@ -278,6 +279,13 @@ export class SettingsSheet extends LitElement {
               </button>`,
           )}
         </div>
+      </section>
+
+      <section>
+        <h3>Aide</h3>
+        <button class="btn help" @click=${() => requestHelp(this)}>
+          États d’une voie : tête, moulinette, à vue, chute…
+        </button>
       </section>
 
       <section>

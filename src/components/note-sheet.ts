@@ -3,15 +3,18 @@ import { customElement, property, query, state } from 'lit/decorators.js';
 import {
   DETAILS,
   MAX_NOTE_LENGTH,
+  ascentSummary,
   detailsKey,
-  normalizeDetails,
+  detailsOf,
   progressStore,
+  withDetail,
   type ClimbMode,
   type Detail,
   type ProgressStore,
   type RouteProgress,
 } from '../lib/progress-store';
 import type { Route } from '../lib/topo';
+import { helpButton } from './help-sheet';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
 
@@ -20,21 +23,9 @@ const MODES: { mode: ClimbMode; label: string; cls: string }[] = [
   { mode: 'm', label: 'Moulinette', cls: 'toprope' },
 ];
 
-const SUMMARIES: Record<Detail, string> = { c: 'avec chute', r: 'avec repos', p: 'non terminée' };
-
-/** Résumé de l'ascension sous les puces (« Enchaînée proprement », « Avec chute · non terminée »). */
-function summary(a: RouteProgress, mode: ClimbMode): string {
-  if (!a[mode]) return 'Pas faite';
-  const details = a[detailsKey(mode)] ?? '';
-  const text = DETAILS.filter((d) => details.includes(d.code))
-    .map((d) => SUMMARIES[d.code])
-    .join(' · ');
-  return text ? text[0].toUpperCase() + text.slice(1) : 'Enchaînée proprement';
-}
-
 /**
- * Feuille de détails d'une voie : comment elle a été grimpée (chute, repos,
- * partiel) en tête et en moulinette, et sa note (cotation ressentie, méthode…).
+ * Feuille de détails d'une voie : comment elle a été grimpée (à vue, flash,
+ * chute, repos, partiel) en tête et en moulinette, et sa note (cotation ressentie, méthode…).
  */
 @customElement('lardy-note-sheet')
 export class NoteSheet extends LitElement {
@@ -111,6 +102,9 @@ export class NoteSheet extends LitElement {
       }
 
       .how-label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
         font-size: 12px;
         font-weight: 600;
         color: var(--text-muted);
@@ -192,14 +186,13 @@ export class NoteSheet extends LitElement {
   }
 
   private setMode(mode: ClimbMode, on: boolean) {
-    this.ascents = { ...this.ascents, [mode]: on, ...(on ? {} : { [detailsKey(mode)]: '' }) };
+    this.ascents = { ...this.ascents, [mode]: on, ...(on ? {} : { [detailsKey(mode)]: [] }) };
   }
 
   /** Cocher un détail coche aussi la façon de grimper. */
   private setDetail(mode: ClimbMode, detail: Detail, on: boolean) {
     const key = detailsKey(mode);
-    const current = this.ascents[key] ?? '';
-    const details = normalizeDetails(on ? current + detail : current.replace(detail, ''));
+    const details = withDetail(this.ascents[key], detail, on);
     this.ascents = { ...this.ascents, [key]: details, ...(on ? { [mode]: true } : {}) };
   }
 
@@ -220,7 +213,7 @@ export class NoteSheet extends LitElement {
     const a = this.ascents;
     return html`<lardy-sheet .open=${!!r} heading=${heading} @close=${this.close}>
       ${MODES.map(({ mode, label, cls }) => {
-        const details = a[mode] ? (a[detailsKey(mode)] ?? '') : '';
+        const details = detailsOf(a, mode);
         return html`<section class="card ${cls} ${a[mode] ? 'on' : ''}" aria-label=${label}>
           <div class="card-head">
             <h3>${label}</h3>
@@ -234,19 +227,21 @@ export class NoteSheet extends LitElement {
             </button>
           </div>
           <div class="how" role="group" aria-label="Comment, en ${label.toLowerCase()}">
-            <span class="how-label">Comment ?</span>
-            <div class="chips">
-              ${DETAILS.map(
-                (d) => html`<button
-                  class="chip detail-${d.code}"
-                  aria-pressed=${details.includes(d.code) ? 'true' : 'false'}
-                  @click=${() => this.setDetail(mode, d.code, !details.includes(d.code))}
-                >
-                  ${d.label}
-                </button>`,
-              )}
-            </div>
-            <p class="summary">→ ${summary(a, mode)}</p>
+            <span class="how-label">Comment ? ${helpButton(this)}</span>
+            ${(['clean', 'flaw'] as const).map(
+              (kind) => html`<div class="chips ${kind}">
+                ${DETAILS.filter((d) => d.kind === kind).map(
+                  (d) => html`<button
+                    class="chip detail-${d.code}"
+                    aria-pressed=${details.includes(d.code) ? 'true' : 'false'}
+                    @click=${() => this.setDetail(mode, d.code, !details.includes(d.code))}
+                  >
+                    ${d.label}
+                  </button>`,
+                )}
+              </div>`,
+            )}
+            <p class="summary">→ ${ascentSummary(a, mode)}</p>
           </div>
         </section>`;
       })}

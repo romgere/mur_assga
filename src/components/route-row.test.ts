@@ -85,18 +85,19 @@ describe('lardy-route-row', () => {
   it('distingue une ascension avec détails et les affiche', async () => {
     const el = await row();
     expect(el.shadowRoot!.querySelector('.details')).toBeNull();
-    el.store.edit('1-VERTE', { t: true, tx: 'cp', m: true, mx: 'r' });
+    el.store.edit('1-VERTE', { t: true, tx: ['chute', 'partiel'], m: true, mx: ['avue'] });
     await el.updateComplete;
     expect($(el, 'button.lead').getAttribute('aria-pressed')).toBe('true');
     expect($(el, 'button.lead').classList.contains('detailed')).toBe(true);
-    expect($(el, 'button.toprope').classList.contains('detailed')).toBe(true);
-    expect($(el, '.details').textContent).toBe('Tête : chute, partiel · Moul. : repos');
+    // À vue n'est pas un défaut : pas de pointillés.
+    expect($(el, 'button.toprope').classList.contains('detailed')).toBe(false);
+    expect($(el, '.details').textContent).toBe('Tête : chute, partiel · Moul. : à vue');
     expect($(el, '.row').classList.contains('done')).toBe(true);
   });
 
   it('une ascension partielle seule ne marque pas la voie faite', async () => {
     const el = await row();
-    el.store.edit('1-VERTE', { t: true, tx: 'p' });
+    el.store.edit('1-VERTE', { t: true, tx: ['partiel'] });
     await el.updateComplete;
     expect($(el, '.row').classList.contains('done')).toBe(false);
   });
@@ -125,8 +126,8 @@ describe('lardy-route-row', () => {
       const el = await row();
       await longPress(el, 'button.lead');
       expect(el.store.get('1-VERTE')).toEqual({});
-      expect($(el, '.menu .title').textContent).toBe('En tête');
-      expect(el.shadowRoot!.querySelectorAll('.menu input')).toHaveLength(3);
+      expect($(el, '.menu .title').textContent!.trim()).toBe('En tête');
+      expect(el.shadowRoot!.querySelectorAll('.menu input')).toHaveLength(5);
       $(el, 'button.lead').click();
       expect(el.store.get('1-VERTE')).toEqual({ t: true });
     });
@@ -144,15 +145,21 @@ describe('lardy-route-row', () => {
     it('applique les détails tout de suite et coche la façon de grimper', async () => {
       const el = await row();
       await longPress(el, 'button.toprope');
-      check(el, '.menu .detail-r');
-      expect(el.store.get('1-VERTE')).toEqual({ m: true, mx: 'r' });
+      check(el, '.menu .detail-repos');
+      expect(el.store.get('1-VERTE')).toEqual({ m: true, mx: ['repos'] });
       await el.updateComplete;
-      check(el, '.menu .detail-p');
-      check(el, '.menu .detail-r');
-      expect(el.store.get('1-VERTE')).toEqual({ m: true, mx: 'p' });
+      check(el, '.menu .detail-partiel');
+      check(el, '.menu .detail-repos');
+      expect(el.store.get('1-VERTE')).toEqual({ m: true, mx: ['partiel'] });
       await el.updateComplete;
-      expect($<HTMLInputElement>(el, '.menu .detail-p').checked).toBe(true);
+      expect($<HTMLInputElement>(el, '.menu .detail-partiel').checked).toBe(true);
       expect($(el, 'button.toprope').classList.contains('detailed')).toBe(true);
+      // À vue remplace les défauts.
+      check(el, '.menu .detail-avue');
+      expect(el.store.get('1-VERTE')).toEqual({ m: true, mx: ['avue'] });
+      await el.updateComplete;
+      expect($<HTMLInputElement>(el, '.menu .detail-partiel').checked).toBe(false);
+      expect($(el, 'button.toprope').classList.contains('detailed')).toBe(false);
     });
 
     it('s’ouvre au clic droit et se ferme avec Échap ou un appui ailleurs', async () => {
@@ -167,6 +174,18 @@ describe('lardy-route-row', () => {
       await el.updateComplete;
       document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true }));
       await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.menu')).toBeNull();
+    });
+
+
+    it('le bouton (i) ferme le menu et demande l’aide', async () => {
+      const el = await row();
+      const spy = vi.fn();
+      document.body.addEventListener('open-help', spy, { once: true });
+      await longPress(el, 'button.lead');
+      $(el, '.menu .help-btn').click();
+      await el.updateComplete;
+      expect(spy).toHaveBeenCalledOnce();
       expect(el.shadowRoot!.querySelector('.menu')).toBeNull();
     });
   });

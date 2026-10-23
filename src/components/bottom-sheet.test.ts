@@ -52,4 +52,22 @@ describe('lardy-sheet', () => {
     expect(document.activeElement).toBe(button);
     button.remove();
   });
+
+  it('avec deux feuilles empilées, Échap ne ferme que la dernière', async () => {
+    const below = await sheet();
+    below.open = true;
+    await below.updateComplete;
+    const above = await sheet();
+    above.open = true;
+    await above.updateComplete;
+    expect(BottomSheet.anyOpen()).toBe(true);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+    await Promise.all([below.updateComplete, above.updateComplete]);
+    expect(above.open).toBe(false);
+    expect(below.open).toBe(true);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+    await below.updateComplete;
+    expect(below.open).toBe(false);
+    expect(BottomSheet.anyOpen()).toBe(false);
+  });
 });

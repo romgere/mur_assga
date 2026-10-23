@@ -82,7 +82,7 @@ export function filterRoutes(routes: Route[], filters: Filters, store: ProgressS
       case 'notcleanlead':
         return !isClean(p, 't');
       case 'partial':
-        return hasDetail(p, 't', 'p') || hasDetail(p, 'm', 'p');
+        return hasDetail(p, 't', 'partiel') || hasDetail(p, 'm', 'partiel');
       default:
         return true;
     }
