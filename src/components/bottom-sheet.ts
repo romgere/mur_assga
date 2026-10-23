@@ -5,7 +5,8 @@ import { sharedStyles } from './shared-styles';
 /**
  * Feuille modale générique qui monte du bas de l'écran. Se ferme par la
  * croix, un appui sur le fond ou Échap, et rend le focus à l'élément
- * qui l'a ouverte. Émet « close ».
+ * qui l'a ouverte. Émet « close ». Des feuilles peuvent s'empiler (l'aide
+ * par-dessus les détails d'une voie) : Échap ne ferme que la dernière.
  */
 @customElement('lardy-sheet')
 export class BottomSheet extends LitElement {
@@ -97,10 +98,17 @@ export class BottomSheet extends LitElement {
 
   @query('.panel') private panel?: HTMLElement;
 
+  /** Feuilles ouvertes, de la plus ancienne à la plus récente. */
+  private static stack: BottomSheet[] = [];
+
+  static anyOpen(): boolean {
+    return BottomSheet.stack.length > 0;
+  }
+
   private returnFocus: Element | null = null;
 
   private onKeydown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && this.open) {
+    if (e.key === 'Escape' && this.open && BottomSheet.stack.at(-1) === this && !e.defaultPrevented) {
       e.preventDefault();
       this.close();
     }
@@ -119,9 +127,11 @@ export class BottomSheet extends LitElement {
   protected updated(changed: Map<string, unknown>): void {
     if (!changed.has('open')) return;
     if (this.open) {
+      BottomSheet.stack.push(this);
       document.addEventListener('keydown', this.onKeydown);
       if (!this.contains(deepActiveElement())) this.panel?.focus();
     } else if (changed.get('open') === true) {
+      this.unstack();
       document.removeEventListener('keydown', this.onKeydown);
       (this.returnFocus as HTMLElement | null)?.focus?.();
       this.returnFocus = null;
@@ -130,7 +140,12 @@ export class BottomSheet extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    this.unstack();
     document.removeEventListener('keydown', this.onKeydown);
+  }
+
+  private unstack() {
+    BottomSheet.stack = BottomSheet.stack.filter((s) => s !== this);
   }
 
   render() {

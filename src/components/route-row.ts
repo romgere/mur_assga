@@ -1,9 +1,24 @@
 import { LitElement, css, html, nothing } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
-import { isDone, progressStore, type ProgressFlag, type ProgressStore } from '../lib/progress-store';
+import {
+  DETAILS,
+  detailsKey,
+  detailsOf,
+  hasFlaw,
+  isDone,
+  progressStore,
+  withDetail,
+  type ClimbMode,
+  type Detail,
+  type ProgressFlag,
+  type ProgressStore,
+  type RouteProgress,
+} from '../lib/progress-store';
 import { StoreController } from '../lib/store-controller';
 import { colorToken, gradeLevel, type Route } from '../lib/topo';
+import { BottomSheet } from './bottom-sheet';
+import { helpButton } from './help-sheet';
 import { sharedStyles } from './shared-styles';
 
 export interface OpenNoteDetail {
@@ -30,9 +45,21 @@ const noteIcon = html`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidde
   />
 </svg>`;
 
+/** Durée d'appui sur Tête / Moul. avant d'ouvrir le menu des détails. */
+export const LONG_PRESS_MS = 500;
+
+/** Libellés des détails d'une ascension (« chute, repos », « à vue »), vide sans détail. */
+function detailsText(p: RouteProgress, mode: ClimbMode): string {
+  const details = detailsOf(p, mode);
+  return DETAILS.filter((d) => details.includes(d.code))
+    .map((d) => d.label.toLowerCase())
+    .join(', ');
+}
+
 /**
  * Une voie : pastille de couleur, cotation, initiales/badges, et les
- * boutons Tête / Moulinette / favori / note. Seule cette ligne se repeint
+ * boutons Tête / Moulinette / favori / détails et note. Un appui long (ou
+ * clic droit) sur Tête / Moul. ouvre un petit menu des détails. Seule cette ligne se repeint
  * quand sa voie change dans le store.
  */
 @customElement('lardy-route-row')
@@ -45,6 +72,7 @@ export class RouteRow extends LitElement {
       }
 
       .row {
+        position: relative;
         display: grid;
         grid-template-columns: 62px minmax(0, 1fr) auto;
         align-items: center;
@@ -173,6 +201,25 @@ export class RouteRow extends LitElement {
         color: var(--toprope-ink);
       }
 
+      /* Ascension avec chute, repos ou partielle : contour seulement. */
+      .toggle {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      .toggle.lead.detailed[aria-pressed='true'] {
+        background: var(--surface);
+        color: var(--lead);
+        border-style: dashed;
+      }
+
+      .toggle.toprope.detailed[aria-pressed='true'] {
+        background: var(--surface);
+        color: var(--toprope);
+        border-style: dashed;
+      }
+
       .icon {
         display: inline-flex;
         align-items: center;
@@ -191,7 +238,8 @@ export class RouteRow extends LitElement {
         color: var(--accent);
       }
 
-      .note {
+      .note,
+      .details {
         grid-column: 2 / -1;
         margin: 0;
         font-size: 13px;
@@ -201,6 +249,50 @@ export class RouteRow extends LitElement {
         text-overflow: ellipsis;
         white-space: nowrap;
       }
+
+      .details {
+        font-style: normal;
+      }
+
+      .menu {
+        position: absolute;
+        top: calc(100% - 6px);
+        right: 8px;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .menu .title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+      }
+
+      .menu hr {
+        width: 100%;
+        margin: 2px 0;
+        border: 0;
+        border-top: 1px solid var(--border);
+      }
+
+      .menu label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 36px;
+        font-size: 15px;
+      }
     `,
   ];
 
@@ -209,6 +301,12 @@ export class RouteRow extends LitElement {
   /** Mode « Difficulté » : le mur en gros, sans la cotation (déjà donnée par la page). */
   @property({ type: Boolean, attribute: 'wall-first' }) wallFirst = false;
   @property({ attribute: false }) store: ProgressStore = progressStore;
+
+  /** Façon de grimper dont le menu des détails est ouvert. */
+  @state() private menu: ClimbMode | null = null;
+  private pressTimer?: ReturnType<typeof setTimeout>;
+  /** Un appui long vient d'ouvrir le menu : le clic qui suit ne bascule pas. */
+  private skipClick = false;
 
   constructor() {
     super();
@@ -224,8 +322,99 @@ export class RouteRow extends LitElement {
     this.setAttribute('role', 'listitem');
   }
 
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.closeMenu();
+    this.cancelPress();
+  }
+
   private toggle(flag: ProgressFlag) {
     this.store.toggle(this.route.id, flag);
+  }
+
+  private clickMode(mode: ClimbMode) {
+    if (this.skipClick) {
+      this.skipClick = false;
+      return;
+    }
+    this.toggle(mode);
+  }
+
+  private startPress(mode: ClimbMode, e: PointerEvent) {
+    if (e.button !== 0) return;
+    this.skipClick = false;
+    this.cancelPress();
+    this.pressTimer = setTimeout(() => {
+      this.skipClick = true;
+      this.openMenu(mode);
+    }, LONG_PRESS_MS);
+  }
+
+  private cancelPress() {
+    clearTimeout(this.pressTimer);
+    this.pressTimer = undefined;
+  }
+
+  /** Clic droit, ou appui long sur Android qui déclenche aussi contextmenu. */
+  private onContextMenu(mode: ClimbMode, e: Event) {
+    e.preventDefault();
+    this.cancelPress();
+    this.skipClick = true;
+    this.openMenu(mode);
+  }
+
+  private openMenu(mode: ClimbMode) {
+    if (this.menu === mode) return;
+    this.menu = mode;
+    document.addEventListener('pointerdown', this.onOutside, true);
+    document.addEventListener('keydown', this.onKey);
+    this.updateComplete.then(() => this.renderRoot.querySelector<HTMLInputElement>('.menu input')?.focus());
+  }
+
+  private closeMenu(restoreFocus = false) {
+    const mode = this.menu;
+    if (!mode) return;
+    this.menu = null;
+    document.removeEventListener('pointerdown', this.onOutside, true);
+    document.removeEventListener('keydown', this.onKey);
+    if (restoreFocus) {
+      this.renderRoot.querySelector<HTMLElement>(mode === 't' ? 'button.lead' : 'button.toprope')?.focus();
+    }
+  }
+
+  private onOutside = (e: Event) => {
+    const menu = this.renderRoot.querySelector('.menu');
+    if (menu && !e.composedPath().includes(menu)) this.closeMenu();
+  };
+
+  private onKey = (e: KeyboardEvent) => {
+    // Une feuille ouverte par-dessus (l'aide) se ferme d'abord.
+    if (e.key === 'Escape' && !BottomSheet.anyOpen()) this.closeMenu(true);
+  };
+
+  /** Cocher un détail coche aussi la façon de grimper ; appliqué tout de suite. */
+  private setDetail(mode: ClimbMode, detail: Detail, on: boolean) {
+    const key = detailsKey(mode);
+    const details = withDetail(this.store.get(this.route.id)[key], detail, on);
+    this.store.edit(this.route.id, { [key]: details, ...(on ? { [mode]: true } : {}) });
+  }
+
+  private renderMenu(p: RouteProgress, mode: ClimbMode) {
+    const title = mode === 't' ? 'En tête' : 'En moulinette';
+    const details = detailsOf(p, mode);
+    return html`<div class="menu" role="dialog" aria-label="Détails ${title.toLowerCase()}, ${this.label}">
+      <span class="title">${title} ${helpButton(this, () => this.closeMenu(true))}</span>
+      ${DETAILS.map(
+        (d, i) => html`${i > 0 && d.kind !== DETAILS[i - 1].kind ? html`<hr />` : nothing}<label
+          ><input
+            type="checkbox"
+            class="detail-${d.code}"
+            .checked=${details.includes(d.code)}
+            @change=${(e: Event) => this.setDetail(mode, d.code, (e.target as HTMLInputElement).checked)}
+          />${d.label}</label
+        >`,
+      )}
+    </div>`;
   }
 
   private openNote() {
@@ -255,6 +444,12 @@ export class RouteRow extends LitElement {
     const token = colorToken(r.color);
     const swatch = { '--sw': `var(--c-${token}, #888)`, '--sw-ink': `var(--c-${token}-ink, #fff)` };
     const label = this.label;
+    const lead = detailsText(p, 't');
+    const toprope = detailsText(p, 'm');
+    // Pointillés : ascension avec chute, repos ou partielle (pas à vue / flash).
+    const leadFlaw = hasFlaw(p, 't');
+    const topropeFlaw = hasFlaw(p, 'm');
+    const details = [lead && `Tête : ${lead}`, toprope && `Moul. : ${toprope}`].filter(Boolean).join(' · ');
 
     return html`<div class="row ${isDone(p) ? 'done' : ''}">
       <span class="color">
@@ -273,18 +468,28 @@ export class RouteRow extends LitElement {
       </div>
       <div class="actions">
         <button
-          class="toggle lead"
+          class="toggle lead ${leadFlaw ? 'detailed' : ''}"
           aria-pressed=${p.t ? 'true' : 'false'}
           aria-label="Faite en tête, ${label}"
-          @click=${() => this.toggle('t')}
+          @click=${() => this.clickMode('t')}
+          @pointerdown=${(e: PointerEvent) => this.startPress('t', e)}
+          @pointerup=${this.cancelPress}
+          @pointerleave=${this.cancelPress}
+          @pointercancel=${this.cancelPress}
+          @contextmenu=${(e: Event) => this.onContextMenu('t', e)}
         >
           Tête
         </button>
         <button
-          class="toggle toprope"
+          class="toggle toprope ${topropeFlaw ? 'detailed' : ''}"
           aria-pressed=${p.m ? 'true' : 'false'}
           aria-label="Faite en moulinette, ${label}"
-          @click=${() => this.toggle('m')}
+          @click=${() => this.clickMode('m')}
+          @pointerdown=${(e: PointerEvent) => this.startPress('m', e)}
+          @pointerup=${this.cancelPress}
+          @pointerleave=${this.cancelPress}
+          @pointercancel=${this.cancelPress}
+          @contextmenu=${(e: Event) => this.onContextMenu('m', e)}
         >
           Moul.
         </button>
@@ -298,12 +503,14 @@ export class RouteRow extends LitElement {
         </button>
         <button
           class="icon note-btn ${p.n ? 'has-note' : ''}"
-          aria-label="${p.n ? 'Modifier la note' : 'Ajouter une note'}, ${label}"
+          aria-label="Détails et note, ${label}"
           @click=${this.openNote}
         >
           ${noteIcon}
         </button>
       </div>
+      ${this.menu ? this.renderMenu(p, this.menu) : nothing}
+      ${details ? html`<p class="details">${details}</p>` : nothing}
       ${p.n ? html`<p class="note">${p.n}</p>` : nothing}
     </div>`;
   }

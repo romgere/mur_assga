@@ -7,7 +7,7 @@ import { takeUnseenNotes } from '../lib/release-notes';
 import { storage as defaultStorage, type KeyValueStorage } from '../lib/storage';
 import { applyTheme, loadTheme, saveTheme, type Theme } from '../lib/theme';
 import type { Route } from '../lib/topo';
-import { loadUiState, saveUiState, type UiState } from '../lib/ui-state';
+import { defaultFilters, loadUiState, saveUiState, type UiState } from '../lib/ui-state';
 import { gradePages, wallPages, type Page } from '../lib/views';
 import type { FiltersChangeDetail } from './all-routes-view';
 import type { ModeChangeDetail } from './mode-tabs';
@@ -16,11 +16,12 @@ import type { OpenNoteDetail } from './route-row';
 import type { ShowReleaseNotesDetail } from './release-notes-sheet';
 import type { PageChangeDetail, RoutePager } from './route-pager';
 import type { ThemeChangeDetail } from './settings-sheet';
-import type { StatsCountChangeDetail } from './stats-view';
+import type { ShowRoutesDetail, StatsCountChangeDetail } from './stats-view';
 import { sharedStyles } from './shared-styles';
 import './all-routes-view';
 import './favorites-view';
 import './mode-tabs';
+import { OPEN_HELP } from './help-sheet';
 import './note-sheet';
 import './pager-dots';
 import './release-notes-sheet';
@@ -159,6 +160,7 @@ export class LardyApp extends LitElement {
   @state() private noteRoute: Route | null = null;
   @state() private settingsOpen = false;
   @state() private releaseNotes: ShowReleaseNotesDetail | null = null;
+  @state() private helpOpen = false;
 
   @query('lardy-route-pager') private pager?: RoutePager;
 
@@ -177,7 +179,18 @@ export class LardyApp extends LitElement {
     // Avant tout enregistrement : takeUnseenNotes reconnaît un nouvel utilisateur à son stockage vide.
     const unseen = takeUnseenNotes(this.storage);
     if (unseen.length) this.releaseNotes = { heading: 'Application mise à jour', notes: unseen };
+    // L'aide peut être demandée de partout : lignes, détails d'une voie, réglages.
+    this.addEventListener(OPEN_HELP, this.onOpenHelp);
   }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.removeEventListener(OPEN_HELP, this.onOpenHelp);
+  }
+
+  private onOpenHelp = () => {
+    this.helpOpen = true;
+  };
 
   private get pages(): Page[] {
     return this.ui.mode === 'grade' ? this.gradePages : this.wallPages;
@@ -210,6 +223,12 @@ export class LardyApp extends LitElement {
     this.persistUi({ ...this.ui, statsCount: e.detail.count });
   }
 
+  /** Raccourci des stats : « Toutes », filtré sur le statut, du plus dur au plus facile. */
+  private onShowRoutes(e: CustomEvent<ShowRoutesDetail>) {
+    const filters = { ...defaultFilters(this.store.topo.grades.length), status: e.detail.status, sort: 'desc' as const };
+    this.persistUi({ ...this.ui, mode: 'all', filters });
+  }
+
   private onFiltersChange(e: CustomEvent<FiltersChangeDetail>) {
     this.persistUi({ ...this.ui, filters: e.detail.filters });
   }
@@ -238,6 +257,7 @@ export class LardyApp extends LitElement {
         .store=${this.store}
         count=${this.ui.statsCount}
         @count-change=${this.onStatsCountChange}
+        @show-routes=${this.onShowRoutes}
       ></lardy-stats-view>`;
     }
     if (this.ui.mode === 'all') {
@@ -306,7 +326,8 @@ export class LardyApp extends LitElement {
         heading=${this.releaseNotes?.heading ?? ''}
         .notes=${this.releaseNotes?.notes ?? []}
         @close=${() => (this.releaseNotes = null)}
-      ></lardy-release-notes-sheet>`;
+      ></lardy-release-notes-sheet>
+      <lardy-help-sheet .open=${this.helpOpen} @close=${() => (this.helpOpen = false)}></lardy-help-sheet>`;
   }
 }
 

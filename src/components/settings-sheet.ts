@@ -5,6 +5,7 @@ import { progressStore, type ImportResult, type ProgressStore } from '../lib/pro
 import { PwaController, pwaState, type InstallMode, type PwaState } from '../lib/pwa';
 import { APP_VERSION, RELEASE_NOTES } from '../lib/release-notes';
 import type { Theme } from '../lib/theme';
+import { infoIcon as helpIcon, requestHelp } from './help-sheet';
 import { infoIcon, showReleaseNotesEvent } from './release-notes-sheet';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
@@ -145,9 +146,28 @@ export class SettingsSheet extends LitElement {
         margin: 0 0 4px;
       }
 
-      a {
+      a,
+      .link {
         color: var(--accent);
         font-weight: 600;
+      }
+
+      /* Ouvre une feuille : un bouton, mais présenté comme un lien. */
+      .link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        font-size: 14px;
+        text-align: left;
+      }
+
+      .link span {
+        text-decoration: underline;
+      }
+
+      .link svg {
+        flex: none;
       }
     `,
   ];
@@ -278,6 +298,13 @@ export class SettingsSheet extends LitElement {
               </button>`,
           )}
         </div>
+      </section>
+
+      <section>
+        <h3>Aide</h3>
+        <button class="link help" @click=${() => requestHelp(this)}>
+          ${helpIcon}<span>États d’une voie : tête, moulinette, à vue, chute…</span>
+        </button>
       </section>
 
       <section>

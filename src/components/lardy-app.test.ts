@@ -5,6 +5,7 @@ import { UI_KEY } from '../lib/ui-state';
 import { $, $$, memoryStorage, mount, settle, testStore } from '../test/helpers';
 import type { AllRoutesView } from './all-routes-view';
 import type { FavoritesView } from './favorites-view';
+import type { HelpSheet } from './help-sheet';
 import { LardyApp } from './lardy-app';
 import type { ModeTabs } from './mode-tabs';
 import type { NoteSheet } from './note-sheet';
@@ -166,5 +167,36 @@ describe('lardy-app', () => {
     await settle(el);
     expect(sheet.heading).toBe('Maj');
     expect(sheet.open).toBe(true);
+  });
+
+  it('ouvre l’aide demandée depuis une ligne ou les réglages', async () => {
+    const el = await app();
+    const help = () => $<HelpSheet>(el, 'lardy-help-sheet');
+    expect(help().open).toBe(false);
+    $(el, 'main').dispatchEvent(new Event('open-help', { bubbles: true, composed: true }));
+    await settle(el);
+    expect(help().open).toBe(true);
+    help().dispatchEvent(new CustomEvent('close'));
+    await settle(el);
+    expect(help().open).toBe(false);
+    $(el, 'button.settings').click();
+    await settle(el);
+    const settings = $<SettingsSheet>(el, 'lardy-settings-sheet');
+    await settle(settings);
+    $(settings, 'button.help').click();
+    await settle(el);
+    expect(help().open).toBe(true);
+  });
+
+  it('un raccourci des stats ouvre « Toutes » filtré, du plus dur au plus facile', async () => {
+    const el = await app();
+    switchMode(el, 4);
+    await settle(el);
+    $(el, 'lardy-stats-view').dispatchEvent(
+      new CustomEvent('show-routes', { detail: { status: 'partial' }, bubbles: true, composed: true }),
+    );
+    await settle(el);
+    const view = $<AllRoutesView>(el, 'lardy-all-routes-view');
+    expect(view.filters).toMatchObject({ status: 'partial', sort: 'desc', min: 0, favorites: false });
   });
 });

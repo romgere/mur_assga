@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.2.0",
+    "date": "2026-10-23",
+    "notes": [
+      "Ajout de la gestion des détails d’ascension : chute, repos, à vue, flash…",
+      "Appui long sur les boutons « Tête » ou « Moulinette » pour afficher les détails.",
+      "Mise à jour des statistiques pour inclure les détails."
+    ]
+  },
+  {
     "version": "1.1.0",
     "date": "2026-10-23",
     "notes": ["Gestion des notes de version."]

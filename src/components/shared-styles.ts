@@ -43,6 +43,18 @@ export const sharedStyles = css`
     white-space: nowrap;
   }
 
+  /* Bouton (i) d'aide, voir help-sheet. */
+  .help-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin: -6px 0;
+    border-radius: 16px;
+    color: var(--accent);
+  }
+
   .btn {
     display: inline-flex;
     align-items: center;

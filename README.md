@@ -13,12 +13,25 @@ test
   l'autre en balayant l'écran ou avec la barre de pastilles.
 - **Difficulté** : les voies d'une cotation, avec leur mur.
 - **Toutes** : toutes les voies, avec des filtres (niveau min/max, faites ou
-  non, tête, moulinette, favoris, compétition) et un tri (par mur, facile→dur,
-  dur→facile).
+  non, tête, moulinette, à vue, flash, enchaînées, à retravailler, partielles,
+  favoris, compétition) et un tri (par mur, facile→dur, dur→facile).
 - **Favoris** : les voies marquées d'une étoile, avec leur mur.
-- **Stats** : compteurs de progression globaux (tête, moulinette, faites).
+- **Stats** : compteurs de progression globaux (tête, moulinette, faites),
+  niveau max par style (à vue, flash, tête et moulinette propres),
+  répartition des ascensions par style, voies à retravailler (partielles,
+  tête avec chute ou repos, moulinette pas encore en tête) et progression par
+  niveau. Tuiles et raccourcis ouvrent « Toutes » sur le filtre correspondant.
 - « Tête » et « Moulinette » sont cochées indépendamment ; les compteurs
   globaux et ceux de chaque page se mettent à jour.
+- Détails d'ascension (appui long ou clic droit sur Tête / Moul. pour un
+  menu rapide, ou bouton crayon) : pour la tête et la moulinette, **à vue**
+  ou **flash** (premier essai, sans ou avec informations), ou bien avec
+  **chute**, avec **repos** et/ou **partiel** (non terminée). Une voie cochée
+  sans détail est enchaînée proprement ; une ascension partielle ne compte pas
+  comme faite. Le bouton d'une ascension avec chute, repos ou partielle est en
+  pointillés.
+- Aide « États d'une voie » : bouton (i) à côté des détails, ou Réglages →
+  Aide. Elle décrit chaque état et indique s'il compte comme fait.
 - Favoris, notes par voie (cotation ressentie…), thème Auto / Clair / Sombre.
 - Sauvegarde et restauration par copier-coller d'un texte JSON, et effacement
   complet avec confirmation.
@@ -27,10 +40,16 @@ Les données restent dans le navigateur (`localStorage`) :
 
 | Clé                        | Contenu                                                          |
 | -------------------------- | ---------------------------------------------------------------- |
-| `lardy.progress.<saison>`  | `{"mur-COULEUR": {t, m, s, n}}` : tête, moulinette, favori, note |
+| `lardy.progress.<saison>`  | `{"mur-COULEUR": {t, m, tx, mx, s, n}}` (voir ci-dessous)        |
 | `lardy2026.ui`             | mode, page courante de chaque mode, filtres, filtre des stats    |
 | `lardy2026.theme`          | `auto`, `light` ou `dark`                                         |
 | `lardy2026.version`        | dernière version dont les nouveautés ont été vues                |
+
+Dans la progression : `t` / `m` = faite en tête / en moulinette, `tx` / `mx` =
+détails de cette ascension (liste de codes `avue`, `flash`, `chute`, `repos`,
+`partiel` ; absent = enchaînée proprement), `s` = favori, `n` = note. Les détails sont des champs
+ajoutés : les données sans détails restent valides telles quelles. Les
+sauvegardes sont en version 3 ; les versions 1 et 2 s'importent toujours.
 
 La progression est rangée par saison (`lardy.progress.2026-2027`…). L'ancienne
 clé de la V1, `lardy2026.v1`, est reprise automatiquement dans la saison

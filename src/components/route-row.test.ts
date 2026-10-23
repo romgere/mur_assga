@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { $, miniTopo, mount, testStore } from '../test/helpers';
-import { RouteRow } from './route-row';
+import { LONG_PRESS_MS, RouteRow } from './route-row';
 
 const topo = miniTopo();
 const route = (id: string) => topo.routes.find((r) => r.id === id)!;
@@ -80,5 +80,113 @@ describe('lardy-route-row', () => {
     await el.updateComplete;
     expect($(el, '.note').textContent).toBe('ressentie 6a+');
     expect($(el, '.note-btn').classList.contains('has-note')).toBe(true);
+  });
+
+  it('distingue une ascension avec détails et les affiche', async () => {
+    const el = await row();
+    expect(el.shadowRoot!.querySelector('.details')).toBeNull();
+    el.store.edit('1-VERTE', { t: true, tx: ['chute', 'partiel'], m: true, mx: ['avue'] });
+    await el.updateComplete;
+    expect($(el, 'button.lead').getAttribute('aria-pressed')).toBe('true');
+    expect($(el, 'button.lead').classList.contains('detailed')).toBe(true);
+    // À vue n'est pas un défaut : pas de pointillés.
+    expect($(el, 'button.toprope').classList.contains('detailed')).toBe(false);
+    expect($(el, '.details').textContent).toBe('Tête : chute, partiel · Moul. : à vue');
+    expect($(el, '.row').classList.contains('done')).toBe(true);
+  });
+
+  it('une ascension partielle seule ne marque pas la voie faite', async () => {
+    const el = await row();
+    el.store.edit('1-VERTE', { t: true, tx: ['partiel'] });
+    await el.updateComplete;
+    expect($(el, '.row').classList.contains('done')).toBe(false);
+  });
+
+  describe('menu des détails', () => {
+    async function longPress(el: RouteRow, selector: string) {
+      vi.useFakeTimers();
+      try {
+        $(el, selector).dispatchEvent(new PointerEvent('pointerdown', { button: 0, bubbles: true }));
+        vi.advanceTimersByTime(LONG_PRESS_MS);
+      } finally {
+        vi.useRealTimers();
+      }
+      $(el, selector).dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+      $(el, selector).click();
+      await el.updateComplete;
+    }
+
+    const check = (el: RouteRow, selector: string) => {
+      const input = $<HTMLInputElement>(el, selector);
+      input.checked = !input.checked;
+      input.dispatchEvent(new Event('change'));
+    };
+
+    it('s’ouvre sur appui long sans basculer la tête', async () => {
+      const el = await row();
+      await longPress(el, 'button.lead');
+      expect(el.store.get('1-VERTE')).toEqual({});
+      expect($(el, '.menu .title').textContent!.trim()).toBe('En tête');
+      expect(el.shadowRoot!.querySelectorAll('.menu input')).toHaveLength(5);
+      $(el, 'button.lead').click();
+      expect(el.store.get('1-VERTE')).toEqual({ t: true });
+    });
+
+    it('un appui court bascule toujours sans ouvrir le menu', async () => {
+      const el = await row();
+      $(el, 'button.toprope').dispatchEvent(new PointerEvent('pointerdown', { button: 0, bubbles: true }));
+      $(el, 'button.toprope').dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+      $(el, 'button.toprope').click();
+      await el.updateComplete;
+      expect(el.store.get('1-VERTE')).toEqual({ m: true });
+      expect(el.shadowRoot!.querySelector('.menu')).toBeNull();
+    });
+
+    it('applique les détails tout de suite et coche la façon de grimper', async () => {
+      const el = await row();
+      await longPress(el, 'button.toprope');
+      check(el, '.menu .detail-repos');
+      expect(el.store.get('1-VERTE')).toEqual({ m: true, mx: ['repos'] });
+      await el.updateComplete;
+      check(el, '.menu .detail-partiel');
+      check(el, '.menu .detail-repos');
+      expect(el.store.get('1-VERTE')).toEqual({ m: true, mx: ['partiel'] });
+      await el.updateComplete;
+      expect($<HTMLInputElement>(el, '.menu .detail-partiel').checked).toBe(true);
+      expect($(el, 'button.toprope').classList.contains('detailed')).toBe(true);
+      // À vue remplace les défauts.
+      check(el, '.menu .detail-avue');
+      expect(el.store.get('1-VERTE')).toEqual({ m: true, mx: ['avue'] });
+      await el.updateComplete;
+      expect($<HTMLInputElement>(el, '.menu .detail-partiel').checked).toBe(false);
+      expect($(el, 'button.toprope').classList.contains('detailed')).toBe(false);
+    });
+
+    it('s’ouvre au clic droit et se ferme avec Échap ou un appui ailleurs', async () => {
+      const el = await row();
+      $(el, 'button.lead').dispatchEvent(new Event('contextmenu', { bubbles: true, cancelable: true }));
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.menu')).not.toBeNull();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.menu')).toBeNull();
+      $(el, 'button.lead').dispatchEvent(new Event('contextmenu', { bubbles: true, cancelable: true }));
+      await el.updateComplete;
+      document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true }));
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.menu')).toBeNull();
+    });
+
+
+    it('le bouton (i) ferme le menu et demande l’aide', async () => {
+      const el = await row();
+      const spy = vi.fn();
+      document.body.addEventListener('open-help', spy, { once: true });
+      await longPress(el, 'button.lead');
+      $(el, '.menu .help-btn').click();
+      await el.updateComplete;
+      expect(spy).toHaveBeenCalledOnce();
+      expect(el.shadowRoot!.querySelector('.menu')).toBeNull();
+    });
   });
 });
