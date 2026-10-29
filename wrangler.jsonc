@@ -24,6 +24,16 @@
   // prévisualisation des PR aussi par défaut : on les réactive explicitement.
   "preview_urls": true,
   "observability": { "enabled": true },
-  // Requis par `wrangler preview` (déploiement des branches par Workers Builds).
-  "previews": {}
+  // Prévisualisations des branches (`wrangler preview`, Workers Builds). Elles
+  // n'héritent d'aucune liaison : base D1 à part, pour ne pas écrire en production.
+  // Même schéma que la production (migrations/), à appliquer aussi sur cette base.
+  "previews": {
+    "d1_databases": [
+      {
+        "binding": "DB",
+        "database_name": "mur-assga-preview",
+        "database_id": "3248024d-bd54-43da-982c-f396f53223b6"
+      }
+    ]
+  }
 }

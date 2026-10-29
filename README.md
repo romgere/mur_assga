@@ -93,6 +93,12 @@ son schéma est dans [`migrations/`](migrations). Pour une nouvelle migration :
 `npx wrangler d1 migrations create mur-assga <nom>`, puis
 `npx wrangler d1 migrations apply mur-assga --remote` avant de déployer.
 
+Les prévisualisations des branches (Workers Builds) n'héritent pas des
+liaisons de production : elles utilisent leur propre base, `mur-assga-preview`
+(bloc `previews` de `wrangler.jsonc`). Une nouvelle migration doit aussi y être
+appliquée, par exemple
+`npx wrangler d1 execute mur-assga-preview --remote --file migrations/<fichier>.sql`.
+
 ## Application installable et hors ligne (PWA)
 
 L'application fonctionne sans réseau après une première visite : le service
