@@ -39,6 +39,8 @@ worker, sécurité) dans [`public/_headers`](public/_headers).
 - Favoris, notes par voie (cotation ressentie…), thème Auto / Clair / Sombre.
 - Sauvegarde et restauration par copier-coller d'un texte JSON, et effacement
   complet avec confirmation.
+- Synchronisation facultative entre appareils (Réglages → Synchronisation),
+  sans compte : voir [Synchronisation](#synchronisation-entre-appareils).
 
 Les données restent dans le navigateur (`localStorage`) :
 
@@ -49,6 +51,8 @@ Les données restent dans le navigateur (`localStorage`) :
 | `lardy2026.theme`          | `auto`, `light` ou `dark`                                         |
 | `lardy2026.version`        | dernière version dont les nouveautés ont été vues                |
 | `lardy2026.tutorial`       | `1` une fois le tutoriel passé ou terminé                        |
+| `lardy.sync.code`          | code de synchronisation, absent si elle est désactivée          |
+| `lardy.sync.<saison>`      | révision en ligne, progression à cette révision, envoi en attente |
 
 Dans la progression : `t` / `m` = faite en tête / en moulinette, `tx` / `mx` =
 détails de cette ascension (liste de codes `avue`, `flash`, `chute`, `repos`,
@@ -62,6 +66,32 @@ clé de la V1, `lardy2026.v1`, est reprise automatiquement dans la saison
 
 Si le stockage est indisponible (navigation privée…), l'application continue
 en mémoire et le signale dans les réglages.
+
+## Synchronisation entre appareils
+
+Facultative, activée depuis **Réglages → Synchronisation**. Pas de compte :
+l'appareil crée un code aléatoire de 24 caractères (120 bits), qu'on saisit sur
+ses autres appareils. Le Worker ([`worker/`](worker)) l'attend en
+`Authorization: Bearer <code>` et la base ne garde que son empreinte SHA-256.
+
+| Requête                         | Effet                                                           |
+| ------------------------------- | --------------------------------------------------------------- |
+| `GET /api/progress/<saison>`    | `{ rev, data, updatedAt }`, 404 si rien n'est enregistré        |
+| `PUT /api/progress/<saison>`    | envoie `{ rev, data }` ; 409 + version en ligne si `rev` a changé |
+| `DELETE /api/progress`          | efface toutes les saisons du code                               |
+
+Le `localStorage` reste la référence (l'application marche hors ligne) :
+chaque modification part 2 secondes plus tard, et la version en ligne est
+relue à l'ouverture, au retour sur l'application et au retour du réseau. Si
+deux appareils ont modifié la progression entre deux synchros, la fusion se
+fait voie par voie : les voies modifiées sur l'appareil qui synchronise
+l'emportent, les autres viennent de la version en ligne
+([`src/lib/sync.ts`](src/lib/sync.ts)).
+
+La base D1 `mur-assga` est déclarée dans [`wrangler.jsonc`](wrangler.jsonc) ;
+son schéma est dans [`migrations/`](migrations). Pour une nouvelle migration :
+`npx wrangler d1 migrations create mur-assga <nom>`, puis
+`npx wrangler d1 migrations apply mur-assga --remote` avant de déployer.
 
 ## Application installable et hors ligne (PWA)
 
@@ -174,7 +204,11 @@ npm install
 npm run dev      # serveur de développement
 npm test         # tests unitaires (Vitest + happy-dom)
 npm run build    # vérification TypeScript + build dans dist/
+npm run dev:worker  # build + Worker et base D1 locaux (wrangler dev), synchro comprise
 ```
+
+Avec `npm run dev`, l'API de synchronisation n'existe pas : la synchro affiche
+une erreur, le reste fonctionne.
 
 Pile : [Vite](https://vite.dev), [Lit](https://lit.dev), TypeScript.
 
@@ -182,7 +216,7 @@ Pile : [Vite](https://vite.dev), [Lit](https://lit.dev), TypeScript.
 src/
   data/topo.json          données du topo
   data/release-notes.json notes de version (la plus récente = version de l'application)
-  lib/                    stockage, store de progression, filtres, thème, état d'interface
+  lib/                    stockage, store de progression, synchro, filtres, thème, état d'interface
   components/             composants Lit, chacun avec son fichier *.test.ts
     lardy-app             racine : en-tête, modes, vue, pastilles, feuilles
     route-pager           pager horizontal en scroll-snap
@@ -193,12 +227,15 @@ src/
     all-routes-view       mode « Toutes » : filtres, tri, liste
     bottom-sheet          feuille modale générique
     note-sheet            édition d'une note
-    settings-sheet        thème, nouveautés, sauvegarde, restauration, effacement
+    settings-sheet        thème, nouveautés, synchro, sauvegarde, restauration, effacement
+    sync-panel            section Synchronisation des réglages
     update-banner         bandeau « Nouvelle version disponible » et son bouton (i)
     release-notes-sheet   affichage des notes de version
     tutorial-sheet        tutoriel de prise en main (étapes, pastilles, « Passer »)
     icons                 icônes SVG partagées
   styles/tokens.css       tokens de couleur (clair + sombre) et styles globaux
+worker/                   Worker Cloudflare : fichiers statiques + API /api/progress (D1)
+migrations/               schéma de la base D1
 ```
 
 Un clic sur une voie ne repeint que sa ligne et les compteurs : chaque composant

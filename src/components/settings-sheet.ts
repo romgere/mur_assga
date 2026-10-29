@@ -4,6 +4,7 @@ import { copyText } from '../lib/clipboard';
 import { progressStore, type ImportResult, type ProgressStore } from '../lib/progress-store';
 import { PwaController, pwaState, type InstallMode, type PwaState } from '../lib/pwa';
 import { APP_VERSION, RELEASE_NOTES } from '../lib/release-notes';
+import { progressSync, type ProgressSync } from '../lib/sync';
 import type { Theme } from '../lib/theme';
 import { requestHelp } from './help-sheet';
 import { infoIcon } from './icons';
@@ -11,6 +12,7 @@ import { requestTutorial } from './tutorial-sheet';
 import { showReleaseNotesEvent } from './release-notes-sheet';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
+import './sync-panel';
 
 export interface ThemeChangeDetail {
   theme: Theme;
@@ -30,8 +32,8 @@ export const AUTHOR_URL = 'https://mestres.fr';
 export const CLEAR_CONFIRM_MS = 4000;
 
 /**
- * Réglages : thème, installation de l'application, nouveautés de la version, sauvegarde (texte JSON à copier), restauration (texte
- * collé et validé) et effacement complet en deux temps.
+ * Réglages : thème, installation de l'application, nouveautés de la version, synchronisation entre appareils,
+ * sauvegarde (texte JSON à copier), restauration (texte collé et validé) et effacement complet en deux temps.
  */
 @customElement('lardy-settings-sheet')
 export class SettingsSheet extends LitElement {
@@ -184,6 +186,7 @@ export class SettingsSheet extends LitElement {
   @property() theme: Theme = 'auto';
   @property({ attribute: false }) store: ProgressStore = progressStore;
   @property({ attribute: false }) pwa: PwaState = pwaState;
+  @property({ attribute: false }) sync: ProgressSync = progressSync;
 
   @state() private exportText = '';
   @state() private copyFeedback = '';
@@ -338,11 +341,18 @@ export class SettingsSheet extends LitElement {
       </section>
 
       <section>
+        <h3>Synchronisation</h3>
+        <lardy-sync-panel .sync=${this.sync}></lardy-sync-panel>
+      </section>
+
+      <section>
         <h3>Sauvegarde</h3>
         ${this.store.persistent
           ? html`<p>
-              Vos voies sont enregistrées dans ce navigateur uniquement. Copiez ce texte et gardez-le (notes, mail…)
-              pour le restaurer sur un autre appareil.
+              ${this.sync.enabled
+                ? 'Vos voies sont enregistrées dans ce navigateur et synchronisées en ligne.'
+                : 'Vos voies sont enregistrées dans ce navigateur uniquement.'}
+              Copiez ce texte et gardez-le (notes, mail…) pour le restaurer sur un autre appareil.
             </p>`
           : html`<p class="warning" role="alert">
               Le stockage du navigateur est indisponible (navigation privée ?) : vos voies seront perdues à la
