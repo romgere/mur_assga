@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PwaState } from '../lib/pwa';
-import { $, fakeWindow, installPrompt, mount, settle, testPwa, testStore } from '../test/helpers';
+import { ProgressSync } from '../lib/sync';
+import { $, fakeWindow, installPrompt, memoryStorage, mount, settle, testPwa, testStore } from '../test/helpers';
 import type { BottomSheet } from './bottom-sheet';
 import { APP_VERSION, RELEASE_NOTES } from '../lib/release-notes';
 import { AUTHOR_URL, CLEAR_CONFIRM_MS, REPO_URL, SettingsSheet } from './settings-sheet';
@@ -8,12 +9,20 @@ import { AUTHOR_URL, CLEAR_CONFIRM_MS, REPO_URL, SettingsSheet } from './setting
 async function settings(pwa = testPwa()) {
   const el = new SettingsSheet();
   el.pwa = pwa;
-  el.store = testStore();
+  const storage = memoryStorage();
+  el.store = testStore(storage);
   el.store.toggle('1-VERTE', 't');
+  el.sync = new ProgressSync(el.store, storage, syncFetch as typeof fetch, 5);
   el.open = true;
   await mount(el);
   await settle(el, $<BottomSheet>(el, 'lardy-sheet'));
   return el;
+}
+
+/** Serveur de synchro minimal : rien en ligne, toute écriture acceptée. */
+async function syncFetch(_url: RequestInfo | URL, init: RequestInit = {}) {
+  if ((init.method ?? 'GET') === 'GET') return Response.json({ error: 'absent' }, { status: 404 });
+  return Response.json({ rev: 1 });
 }
 
 function field(el: SettingsSheet, cls: string) {
@@ -70,16 +79,16 @@ describe('lardy-settings-sheet', () => {
     expect(el.store.get('1-VERTE')).toEqual({ t: true });
   });
 
-  it('efface tout en deux temps', async () => {
+  it('remet les voies à zéro en deux temps', async () => {
     const el = await settings();
     $(el, 'button.clear').click();
     await el.updateComplete;
     expect(el.store.get('1-VERTE')).toEqual({ t: true });
-    expect($(el, 'button.clear').textContent!.trim()).toBe('Confirmer l’effacement');
+    expect($(el, 'button.clear').textContent!.trim()).toBe('Confirmer la remise à zéro');
     $(el, 'button.clear').click();
     await el.updateComplete;
     expect(el.store.get('1-VERTE')).toEqual({});
-    expect(el.shadowRoot!.textContent).toContain('Données effacées.');
+    expect(el.shadowRoot!.textContent).toContain('Voies remises à zéro.');
   });
 
   it('annule la confirmation après un délai', async () => {
@@ -88,7 +97,7 @@ describe('lardy-settings-sheet', () => {
     $(el, 'button.clear').click();
     vi.advanceTimersByTime(CLEAR_CONFIRM_MS + 10);
     await el.updateComplete;
-    expect($(el, 'button.clear').textContent!.trim()).toBe('Tout effacer');
+    expect($(el, 'button.clear').textContent!.trim()).toBe('Remettre à zéro');
     $(el, 'button.clear').click();
     expect(el.store.get('1-VERTE')).toEqual({ t: true });
   });
@@ -146,5 +155,23 @@ describe('lardy-settings-sheet', () => {
     el.addEventListener('show-release-notes', (e) => shown((e as CustomEvent).detail));
     $(el, 'button.release-notes').click();
     expect(shown).toHaveBeenCalledWith({ heading: 'Nouveautés', notes: [RELEASE_NOTES[0]] });
+  });
+
+  it('masque la sauvegarde manuelle tant que la synchronisation est active', async () => {
+    const el = await settings();
+    const shadow = el.shadowRoot!;
+    expect(shadow.querySelector('lardy-sync-panel')).not.toBeNull();
+    expect(shadow.querySelector('textarea.export')).not.toBeNull();
+    expect(shadow.querySelector('textarea.import')).not.toBeNull();
+
+    await el.sync.enable();
+    await settle(el);
+    expect(shadow.querySelector('textarea.export')).toBeNull();
+    expect(shadow.querySelector('textarea.import')).toBeNull();
+    expect(shadow.textContent).toContain('sur vos appareils synchronisés');
+
+    el.sync.disable();
+    await settle(el);
+    expect(shadow.querySelector('textarea.export')).not.toBeNull();
   });
 });

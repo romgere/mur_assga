@@ -37,10 +37,11 @@ worker, sécurité) dans [`public/_headers`](public/_headers).
   utilisateurs d'avant le tutoriel), qu'on peut passer, et à revoir depuis
   Réglages → Aide.
 - Favoris, notes par voie (cotation ressentie…), thème Auto / Clair / Sombre.
-- Sauvegarde et restauration par copier-coller d'un texte JSON, et effacement
-  complet avec confirmation.
+- Sauvegarde et restauration par copier-coller d'un texte JSON, et remise à
+  zéro des voies avec confirmation.
 - Synchronisation facultative entre appareils (Réglages → Synchronisation),
-  sans compte : voir [Synchronisation](#synchronisation-entre-appareils).
+  sans compte : voir [Synchronisation](#synchronisation-entre-appareils). Tant
+  qu'elle est active, la sauvegarde par copier-coller est masquée.
 
 Les données restent dans le navigateur (`localStorage`) :
 
@@ -233,7 +234,7 @@ src/
     all-routes-view       mode « Toutes » : filtres, tri, liste
     bottom-sheet          feuille modale générique
     note-sheet            édition d'une note
-    settings-sheet        thème, nouveautés, synchro, sauvegarde, restauration, effacement
+    settings-sheet        thème, nouveautés, synchro, sauvegarde, restauration, remise à zéro
     sync-panel            section Synchronisation des réglages
     update-banner         bandeau « Nouvelle version disponible » et son bouton (i)
     release-notes-sheet   affichage des notes de version
