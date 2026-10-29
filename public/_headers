@@ -1,0 +1,23 @@
+# En-têtes HTTP servis par Cloudflare (Workers static assets).
+
+# Fichiers du build : leur nom contient un hash, ils ne changent jamais.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Le service worker et le manifeste doivent toujours être revalidés, sinon
+# les appareils restent bloqués sur une ancienne version de l'application.
+/sw.js
+  Cache-Control: no-cache
+
+/manifest.webmanifest
+  Cache-Control: no-cache
+  Content-Type: application/manifest+json
+
+# Nouveautés de la version déployée, lues par les versions installées.
+/release-notes.json
+  Cache-Control: no-cache
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY

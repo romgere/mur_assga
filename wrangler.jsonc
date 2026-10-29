@@ -1,0 +1,12 @@
+{
+  "name": "mur-assga",
+  "compatibility_date": "2026-10-23",
+  // Site statique : le build Vite (dist/) est servi tel quel, sans code Worker.
+  "assets": {
+    "directory": "./dist",
+    // Application monopage : toute URL inconnue renvoie l'index.
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [{ "pattern": "mur-escalade-lardy.mestres.fr", "custom_domain": true }],
+  "observability": { "enabled": true }
+}
