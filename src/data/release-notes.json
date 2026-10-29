@@ -3,7 +3,10 @@
     "version": "1.4.0",
     "date": "2026-10-29",
     "notes": [
-      "Synchronisation facultative entre vos appareils : Réglages → Synchronisation.",
+      {
+        "text": "Synchronisation facultative entre vos appareils : Réglages → Synchronisation.",
+        "tutorial": ["synchro"]
+      },
       "Pas de compte : un code aléatoire, à saisir sur l’autre appareil, suffit."
     ]
   },
