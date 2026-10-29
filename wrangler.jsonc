@@ -8,5 +8,7 @@
     "not_found_handling": "single-page-application"
   },
   "routes": [{ "pattern": "mur-escalade-lardy.mestres.fr", "custom_domain": true }],
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  // Requis par `wrangler preview` (déploiement des branches par Workers Builds).
+  "previews": {}
 }
