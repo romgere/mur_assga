@@ -5,8 +5,9 @@ d'escalade de Lardy (ASSGA Escalade, topo 2026-2027).
 
 Production : <https://mur-escalade-lardy.mestres.fr>
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/41e1ce6a-399f-4fd6-83c6-d764fd6423c5/deploy-status)](https://app.netlify.com/projects/mur-escalade-lardy/deploys)
-test
+Hébergement : Cloudflare Workers (fichiers statiques). La configuration est
+dans [`wrangler.jsonc`](wrangler.jsonc) et les en-têtes HTTP (cache du service
+worker, sécurité) dans [`public/_headers`](public/_headers).
 ## Fonctionnalités
 
 - **Mur** (mode par défaut) : les voies d'un mur ; on passe d'un mur à
