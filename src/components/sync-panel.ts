@@ -55,6 +55,15 @@ export class SyncPanel extends LitElement {
         text-transform: uppercase;
       }
 
+      .row.actions {
+        justify-content: center;
+      }
+
+      .status,
+      .feedback {
+        text-align: center;
+      }
+
       .link-intro {
         margin-top: 12px;
       }
@@ -199,9 +208,11 @@ export class SyncPanel extends LitElement {
     return html`<p>
         Retrouvez vos voies sur vos autres appareils. Pas de compte ni d’e-mail : un code aléatoire suffit.
       </p>
-      <button class="btn primary enable" ?disabled=${this.busy} @click=${this.enable}>
-        Activer la synchronisation
-      </button>
+      <div class="row actions">
+        <button class="btn primary enable" ?disabled=${this.busy} @click=${this.enable}>
+          Activer la synchronisation
+        </button>
+      </div>
       <p class="link-intro">Déjà activée sur un autre appareil ? Saisissez son code :</p>
       <div class="row">
         <label class="visually-hidden" for="sync-code">Code de synchronisation</label>
@@ -234,13 +245,13 @@ export class SyncPanel extends LitElement {
         <button class="btn copy-code" @click=${this.copy}>Copier</button>
       </div>
       <p class="status ${error ? 'error' : ''}" role="status">${this.statusText()}</p>
-      <div class="row">
+      <div class="row actions">
         <button class="btn sync-now" ?disabled=${this.busy} @click=${() => this.run(() => this.sync.sync())}>
           Synchroniser
         </button>
         <button class="btn disable" ?disabled=${this.busy} @click=${this.disable}>Désactiver ici</button>
       </div>
-      <div class="row">
+      <div class="row actions">
         <button class="btn danger delete-remote" ?disabled=${this.busy} @click=${this.deleteRemote}>
           ${this.confirmingDelete ? 'Confirmer l’effacement' : 'Effacer mes données en ligne'}
         </button>

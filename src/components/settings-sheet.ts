@@ -89,11 +89,24 @@ export class SettingsSheet extends LitElement {
         background: var(--bg);
       }
 
+      /* Boutons d'action centrés ; leur message s'affiche dessous. */
       .row {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
+        justify-content: center;
         gap: 8px;
         margin-top: 8px;
+      }
+
+      .row .feedback:not(:empty) {
+        flex-basis: 100%;
+        text-align: center;
+      }
+
+      .install {
+        display: flex;
+        margin: 0 auto;
       }
 
       .feedback {
