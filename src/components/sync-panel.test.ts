@@ -26,7 +26,7 @@ function text(el: SyncPanel) {
 describe('lardy-sync-panel', () => {
   it('propose d’activer la synchronisation ou de saisir un code', async () => {
     const { el, fetchFn } = await panel();
-    expect(text(el)).toContain('Activer la synchronisation');
+    expect(text(el)).toContain('Activer la sauvegarde en ligne');
     expect($<HTMLButtonElement>(el, 'button.link-code').disabled).toBe(true);
     expect(fetchFn).not.toHaveBeenCalled();
   });
@@ -37,7 +37,8 @@ describe('lardy-sync-panel', () => {
     await vi.waitFor(() => expect(el.sync.status).toBe('synced'));
     await settle(el);
     expect($(el, '.code').textContent).toBe(el.sync.displayCode);
-    expect(text(el)).toContain('À jour');
+    expect(text(el)).toContain('Sauvegardé');
+    expect(text(el)).toContain('Gardez ce code en lieu sûr (note, e-mail, papier)');
   });
 
   it('signale un code mal saisi', async () => {
@@ -87,7 +88,7 @@ describe('lardy-sync-panel', () => {
     await vi.waitFor(() => expect(el.sync.enabled).toBe(false));
     expect(fetchFn).toHaveBeenCalledWith('/api/progress', expect.objectContaining({ method: 'DELETE' }));
     await settle(el);
-    expect(text(el)).toContain('Données en ligne effacées');
+    expect(text(el)).toContain('Sauvegarde en ligne effacée');
   });
 
   it('se désactive sur cet appareil', async () => {
@@ -97,6 +98,6 @@ describe('lardy-sync-panel', () => {
     $(el, 'button.disable').click();
     await settle(el);
     expect(el.sync.enabled).toBe(false);
-    expect(text(el)).toContain('Activer la synchronisation');
+    expect(text(el)).toContain('Activer la sauvegarde en ligne');
   });
 });

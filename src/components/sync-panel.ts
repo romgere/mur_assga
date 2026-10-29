@@ -4,13 +4,13 @@ import { copyText } from '../lib/clipboard';
 import { progressSync, type ProgressSync } from '../lib/sync';
 import { sharedStyles } from './shared-styles';
 
-/** Délai pendant lequel « Effacer mes données en ligne » attend la confirmation. */
+/** Délai pendant lequel « Effacer ma sauvegarde en ligne » attend la confirmation. */
 export const DELETE_CONFIRM_MS = 4000;
 
 /**
- * Section « Synchronisation » des réglages : activation (nouveau code ou code
- * d'un autre appareil), affichage du code et de l'état, désactivation et
- * effacement des données en ligne.
+ * Section « Sauvegarde en ligne » des réglages : activation (nouveau code ou
+ * récupération avec un code existant), affichage du code et de l'état,
+ * désactivation et effacement de la sauvegarde en ligne.
  */
 @customElement('lardy-sync-panel')
 export class SyncPanel extends LitElement {
@@ -62,6 +62,15 @@ export class SyncPanel extends LitElement {
       .status,
       .feedback {
         text-align: center;
+      }
+
+      .keep {
+        margin-top: 8px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--accent);
+        color: var(--text);
+        font-weight: 600;
       }
 
       .link-intro {
@@ -149,7 +158,7 @@ export class SyncPanel extends LitElement {
         this.codeDraft = '';
         this.say('');
       } else {
-        this.say('Code invalide : 24 lettres et chiffres, tels qu’affichés sur l’autre appareil.', true);
+        this.say('Code invalide : 24 lettres et chiffres, tels que notés à l’activation.', true);
       }
     });
   }
@@ -162,7 +171,7 @@ export class SyncPanel extends LitElement {
   private disable() {
     this.resetDelete();
     this.sync.disable();
-    this.say('Synchronisation désactivée sur cet appareil. Vos voies y restent enregistrées.');
+    this.say('Sauvegarde en ligne désactivée sur cet appareil. Vos voies y restent enregistrées.');
   }
 
   /** Premier appui : demande de confirmation ; second appui : effacement. */
@@ -174,7 +183,7 @@ export class SyncPanel extends LitElement {
     }
     this.resetDelete();
     return this.run(async () => {
-      if (await this.sync.deleteRemote()) this.say('Données en ligne effacées. Vos voies restent sur cet appareil.');
+      if (await this.sync.deleteRemote()) this.say('Sauvegarde en ligne effacée. Vos voies restent sur cet appareil.');
     });
   }
 
@@ -187,18 +196,18 @@ export class SyncPanel extends LitElement {
     const sync = this.sync;
     switch (sync.status) {
       case 'pending':
-        return 'Modifications en attente d’envoi…';
+        return 'Modifications en attente de sauvegarde…';
       case 'syncing':
-        return 'Synchronisation…';
+        return 'Sauvegarde…';
       case 'synced': {
         const at = sync.syncedAt;
         const time = at?.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-        return time ? `À jour (dernière synchronisation à ${time}).` : 'À jour.';
+        return time ? `Sauvegardé (dernière sauvegarde à ${time}).` : 'Sauvegardé.';
       }
       case 'offline':
-        return 'Hors ligne : vos modifications seront envoyées au retour du réseau.';
+        return 'Hors ligne : vos modifications seront sauvegardées au retour du réseau.';
       case 'error':
-        return `Échec de la synchronisation : ${sync.message}`;
+        return `Échec de la sauvegarde : ${sync.message}`;
       default:
         return '';
     }
@@ -206,16 +215,17 @@ export class SyncPanel extends LitElement {
 
   private renderOff() {
     return html`<p>
-        Retrouvez vos voies sur vos autres appareils. Pas de compte ni d’e-mail : un code aléatoire suffit.
+        Sauvegardez vos voies en ligne pour les retrouver en cas de perte, de casse ou de changement de téléphone.
+        Pas de compte ni d’e-mail : un code de sauvegarde suffit.
       </p>
       <div class="row actions">
         <button class="btn primary enable" ?disabled=${this.busy} @click=${this.enable}>
-          Activer la synchronisation
+          Activer la sauvegarde en ligne
         </button>
       </div>
-      <p class="link-intro">Déjà activée sur un autre appareil ? Saisissez son code :</p>
+      <p class="link-intro">Nouveau téléphone ? Saisissez votre code de sauvegarde pour récupérer vos voies :</p>
       <div class="row">
-        <label class="visually-hidden" for="sync-code">Code de synchronisation</label>
+        <label class="visually-hidden" for="sync-code">Code de sauvegarde</label>
         <input
           id="sync-code"
           class="code-input"
@@ -230,30 +240,32 @@ export class SyncPanel extends LitElement {
           }}
         />
         <button class="btn link-code" ?disabled=${this.busy || !this.codeDraft.trim()} @click=${this.link}>
-          Utiliser
+          Récupérer
         </button>
       </div>`;
   }
 
   private renderOn() {
     const error = this.sync.status === 'error' || this.sync.status === 'offline';
-    return html`<p>
-        Code de synchronisation, à saisir sur vos autres appareils. Gardez-le pour vous : il donne accès à vos voies.
-      </p>
+    return html`<p>Votre code de sauvegarde :</p>
       <div class="row">
         <span class="code">${this.sync.displayCode}</span>
         <button class="btn copy-code" @click=${this.copy}>Copier</button>
       </div>
+      <p class="keep">
+        Gardez ce code en lieu sûr (note, e-mail, papier) : sans lui, impossible de récupérer vos voies si vous
+        perdez ou cassez votre téléphone. Ne le partagez pas, il donne accès à vos voies.
+      </p>
       <p class="status ${error ? 'error' : ''}" role="status">${this.statusText()}</p>
       <div class="row actions">
         <button class="btn sync-now" ?disabled=${this.busy} @click=${() => this.run(() => this.sync.sync())}>
-          Synchroniser
+          Sauvegarder maintenant
         </button>
         <button class="btn disable" ?disabled=${this.busy} @click=${this.disable}>Désactiver ici</button>
       </div>
       <div class="row actions">
         <button class="btn danger delete-remote" ?disabled=${this.busy} @click=${this.deleteRemote}>
-          ${this.confirmingDelete ? 'Confirmer l’effacement' : 'Effacer mes données en ligne'}
+          ${this.confirmingDelete ? 'Confirmer l’effacement' : 'Effacer ma sauvegarde en ligne'}
         </button>
       </div>`;
   }

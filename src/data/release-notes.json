@@ -4,10 +4,10 @@
     "date": "2026-10-29",
     "notes": [
       {
-        "text": "Synchronisation facultative entre vos appareils : Réglages → Synchronisation.",
+        "text": "Sauvegarde en ligne facultative, pour retrouver vos voies en cas de perte ou de casse du téléphone : Réglages → Sauvegarde en ligne.",
         "tutorial": ["synchro"]
       },
-      "Pas de compte : un code aléatoire, à saisir sur l’autre appareil, suffit."
+      "Pas de compte : un code de sauvegarde, à garder en lieu sûr, suffit."
     ]
   },
   {

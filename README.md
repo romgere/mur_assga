@@ -39,9 +39,10 @@ worker, sécurité) dans [`public/_headers`](public/_headers).
 - Favoris, notes par voie (cotation ressentie…), thème Auto / Clair / Sombre.
 - Sauvegarde et restauration par copier-coller d'un texte JSON, et remise à
   zéro des voies avec confirmation.
-- Synchronisation facultative entre appareils (Réglages → Synchronisation),
-  sans compte : voir [Synchronisation](#synchronisation-entre-appareils). Tant
-  qu'elle est active, la sauvegarde par copier-coller est masquée.
+- Sauvegarde en ligne facultative (Réglages → Sauvegarde en ligne), pour
+  retrouver ses voies en cas de perte ou de casse du téléphone, sans compte :
+  voir [Sauvegarde en ligne](#sauvegarde-en-ligne). Tant qu'elle est active, la
+  sauvegarde par copier-coller est masquée.
 
 Les données restent dans le navigateur (`localStorage`) :
 
@@ -52,7 +53,7 @@ Les données restent dans le navigateur (`localStorage`) :
 | `lardy2026.theme`          | `auto`, `light` ou `dark`                                         |
 | `lardy2026.version`        | dernière version dont les nouveautés ont été vues                |
 | `lardy2026.tutorial`       | `1` une fois le tutoriel passé ou terminé                        |
-| `lardy.sync.code`          | code de synchronisation, absent si elle est désactivée          |
+| `lardy.sync.code`          | code de sauvegarde en ligne, absent si elle est désactivée      |
 | `lardy.sync.<saison>`      | révision en ligne, progression à cette révision, envoi en attente |
 
 Dans la progression : `t` / `m` = faite en tête / en moulinette, `tx` / `mx` =
@@ -68,11 +69,15 @@ clé de la V1, `lardy2026.v1`, est reprise automatiquement dans la saison
 Si le stockage est indisponible (navigation privée…), l'application continue
 en mémoire et le signale dans les réglages.
 
-## Synchronisation entre appareils
+## Sauvegarde en ligne
 
-Facultative, activée depuis **Réglages → Synchronisation**. Pas de compte :
-l'appareil crée un code aléatoire de 24 caractères (120 bits), qu'on saisit sur
-ses autres appareils. Le Worker ([`worker/`](worker)) l'attend en
+Facultative, activée depuis **Réglages → Sauvegarde en ligne** ou depuis l'étape
+« Ne perdez pas vos voies » du tutoriel. L'usage visé est la récupération des
+voies sur un nouveau téléphone (perte, casse) ; techniquement, c'est une
+synchronisation, donc plusieurs appareils peuvent aussi partager un code. Pas
+de compte : l'appareil crée un code de sauvegarde aléatoire de 24 caractères
+(120 bits), que l'utilisateur est invité à garder en lieu sûr et à saisir sur
+son nouveau téléphone. Le Worker ([`worker/`](worker)) l'attend en
 `Authorization: Bearer <code>` et la base ne garde que son empreinte SHA-256.
 
 | Requête                         | Effet                                                           |
@@ -234,8 +239,8 @@ src/
     all-routes-view       mode « Toutes » : filtres, tri, liste
     bottom-sheet          feuille modale générique
     note-sheet            édition d'une note
-    settings-sheet        thème, nouveautés, synchro, sauvegarde, restauration, remise à zéro
-    sync-panel            section Synchronisation des réglages
+    settings-sheet        thème, nouveautés, sauvegarde en ligne, sauvegarde manuelle, restauration, remise à zéro
+    sync-panel            section « Sauvegarde en ligne » des réglages
     update-banner         bandeau « Nouvelle version disponible » et son bouton (i)
     release-notes-sheet   affichage des notes de version
     tutorial-sheet        tutoriel de prise en main (étapes, pastilles, « Passer »)

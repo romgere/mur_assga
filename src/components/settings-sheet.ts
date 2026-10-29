@@ -32,9 +32,9 @@ export const AUTHOR_URL = 'https://mestres.fr';
 export const CLEAR_CONFIRM_MS = 4000;
 
 /**
- * Réglages : thème, installation de l'application, nouveautés de la version, synchronisation entre appareils,
+ * Réglages : thème, installation de l'application, nouveautés de la version, sauvegarde en ligne,
  * sauvegarde manuelle (texte JSON à copier, restauration d'un texte collé et validé ; masquées quand la
- * synchronisation est active) et remise à zéro des voies en deux temps.
+ * sauvegarde en ligne est active) et remise à zéro des voies en deux temps.
  */
 @customElement('lardy-settings-sheet')
 export class SettingsSheet extends LitElement {
@@ -325,7 +325,7 @@ export class SettingsSheet extends LitElement {
   /** Sauvegarde manuelle : texte à copier, puis restauration d'un texte collé. */
   private renderLocalBackup() {
     return html`<section>
-        <h3>Sauvegarde</h3>
+        <h3>Sauvegarde manuelle</h3>
         ${this.store.persistent
           ? html`<p>
               Vos voies sont enregistrées dans ce navigateur uniquement. Copiez ce texte et gardez-le (notes, mail…)
@@ -416,7 +416,7 @@ export class SettingsSheet extends LitElement {
       </section>
 
       <section>
-        <h3>Synchronisation</h3>
+        <h3>Sauvegarde en ligne</h3>
         <lardy-sync-panel .sync=${this.sync}></lardy-sync-panel>
       </section>
 
@@ -426,7 +426,7 @@ export class SettingsSheet extends LitElement {
         <h3>Remise à zéro</h3>
         <p>
           Décoche toutes les voies et supprime les favoris et les notes de la saison${this.sync.enabled
-            ? ', sur cet appareil et sur vos appareils synchronisés'
+            ? ', sur cet appareil et dans votre sauvegarde en ligne'
             : ''}.
         </p>
         <div class="row">

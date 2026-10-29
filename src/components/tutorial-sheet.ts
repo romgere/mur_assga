@@ -66,16 +66,16 @@ export const TUTORIAL_STEPS: Record<string, Step> = {
       <p>Le crayon ouvre tous les détails de la voie et une note personnelle (cotation ressentie, méthode, passage clé…).</p>`,
   },
   synchro: {
-    title: 'Sur tous vos appareils',
+    title: 'Ne perdez pas vos voies',
     art: html`<span class="icon">${syncIcon}</span>`,
-    body: (sheet) => html`<p>Activez la synchronisation pour retrouver vos voies sur votre téléphone, votre tablette…</p>
-      <p>Pas de compte ni d’e-mail : un code aléatoire, à saisir sur vos autres appareils, suffit. Vous pourrez l’activer plus tard dans les réglages.</p>
+    body: (sheet) => html`<p>Téléphone perdu, cassé ou remplacé ? Avec la sauvegarde en ligne, vous retrouvez toutes vos voies.</p>
+      <p>Pas de compte ni d’e-mail : un code de sauvegarde suffit. Vous pourrez aussi l’activer plus tard dans les réglages.</p>
       ${sheet.renderSync()}`,
   },
   reglages: {
     title: 'Réglages',
     art: html`<span class="icon gear">${gearIcon}</span>`,
-    body: () => html`<p>La roue dentée, en haut à droite : thème clair ou sombre, installation de l’application, synchronisation, sauvegarde et restauration de votre progression.</p>
+    body: () => html`<p>La roue dentée, en haut à droite : thème clair ou sombre, installation de l’application, sauvegarde en ligne ou manuelle de votre progression.</p>
       <p>Vous pourrez aussi y revoir ce tutoriel.</p>`,
   },
 };
@@ -319,7 +319,7 @@ export class TutorialSheet extends LitElement {
     }
   }
 
-  /** Étape « synchro » : bouton d'activation, puis le code une fois activée. */
+  /** Étape « synchro » : activation de la sauvegarde en ligne, puis le code à noter. */
   renderSync() {
     if (!this.sync.enabled) {
       return html`<div class="sync-action">
@@ -330,9 +330,10 @@ export class TutorialSheet extends LitElement {
     }
     const pending = this.sync.status === 'offline' || this.sync.status === 'error';
     return html`<div class="sync-action" role="status">
-      <p><strong>Synchronisation activée.</strong>${pending ? ' Elle se fera dès que le réseau le permettra.' : ''}</p>
-      <p>Votre code, à retrouver dans les réglages :</p>
+      <p><strong>Sauvegarde en ligne activée.</strong>${pending ? ' Elle se fera dès que le réseau le permettra.' : ''}</p>
+      <p>Votre code de sauvegarde :</p>
       <p class="sync-code">${this.sync.displayCode}</p>
+      <p><strong>Notez-le en lieu sûr (note, e-mail, papier)</strong> : il vous servira à récupérer vos voies. Vous le retrouverez aussi dans les réglages.</p>
     </div>`;
   }
 

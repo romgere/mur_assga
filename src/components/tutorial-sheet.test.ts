@@ -127,12 +127,13 @@ describe('lardy-tutorial-sheet', () => {
     el.open = true;
     await mount(el);
     await settle(el, $<BottomSheet>(el, 'lardy-sheet'));
-    expect(heading(el)).toBe('Sur tous vos appareils');
+    expect(heading(el)).toBe('Ne perdez pas vos voies');
 
     $(el, 'button.enable-sync').click();
     await vi.waitFor(() => expect(el.sync.status).toBe('synced'));
     await settle(el);
     expect(el.shadowRoot!.querySelector('button.enable-sync')).toBeNull();
     expect($(el, '.sync-code').textContent).toBe(el.sync.displayCode);
+    expect(el.shadowRoot!.textContent).toContain('Notez-le en lieu sûr');
   });
 });

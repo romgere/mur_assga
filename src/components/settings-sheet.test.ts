@@ -168,7 +168,7 @@ describe('lardy-settings-sheet', () => {
     await settle(el);
     expect(shadow.querySelector('textarea.export')).toBeNull();
     expect(shadow.querySelector('textarea.import')).toBeNull();
-    expect(shadow.textContent).toContain('sur vos appareils synchronisés');
+    expect(shadow.textContent).toContain('dans votre sauvegarde en ligne');
 
     el.sync.disable();
     await settle(el);
