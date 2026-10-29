@@ -20,6 +20,9 @@
     }
   ],
   "routes": [{ "pattern": "mur-escalade-lardy.mestres.fr", "custom_domain": true }],
+  // Avec des routes, l'adresse workers.dev est désactivée et les URL de
+  // prévisualisation des PR aussi par défaut : on les réactive explicitement.
+  "preview_urls": true,
   "observability": { "enabled": true },
   // Requis par `wrangler preview` (déploiement des branches par Workers Builds).
   "previews": {}
