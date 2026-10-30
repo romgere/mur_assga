@@ -20,6 +20,9 @@ function fakeD1(): { db: D1Database; sqlite: DatabaseSync } {
         async first() {
           return sqlite.prepare(sql).get(...(values as string[])) ?? null;
         },
+        async all() {
+          return { results: sqlite.prepare(sql).all(...(values as string[])) };
+        },
         async run() {
           const { changes } = sqlite.prepare(sql).run(...(values as string[]));
           return { success: true, meta: { changes: Number(changes) } };
@@ -114,6 +117,15 @@ describe('API de synchronisation', () => {
   it('refuse un envoi trop volumineux', async () => {
     const data = { a: { n: 'x'.repeat(MAX_BODY_BYTES) } };
     expect((await call(db, 'PUT', '/2026-2027', { rev: 0, data })).status).toBe(413);
+  });
+
+  it('liste les saisons enregistrées pour le code', async () => {
+    expect(await (await call(db, 'GET', '')).json()).toEqual({ seasons: [] });
+    await call(db, 'PUT', '/2027-2028', { rev: 0, data: {} });
+    await call(db, 'PUT', '/2026-2027', { rev: 0, data: {} });
+    await call(db, 'PUT', '/2025-2026', { rev: 0, data: {} }, OTHER);
+    expect(await (await call(db, 'GET', '')).json()).toEqual({ seasons: ['2026-2027', '2027-2028'] });
+    expect((await call(db, 'PUT', '', {})).status).toBe(405);
   });
 
   it('efface toutes les saisons du code', async () => {

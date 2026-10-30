@@ -24,6 +24,10 @@ class FakeServer {
     const method = init.method ?? 'GET';
     this.requests.push(`${method} ${url}`);
     const code = new Headers(init.headers).get('Authorization')!.replace('Bearer ', '');
+    if (url === '/api/progress' && method === 'GET') {
+      const seasons = [...this.rows.keys()].filter((k) => k.startsWith(`${code}|`)).map((k) => k.split('|')[1]);
+      return Response.json({ seasons });
+    }
     if (method === 'DELETE') {
       for (const key of [...this.rows.keys()]) if (key.startsWith(`${code}|`)) this.rows.delete(key);
       return Response.json({ ok: true });
@@ -134,7 +138,7 @@ describe('ProgressSync', () => {
 
     const b = device(server);
     b.store.toggle('2-ROUGE', 's');
-    expect(await b.sync.link(a.sync.displayCode!.toLowerCase())).toBe(true);
+    expect(await b.sync.link(a.sync.displayCode!.toLowerCase())).toBe('ok');
     expect(b.store.snapshot()).toEqual({ '1-VERTE': { t: true }, '2-ROUGE': { s: true } });
 
     await a.sync.sync();
@@ -143,8 +147,69 @@ describe('ProgressSync', () => {
 
   it('refuse un code mal saisi', async () => {
     const { sync } = device(new FakeServer());
-    expect(await sync.link('ABCD-1234')).toBe(false);
+    expect(await sync.link('ABCD-1234')).toBe('invalid');
     expect(sync.enabled).toBe(false);
+  });
+
+  it('refuse un code sans sauvegarde en ligne (faute de frappe) sans rien créer', async () => {
+    const server = new FakeServer();
+    const { sync, store } = device(server);
+    store.toggle('1-VERTE', 't');
+    expect(await sync.link('ABCD-EFGH-IJKL-MNOP-QRST-UVWX')).toBe('unknown');
+    expect(sync.enabled).toBe(false);
+    expect(server.rows.size).toBe(0);
+  });
+
+  it('accepte un code enregistré pour une autre saison seulement', async () => {
+    const server = new FakeServer();
+    server.rows.set('ABCDEFGHIJKLMNOPQRSTUVWX|2025-2026', { rev: 3, data: {} });
+    const { sync, store } = device(server);
+    store.toggle('1-VERTE', 't');
+    expect(await sync.link('ABCD-EFGH-IJKL-MNOP-QRST-UVWX')).toBe('ok');
+    expect(server.data('ABCDEFGHIJKLMNOPQRSTUVWX')).toEqual({ '1-VERTE': { t: true } });
+  });
+
+  it('ne rejoint pas un code hors ligne', async () => {
+    const server = new FakeServer();
+    server.down = true;
+    const { sync } = device(server);
+    expect(await sync.link('ABCD-EFGH-IJKL-MNOP-QRST-UVWX')).toBe('offline');
+    expect(sync.enabled).toBe(false);
+  });
+
+  it('sauvegarde effacée depuis un autre appareil : garde les voies d’ici et se désactive', async () => {
+    const server = new FakeServer();
+    const a = device(server);
+    a.store.toggle('1-VERTE', 't');
+    await a.sync.enable();
+    const b = device(server);
+    b.store.toggle('2-ROUGE', 's');
+    await b.sync.link(a.sync.displayCode!);
+
+    expect(await a.sync.deleteRemote()).toBe(true);
+    await b.sync.sync();
+
+    expect(b.store.snapshot()).toEqual({ '1-VERTE': { t: true }, '2-ROUGE': { s: true } });
+    expect(b.sync.enabled).toBe(false);
+    expect(b.sync.message).toContain('effacée depuis un autre appareil');
+    expect(server.rows.size).toBe(0);
+  });
+
+  it('renvoie telles quelles les voies inconnues de cette version (topo plus récent ailleurs)', async () => {
+    const server = new FakeServer();
+    const code = 'ABCDEFGHIJKLMNOPQRSTUVWX';
+    server.rows.set(`${code}|2026-2027`, { rev: 2, data: { '9-NOUVELLE': { t: true, n: 'v2' }, '1-VERTE': { s: true } } });
+    const { sync, store } = device(server);
+    expect(await sync.link(code)).toBe('ok');
+    expect(store.snapshot()).toEqual({ '1-VERTE': { s: true } });
+
+    store.toggle('2-ROUGE', 'm');
+    await vi.waitFor(() => expect(sync.status).toBe('synced'));
+    expect(server.data(code)).toEqual({
+      '9-NOUVELLE': { t: true, n: 'v2' },
+      '1-VERTE': { s: true },
+      '2-ROUGE': { m: true },
+    });
   });
 
   it('fusionne les modifications faites hors ligne sur deux appareils', async () => {

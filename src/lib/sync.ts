@@ -39,6 +39,18 @@ interface SyncState {
   syncedAt?: string;
 }
 
+/** Résultat de « Récupérer » avec un code saisi. */
+export type LinkResult = 'ok' | 'invalid' | 'unknown' | 'offline' | 'error';
+
+/** Version en ligne d'une saison. */
+interface Remote {
+  rev: number;
+  /** Voies connues de cette version de l'application. */
+  data: ProgressMap;
+  /** Voies inconnues ici (topo plus récent sur un autre appareil) : renvoyées telles quelles. */
+  extra: Record<string, unknown>;
+}
+
 const EMPTY_STATE: SyncState = { rev: 0, base: {}, dirty: false };
 
 /** Base32 (RFC 4648) : ni 0, ni 1, ni 8, faciles à confondre. */
@@ -172,22 +184,35 @@ export class ProgressSync extends EventTarget {
   /**
    * Rejoint un code créé sur un autre appareil. La progression de cet appareil
    * est fusionnée avec celle en ligne (les voies notées ici l'emportent).
+   * Un code sans sauvegarde en ligne est refusé : c'est presque toujours une
+   * faute de frappe, qui créerait sinon une nouvelle sauvegarde vide.
    */
-  async link(input: string): Promise<boolean> {
+  async link(input: string): Promise<LinkResult> {
     const code = normalizeCode(input);
-    if (!code) return false;
+    if (!code) return 'invalid';
+    try {
+      const response = await this.request('GET', API_BASE, undefined, code);
+      if (!response.ok) throw new HttpError(await errorMessage(response));
+      const { seasons } = (await response.json()) as { seasons: string[] };
+      if (!seasons.length) return 'unknown';
+    } catch (e) {
+      return e instanceof HttpError ? 'error' : 'offline';
+    }
     await this.useCode(code);
-    return true;
+    return 'ok';
   }
 
-  /** Oublie le code sur cet appareil ; la progression locale et en ligne est conservée. */
-  disable(): void {
+  /**
+   * Oublie le code sur cet appareil ; la progression locale et en ligne est
+   * conservée. `message` explique une désactivation qui n'a pas été demandée ici.
+   */
+  disable(message = ''): void {
     clearTimeout(this.timer);
     this.code = null;
     this.state = { ...EMPTY_STATE };
     this.storage.remove(SYNC_CODE_KEY);
     this.storage.remove(this.stateKey);
-    this.setStatus('off');
+    this.setStatus('off', message);
   }
 
   /** Efface la progression en ligne (toutes saisons) puis désactive la synchro. */
@@ -259,20 +284,27 @@ export class ProgressSync extends EventTarget {
       // Plusieurs tours seulement si un autre appareil écrit en même temps.
       for (let attempt = 0; attempt < 3; attempt++) {
         const remote = await this.pull();
+        // Plus rien en ligne alors que cet appareil y avait écrit : la
+        // sauvegarde a été effacée depuis un autre appareil. On garde les
+        // voies d'ici au lieu de les remplacer par une progression vide.
+        if (!remote && this.state.rev > 0) {
+          return this.disable('Sauvegarde en ligne effacée depuis un autre appareil. Vos voies restent sur cet appareil.');
+        }
+        const { rev, data, extra } = remote ?? { rev: 0, data: {}, extra: {} };
         const changes = this.changes;
         const local = this.store.snapshot();
         let next = local;
-        if (remote.rev !== this.state.rev) {
-          next = this.state.dirty ? mergeProgress(this.state.base, local, remote.data) : remote.data;
+        if (rev !== this.state.rev) {
+          next = this.state.dirty ? mergeProgress(this.state.base, local, data) : data;
           if (!sameProgress(next, local)) this.store.applyRemote(next);
         }
-        if (sameProgress(next, remote.data)) return this.done(remote.rev, next, changes);
+        if (sameProgress(next, data)) return this.done(rev, next, changes);
 
-        const response = await this.request('PUT', this.seasonUrl, { rev: remote.rev, data: next });
+        const response = await this.request('PUT', this.seasonUrl, { rev, data: { ...extra, ...next } });
         if (response.status === 409) continue;
         if (!response.ok) throw new HttpError(await errorMessage(response));
-        const { rev } = (await response.json()) as { rev: number };
-        return this.done(rev, next, changes);
+        const saved = (await response.json()) as { rev: number };
+        return this.done(saved.rev, next, changes);
       }
       throw new HttpError('Trop d’écritures simultanées, nouvel essai plus tard.');
     } catch (e) {
@@ -280,14 +312,17 @@ export class ProgressSync extends EventTarget {
     }
   }
 
-  private async pull(): Promise<{ rev: number; data: ProgressMap }> {
+  /** Version en ligne de la saison ; null si rien n'y est enregistré. */
+  private async pull(): Promise<Remote | null> {
     const response = await this.request('GET', this.seasonUrl);
-    if (response.status === 404) return { rev: 0, data: {} };
+    if (response.status === 404) return null;
     if (!response.ok) throw new HttpError(await errorMessage(response));
     const body = (await response.json()) as { rev: number; data: unknown };
     const data = this.store.normalize(body.data);
     if (!data) throw new HttpError('Données en ligne illisibles.');
-    return { rev: body.rev, data };
+    const known = new Set(this.store.topo.routes.map((r) => r.id));
+    const extra = Object.fromEntries(Object.entries(body.data as object).filter(([id]) => !known.has(id)));
+    return { rev: body.rev, data, extra };
   }
 
   private done(rev: number, base: ProgressMap, changes: number): void {
@@ -310,11 +345,11 @@ export class ProgressSync extends EventTarget {
     return `${API_BASE}/${encodeURIComponent(this.store.topo.season)}`;
   }
 
-  private request(method: string, url: string, body?: unknown): Promise<Response> {
+  private request(method: string, url: string, body?: unknown, code = this.code): Promise<Response> {
     return this.fetchFn(url, {
       method,
       headers: {
-        Authorization: `Bearer ${this.code}`,
+        Authorization: `Bearer ${code}`,
         ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
       },
       body: body === undefined ? undefined : JSON.stringify(body),

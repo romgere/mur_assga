@@ -1,11 +1,18 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { copyText } from '../lib/clipboard';
-import { progressSync, type ProgressSync } from '../lib/sync';
+import { progressSync, type LinkResult, type ProgressSync } from '../lib/sync';
 import { sharedStyles } from './shared-styles';
 
 /** Délai pendant lequel « Effacer ma sauvegarde en ligne » attend la confirmation. */
 export const DELETE_CONFIRM_MS = 4000;
+
+const LINK_ERRORS: Record<Exclude<LinkResult, 'ok'>, string> = {
+  invalid: 'Code invalide : 24 lettres et chiffres, tels que notés à l’activation.',
+  unknown: 'Aucune sauvegarde trouvée pour ce code : vérifiez-le caractère par caractère.',
+  offline: 'Hors ligne : connectez-vous pour récupérer vos voies.',
+  error: 'Vérification du code impossible pour le moment, réessayez plus tard.',
+};
 
 /**
  * Section « Sauvegarde en ligne » des réglages : activation (nouveau code ou
@@ -154,11 +161,12 @@ export class SyncPanel extends LitElement {
 
   private link() {
     return this.run(async () => {
-      if (await this.sync.link(this.codeDraft)) {
+      const result = await this.sync.link(this.codeDraft);
+      if (result === 'ok') {
         this.codeDraft = '';
         this.say('');
       } else {
-        this.say('Code invalide : 24 lettres et chiffres, tels que notés à l’activation.', true);
+        this.say(LINK_ERRORS[result], true);
       }
     });
   }
@@ -214,7 +222,10 @@ export class SyncPanel extends LitElement {
   }
 
   private renderOff() {
-    return html`<p>
+    // Désactivée sans action ici (sauvegarde effacée depuis un autre appareil).
+    const notice = this.sync.message;
+    return html`${notice ? html`<p class="status error" role="status">${notice}</p>` : ''}
+      <p>
         Sauvegardez vos voies en ligne pour les retrouver en cas de perte, de casse ou de changement de téléphone.
         Pas de compte ni d’e-mail : un code de sauvegarde suffit.
       </p>

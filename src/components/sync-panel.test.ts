@@ -5,8 +5,13 @@ import { SyncPanel } from './sync-panel';
 
 /** Serveur minimal : accepte tout, ne garde rien. */
 function okFetch() {
-  return vi.fn(async (_url: RequestInfo | URL, init: RequestInit = {}) => {
-    if ((init.method ?? 'GET') === 'GET') return Response.json({ error: 'absent' }, { status: 404 });
+  return vi.fn(async (url: RequestInfo | URL, init: RequestInit = {}) => {
+    if ((init.method ?? 'GET') === 'GET') {
+      // Le code ABCD… a une sauvegarde ; les autres non.
+      const known = new Headers(init.headers).get('Authorization')!.includes('ABCDEFGH');
+      if (String(url) === '/api/progress') return Response.json({ seasons: known ? ['2026-2027'] : [] });
+      return Response.json({ error: 'absent' }, { status: 404 });
+    }
     return Response.json({ rev: 1, ok: true });
   });
 }
@@ -51,6 +56,26 @@ describe('lardy-sync-panel', () => {
     await settle(el);
     expect(text(el)).toContain('Code invalide');
     expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it('signale un code sans sauvegarde en ligne', async () => {
+    const { el } = await panel();
+    const input = $<HTMLInputElement>(el, 'input.code-input');
+    input.value = 'ZZZZ-EFGH-IJKL-MNOP-QRST-UVWX';
+    input.dispatchEvent(new Event('input'));
+    await el.updateComplete;
+    $(el, 'button.link-code').click();
+    await vi.waitFor(() => expect(text(el)).toContain('Aucune sauvegarde trouvée pour ce code'));
+    expect(el.sync.enabled).toBe(false);
+  });
+
+  it('explique une désactivation venue d’un autre appareil', async () => {
+    const { el } = await panel();
+    await el.sync.enable();
+    el.sync.disable('Sauvegarde en ligne effacée depuis un autre appareil.');
+    await settle(el);
+    expect(text(el)).toContain('Sauvegarde en ligne effacée depuis un autre appareil.');
+    expect(text(el)).toContain('Activer la sauvegarde en ligne');
   });
 
   it('rejoint un code existant', async () => {

@@ -6,6 +6,7 @@
  * La base ne garde que son empreinte SHA-256 : qui lit la base ne peut ni lire
  * ni modifier les données de quelqu'un.
  *
+ *   GET    /api/progress           → { seasons } : saisons enregistrées pour ce code.
  *   GET    /api/progress/<saison>  → { rev, data, updatedAt } (404 : rien d'enregistré)
  *   PUT    /api/progress/<saison>  ← { rev, data } ; rev = révision sur laquelle
  *          l'appareil s'appuie (0 : aucune). 409 + version en ligne si elle a
@@ -36,9 +37,20 @@ export async function handleApi(request: Request, db: D1Database): Promise<Respo
   const user = await hashCode(code);
 
   if (url.pathname === '/api/progress') {
-    if (request.method !== 'DELETE') return error(405, 'Méthode non autorisée.');
-    await db.prepare('DELETE FROM progress WHERE user_hash = ?').bind(user).run();
-    return json(200, { ok: true });
+    switch (request.method) {
+      case 'GET': {
+        const { results } = await db
+          .prepare('SELECT season FROM progress WHERE user_hash = ? ORDER BY season')
+          .bind(user)
+          .all<{ season: string }>();
+        return json(200, { seasons: results.map((r) => r.season) });
+      }
+      case 'DELETE':
+        await db.prepare('DELETE FROM progress WHERE user_hash = ?').bind(user).run();
+        return json(200, { ok: true });
+      default:
+        return error(405, 'Méthode non autorisée.');
+    }
   }
 
   const match = /^\/api\/progress\/([^/]+)$/.exec(url.pathname);

@@ -82,6 +82,7 @@ son nouveau téléphone. Le Worker ([`worker/`](worker)) l'attend en
 
 | Requête                         | Effet                                                           |
 | ------------------------------- | --------------------------------------------------------------- |
+| `GET /api/progress`             | `{ seasons }` : saisons enregistrées pour ce code               |
 | `GET /api/progress/<saison>`    | `{ rev, data, updatedAt }`, 404 si rien n'est enregistré        |
 | `PUT /api/progress/<saison>`    | envoie `{ rev, data }` ; 409 + version en ligne si `rev` a changé |
 | `DELETE /api/progress`          | efface toutes les saisons du code                               |
@@ -93,6 +94,16 @@ deux appareils ont modifié la progression entre deux synchros, la fusion se
 fait voie par voie : les voies modifiées sur l'appareil qui synchronise
 l'emportent, les autres viennent de la version en ligne
 ([`src/lib/sync.ts`](src/lib/sync.ts)).
+
+Garde-fous contre la perte de voies :
+
+- « Récupérer » refuse un code sans aucune sauvegarde en ligne (faute de
+  frappe) au lieu de créer une sauvegarde vide sous ce code.
+- Une sauvegarde effacée depuis un autre appareil (404 alors que cet appareil
+  y avait déjà écrit) désactive la sauvegarde ici en gardant les voies, avec
+  un message, au lieu de les remplacer par une progression vide.
+- Les voies inconnues de la version installée (topo plus récent sur un autre
+  appareil) sont renvoyées telles quelles, jamais supprimées.
 
 La base D1 `mur-assga` est déclarée dans [`wrangler.jsonc`](wrangler.jsonc) ;
 son schéma est dans [`migrations/`](migrations). Pour une nouvelle migration :
