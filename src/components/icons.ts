@@ -32,6 +32,25 @@ export const noteIcon = html`<svg viewBox="0 0 24 24" width="20" height="20" ari
   />
 </svg>`;
 
+/** Nuage et flèches : synchronisation entre appareils. */
+export const syncIcon = html`<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+  <path
+    d="M7 18.5h10.5a4 4 0 0 0 .6-8 6 6 0 0 0-11.6-1A4.5 4.5 0 0 0 7 18.5z"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.6"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M9.5 12.5a2.8 2.8 0 0 1 4.8-1.2l.7.7m0-2v2h-2m1.5 3a2.8 2.8 0 0 1-4.8 1.2l-.7-.7m0 2v-2h2"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>`;
+
 /** (i) des liens d'aide (18 px) et des boutons de nouveautés (22 px). */
 export const infoIcon = (size = 18) => html`<svg viewBox="0 0 24 24" width=${size} height=${size} aria-hidden="true">
   <circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.8" />

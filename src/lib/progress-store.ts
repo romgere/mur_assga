@@ -173,10 +173,16 @@ export interface ImportResult {
   ignored?: number;
 }
 
-/** Événement émis à chaque modification ; id absent = tout a changé. */
+/**
+ * Événement émis à chaque modification ; id absent = tout a changé. remote :
+ * la modification vient de la synchronisation (pas à renvoyer au serveur).
+ */
 export class ProgressChangeEvent extends Event {
   static readonly type = 'change';
-  constructor(readonly id?: string) {
+  constructor(
+    readonly id?: string,
+    readonly remote = false,
+  ) {
     super(ProgressChangeEvent.type);
   }
 }
@@ -287,6 +293,24 @@ export class ProgressStore extends EventTarget {
       null,
       1,
     );
+  }
+
+  /** Copie de toute la progression de la saison (pour la synchronisation). */
+  snapshot(): ProgressMap {
+    return structuredClone(this.data);
+  }
+
+  /** Valide une table de progression reçue (voies inconnues ignorées) ; null si invalide. */
+  normalize(json: unknown): ProgressMap | null {
+    const result = this.validate(json);
+    return result.ok ? result.data : null;
+  }
+
+  /** Remplace toute la progression par celle reçue de la synchronisation. */
+  applyRemote(data: ProgressMap): void {
+    this.data = structuredClone(data);
+    this.persist();
+    this.dispatchEvent(new ProgressChangeEvent(undefined, true));
   }
 
   /** Remplace toute la progression par celle du texte fourni, après validation. */

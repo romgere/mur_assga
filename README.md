@@ -37,8 +37,12 @@ worker, sécurité) dans [`public/_headers`](public/_headers).
   utilisateurs d'avant le tutoriel), qu'on peut passer, et à revoir depuis
   Réglages → Aide.
 - Favoris, notes par voie (cotation ressentie…), thème Auto / Clair / Sombre.
-- Sauvegarde et restauration par copier-coller d'un texte JSON, et effacement
-  complet avec confirmation.
+- Sauvegarde et restauration par copier-coller d'un texte JSON, et remise à
+  zéro des voies avec confirmation.
+- Sauvegarde en ligne facultative (Réglages → Sauvegarde en ligne), pour
+  retrouver ses voies en cas de perte ou de casse du téléphone, sans compte :
+  voir [Sauvegarde en ligne](#sauvegarde-en-ligne). Tant qu'elle est active, la
+  sauvegarde par copier-coller est masquée.
 
 Les données restent dans le navigateur (`localStorage`) :
 
@@ -49,6 +53,8 @@ Les données restent dans le navigateur (`localStorage`) :
 | `lardy2026.theme`          | `auto`, `light` ou `dark`                                         |
 | `lardy2026.version`        | dernière version dont les nouveautés ont été vues                |
 | `lardy2026.tutorial`       | `1` une fois le tutoriel passé ou terminé                        |
+| `lardy.sync.code`          | code de sauvegarde en ligne, absent si elle est désactivée      |
+| `lardy.sync.<saison>`      | révision en ligne, progression à cette révision, envoi en attente |
 
 Dans la progression : `t` / `m` = faite en tête / en moulinette, `tx` / `mx` =
 détails de cette ascension (liste de codes `avue`, `flash`, `chute`, `repos`,
@@ -62,6 +68,53 @@ clé de la V1, `lardy2026.v1`, est reprise automatiquement dans la saison
 
 Si le stockage est indisponible (navigation privée…), l'application continue
 en mémoire et le signale dans les réglages.
+
+## Sauvegarde en ligne
+
+Facultative, activée depuis **Réglages → Sauvegarde en ligne** ou depuis l'étape
+« Ne perdez pas vos voies » du tutoriel. L'usage visé est la récupération des
+voies sur un nouveau téléphone (perte, casse) ; techniquement, c'est une
+synchronisation, donc plusieurs appareils peuvent aussi partager un code. Pas
+de compte : l'appareil crée un code de sauvegarde aléatoire de 24 caractères
+(120 bits), que l'utilisateur est invité à garder en lieu sûr et à saisir sur
+son nouveau téléphone. Le Worker ([`worker/`](worker)) l'attend en
+`Authorization: Bearer <code>` et la base ne garde que son empreinte SHA-256.
+
+| Requête                         | Effet                                                           |
+| ------------------------------- | --------------------------------------------------------------- |
+| `GET /api/progress`             | `{ seasons }` : saisons enregistrées pour ce code               |
+| `GET /api/progress/<saison>`    | `{ rev, data, updatedAt }`, 404 si rien n'est enregistré        |
+| `PUT /api/progress/<saison>`    | envoie `{ rev, data }` ; 409 + version en ligne si `rev` a changé |
+| `DELETE /api/progress`          | efface toutes les saisons du code                               |
+
+Le `localStorage` reste la référence (l'application marche hors ligne) :
+chaque modification part 2 secondes plus tard, et la version en ligne est
+relue à l'ouverture, au retour sur l'application et au retour du réseau. Si
+deux appareils ont modifié la progression entre deux synchros, la fusion se
+fait voie par voie : les voies modifiées sur l'appareil qui synchronise
+l'emportent, les autres viennent de la version en ligne
+([`src/lib/sync.ts`](src/lib/sync.ts)).
+
+Garde-fous contre la perte de voies :
+
+- « Récupérer » refuse un code sans aucune sauvegarde en ligne (faute de
+  frappe) au lieu de créer une sauvegarde vide sous ce code.
+- Une sauvegarde effacée depuis un autre appareil (404 alors que cet appareil
+  y avait déjà écrit) désactive la sauvegarde ici en gardant les voies, avec
+  un message, au lieu de les remplacer par une progression vide.
+- Les voies inconnues de la version installée (topo plus récent sur un autre
+  appareil) sont renvoyées telles quelles, jamais supprimées.
+
+La base D1 `mur-assga` est déclarée dans [`wrangler.jsonc`](wrangler.jsonc) ;
+son schéma est dans [`migrations/`](migrations). Pour une nouvelle migration :
+`npx wrangler d1 migrations create mur-assga <nom>`, puis
+`npx wrangler d1 migrations apply mur-assga --remote` avant de déployer.
+
+Les prévisualisations des branches (Workers Builds) n'héritent pas des
+liaisons de production : elles utilisent leur propre base, `mur-assga-preview`
+(bloc `previews` de `wrangler.jsonc`). Une nouvelle migration doit aussi y être
+appliquée, par exemple
+`npx wrangler d1 execute mur-assga-preview --remote --file migrations/<fichier>.sql`.
 
 ## Application installable et hors ligne (PWA)
 
@@ -174,7 +227,11 @@ npm install
 npm run dev      # serveur de développement
 npm test         # tests unitaires (Vitest + happy-dom)
 npm run build    # vérification TypeScript + build dans dist/
+npm run dev:worker  # build + Worker et base D1 locaux (wrangler dev), synchro comprise
 ```
+
+Avec `npm run dev`, l'API de synchronisation n'existe pas : la synchro affiche
+une erreur, le reste fonctionne.
 
 Pile : [Vite](https://vite.dev), [Lit](https://lit.dev), TypeScript.
 
@@ -182,7 +239,7 @@ Pile : [Vite](https://vite.dev), [Lit](https://lit.dev), TypeScript.
 src/
   data/topo.json          données du topo
   data/release-notes.json notes de version (la plus récente = version de l'application)
-  lib/                    stockage, store de progression, filtres, thème, état d'interface
+  lib/                    stockage, store de progression, synchro, filtres, thème, état d'interface
   components/             composants Lit, chacun avec son fichier *.test.ts
     lardy-app             racine : en-tête, modes, vue, pastilles, feuilles
     route-pager           pager horizontal en scroll-snap
@@ -193,12 +250,15 @@ src/
     all-routes-view       mode « Toutes » : filtres, tri, liste
     bottom-sheet          feuille modale générique
     note-sheet            édition d'une note
-    settings-sheet        thème, nouveautés, sauvegarde, restauration, effacement
+    settings-sheet        thème, nouveautés, sauvegarde en ligne, sauvegarde manuelle, restauration, remise à zéro
+    sync-panel            section « Sauvegarde en ligne » des réglages
     update-banner         bandeau « Nouvelle version disponible » et son bouton (i)
     release-notes-sheet   affichage des notes de version
     tutorial-sheet        tutoriel de prise en main (étapes, pastilles, « Passer »)
     icons                 icônes SVG partagées
   styles/tokens.css       tokens de couleur (clair + sombre) et styles globaux
+worker/                   Worker Cloudflare : fichiers statiques + API /api/progress (D1)
+migrations/               schéma de la base D1
 ```
 
 Un clic sur une voie ne repeint que sa ligne et les compteurs : chaque composant

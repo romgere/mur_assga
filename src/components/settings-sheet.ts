@@ -1,9 +1,10 @@
-import { LitElement, css, html } from 'lit';
+import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { copyText } from '../lib/clipboard';
 import { progressStore, type ImportResult, type ProgressStore } from '../lib/progress-store';
 import { PwaController, pwaState, type InstallMode, type PwaState } from '../lib/pwa';
 import { APP_VERSION, RELEASE_NOTES } from '../lib/release-notes';
+import { progressSync, type ProgressSync } from '../lib/sync';
 import type { Theme } from '../lib/theme';
 import { requestHelp } from './help-sheet';
 import { infoIcon } from './icons';
@@ -11,6 +12,7 @@ import { requestTutorial } from './tutorial-sheet';
 import { showReleaseNotesEvent } from './release-notes-sheet';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
+import './sync-panel';
 
 export interface ThemeChangeDetail {
   theme: Theme;
@@ -26,12 +28,13 @@ const THEME_OPTIONS: { value: Theme; label: string }[] = [
 export const REPO_URL = 'https://github.com/romgere/mur_assga';
 export const AUTHOR_URL = 'https://mestres.fr';
 
-/** Délai pendant lequel le bouton « Tout effacer » attend la confirmation. */
+/** Délai pendant lequel le bouton « Remettre à zéro » attend la confirmation. */
 export const CLEAR_CONFIRM_MS = 4000;
 
 /**
- * Réglages : thème, installation de l'application, nouveautés de la version, sauvegarde (texte JSON à copier), restauration (texte
- * collé et validé) et effacement complet en deux temps.
+ * Réglages : thème, installation de l'application, nouveautés de la version, sauvegarde en ligne,
+ * sauvegarde manuelle (texte JSON à copier, restauration d'un texte collé et validé ; masquées quand la
+ * sauvegarde en ligne est active) et remise à zéro des voies en deux temps.
  */
 @customElement('lardy-settings-sheet')
 export class SettingsSheet extends LitElement {
@@ -86,11 +89,24 @@ export class SettingsSheet extends LitElement {
         background: var(--bg);
       }
 
+      /* Boutons d'action centrés ; leur message s'affiche dessous. */
       .row {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
+        justify-content: center;
         gap: 8px;
         margin-top: 8px;
+      }
+
+      .row .feedback:not(:empty) {
+        flex-basis: 100%;
+        text-align: center;
+      }
+
+      .install {
+        display: flex;
+        margin: 0 auto;
       }
 
       .feedback {
@@ -184,6 +200,7 @@ export class SettingsSheet extends LitElement {
   @property() theme: Theme = 'auto';
   @property({ attribute: false }) store: ProgressStore = progressStore;
   @property({ attribute: false }) pwa: PwaState = pwaState;
+  @property({ attribute: false }) sync: ProgressSync = progressSync;
 
   @state() private exportText = '';
   @state() private copyFeedback = '';
@@ -195,13 +212,27 @@ export class SettingsSheet extends LitElement {
   @query('textarea.export') private exportField?: HTMLTextAreaElement;
 
   private clearTimer = 0;
+  private subscribedSync?: ProgressSync;
+  private onSyncChange = () => this.requestUpdate();
 
   constructor() {
     super();
     new PwaController(this, () => this.pwa);
   }
 
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.subscribeSync();
+  }
+
+  private subscribeSync() {
+    this.subscribedSync?.removeEventListener('change', this.onSyncChange);
+    this.subscribedSync = this.sync;
+    this.sync.addEventListener('change', this.onSyncChange);
+  }
+
   protected willUpdate(changed: Map<string, unknown>): void {
+    if (this.isConnected && this.subscribedSync !== this.sync) this.subscribeSync();
     if (changed.has('open') && this.open) {
       this.exportText = this.store.exportText();
       this.copyFeedback = '';
@@ -215,6 +246,8 @@ export class SettingsSheet extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     clearTimeout(this.clearTimer);
+    this.subscribedSync?.removeEventListener('change', this.onSyncChange);
+    this.subscribedSync = undefined;
   }
 
   private close() {
@@ -289,6 +322,51 @@ export class SettingsSheet extends LitElement {
     this.confirmingClear = false;
   }
 
+  /** Sauvegarde manuelle : texte à copier, puis restauration d'un texte collé. */
+  private renderLocalBackup() {
+    return html`<section>
+        <h3>Sauvegarde manuelle</h3>
+        ${this.store.persistent
+          ? html`<p>
+              Vos voies sont enregistrées dans ce navigateur uniquement. Copiez ce texte et gardez-le (notes, mail…)
+              pour le restaurer sur un autre appareil.
+            </p>`
+          : html`<p class="warning" role="alert">
+              Le stockage du navigateur est indisponible (navigation privée ?) : vos voies seront perdues à la
+              fermeture. Copiez la sauvegarde ci-dessous.
+            </p>`}
+        <label class="visually-hidden" for="export">Texte de sauvegarde</label>
+        <textarea id="export" class="export" readonly .value=${this.exportText}></textarea>
+        <div class="row">
+          <button class="btn primary copy" @click=${this.copy}>Copier</button>
+          <span class="feedback ok" role="status">${this.copyFeedback}</span>
+        </div>
+      </section>
+
+      <section>
+        <h3>Restauration</h3>
+        <p>Collez une sauvegarde : elle remplace toutes les données actuelles.</p>
+        <label class="visually-hidden" for="import">Sauvegarde à restaurer</label>
+        <textarea
+          id="import"
+          class="import"
+          placeholder='{"app":"lardy2026", …}'
+          .value=${this.importDraft}
+          @input=${(e: Event) => {
+            this.importDraft = (e.target as HTMLTextAreaElement).value;
+            this.importResult = null;
+          }}
+        ></textarea>
+        <div class="row">
+          <button class="btn restore" ?disabled=${!this.importDraft.trim()} @click=${this.restore}>Restaurer</button>
+          <span class="feedback ${this.importResult?.ok ? 'ok' : 'error'}" role="status"
+            >${this.importResult?.message ?? ''}</span
+          >
+        </div>
+      </section>`;
+  }
+
+
   render() {
     return html`<lardy-sheet .open=${this.open} heading="Réglages" @close=${this.close}>
       <section>
@@ -338,55 +416,25 @@ export class SettingsSheet extends LitElement {
       </section>
 
       <section>
-        <h3>Sauvegarde</h3>
-        ${this.store.persistent
-          ? html`<p>
-              Vos voies sont enregistrées dans ce navigateur uniquement. Copiez ce texte et gardez-le (notes, mail…)
-              pour le restaurer sur un autre appareil.
-            </p>`
-          : html`<p class="warning" role="alert">
-              Le stockage du navigateur est indisponible (navigation privée ?) : vos voies seront perdues à la
-              fermeture. Copiez la sauvegarde ci-dessous.
-            </p>`}
-        <label class="visually-hidden" for="export">Texte de sauvegarde</label>
-        <textarea id="export" class="export" readonly .value=${this.exportText}></textarea>
-        <div class="row">
-          <button class="btn primary copy" @click=${this.copy}>Copier</button>
-          <span class="feedback ok" role="status">${this.copyFeedback}</span>
-        </div>
+        <h3>Sauvegarde en ligne</h3>
+        <lardy-sync-panel .sync=${this.sync}></lardy-sync-panel>
       </section>
 
-      <section>
-        <h3>Restauration</h3>
-        <p>Collez une sauvegarde : elle remplace toutes les données actuelles.</p>
-        <label class="visually-hidden" for="import">Sauvegarde à restaurer</label>
-        <textarea
-          id="import"
-          class="import"
-          placeholder='{"app":"lardy2026", …}'
-          .value=${this.importDraft}
-          @input=${(e: Event) => {
-            this.importDraft = (e.target as HTMLTextAreaElement).value;
-            this.importResult = null;
-          }}
-        ></textarea>
-        <div class="row">
-          <button class="btn restore" ?disabled=${!this.importDraft.trim()} @click=${this.restore}>Restaurer</button>
-          <span class="feedback ${this.importResult?.ok ? 'ok' : 'error'}" role="status"
-            >${this.importResult?.message ?? ''}</span
-          >
-        </div>
-      </section>
+      ${this.sync.enabled ? nothing : this.renderLocalBackup()}
 
       <section>
-        <h3>Effacement</h3>
-        <p>Supprime toutes les voies cochées, les favoris et les notes.</p>
+        <h3>Remise à zéro</h3>
+        <p>
+          Décoche toutes les voies et supprime les favoris et les notes de la saison${this.sync.enabled
+            ? ', sur cet appareil et dans votre sauvegarde en ligne'
+            : ''}.
+        </p>
         <div class="row">
           <button class="btn danger clear" @click=${this.clear}>
-            ${this.confirmingClear ? 'Confirmer l’effacement' : 'Tout effacer'}
+            ${this.confirmingClear ? 'Confirmer la remise à zéro' : 'Remettre à zéro'}
           </button>
           <span class="feedback ok" role="status"
-            >${this.confirmingClear ? 'Appuyez à nouveau pour confirmer.' : this.clearDone ? 'Données effacées.' : ''}</span
+            >${this.confirmingClear ? 'Appuyez à nouveau pour confirmer.' : this.clearDone ? 'Voies remises à zéro.' : ''}</span
           >
         </div>
       </section>

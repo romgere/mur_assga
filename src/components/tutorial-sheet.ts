@@ -1,7 +1,8 @@
 import { LitElement, css, html, nothing, type TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { progressSync, type ProgressSync } from '../lib/sync';
 import { requestHelp } from './help-sheet';
-import { gearIcon, noteIcon, starIcon } from './icons';
+import { gearIcon, noteIcon, starIcon, syncIcon } from './icons';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
 
@@ -64,16 +65,23 @@ export const TUTORIAL_STEPS: Record<string, Step> = {
     body: () => html`<p>L’étoile ajoute la voie à vos favoris, pour garder vos projets sous la main.</p>
       <p>Le crayon ouvre tous les détails de la voie et une note personnelle (cotation ressentie, méthode, passage clé…).</p>`,
   },
+  synchro: {
+    title: 'Ne perdez pas vos voies',
+    art: html`<span class="icon">${syncIcon}</span>`,
+    body: (sheet) => html`<p>Téléphone perdu, cassé ou remplacé ? Avec la sauvegarde en ligne, vous retrouvez toutes vos voies.</p>
+      <p>Pas de compte ni d’e-mail : un code de sauvegarde suffit. Vous pourrez aussi l’activer plus tard dans les réglages.</p>
+      ${sheet.renderSync()}`,
+  },
   reglages: {
     title: 'Réglages',
     art: html`<span class="icon gear">${gearIcon}</span>`,
-    body: () => html`<p>La roue dentée, en haut à droite : thème clair ou sombre, installation de l’application, sauvegarde et restauration de votre progression.</p>
+    body: () => html`<p>La roue dentée, en haut à droite : thème clair ou sombre, installation de l’application, sauvegarde en ligne ou manuelle de votre progression.</p>
       <p>Vous pourrez aussi y revoir ce tutoriel.</p>`,
   },
 };
 
 /** Tutoriel de prise en main, montré au premier lancement. */
-export const ONBOARDING: string[] = ['bienvenue', 'navigation', 'cocher', 'favoris', 'reglages'];
+export const ONBOARDING: string[] = ['bienvenue', 'navigation', 'cocher', 'favoris', 'synchro', 'reglages'];
 
 /** Identifiants connus de cette version, dans l'ordre donné. */
 export function knownSteps(ids: string[]): string[] {
@@ -249,6 +257,27 @@ export class TutorialSheet extends LitElement {
       nav .next {
         min-width: 110px;
       }
+
+      .sync-action {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        margin-top: 12px;
+        text-align: center;
+      }
+
+      .sync-action p {
+        margin: 0;
+        font-size: 14px;
+      }
+
+      .sync-code {
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 13px;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+      }
     `,
   ];
 
@@ -257,7 +286,56 @@ export class TutorialSheet extends LitElement {
   @property({ attribute: false }) steps: string[] = ONBOARDING;
   /** Libellé du bouton de la dernière étape. */
   @property() finishLabel = 'C’est parti !';
+  @property({ attribute: false }) sync: ProgressSync = progressSync;
   @state() index = 0;
+  @state() private activating = false;
+
+  private subscribedSync?: ProgressSync;
+  private onSyncChange = () => this.requestUpdate();
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.subscribeSync();
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.subscribedSync?.removeEventListener('change', this.onSyncChange);
+    this.subscribedSync = undefined;
+  }
+
+  private subscribeSync() {
+    this.subscribedSync?.removeEventListener('change', this.onSyncChange);
+    this.subscribedSync = this.sync;
+    this.sync.addEventListener('change', this.onSyncChange);
+  }
+
+  private async activateSync() {
+    this.activating = true;
+    try {
+      await this.sync.enable();
+    } finally {
+      this.activating = false;
+    }
+  }
+
+  /** Étape « synchro » : activation de la sauvegarde en ligne, puis le code à noter. */
+  renderSync() {
+    if (!this.sync.enabled) {
+      return html`<div class="sync-action">
+        <button class="btn primary enable-sync" ?disabled=${this.activating} @click=${this.activateSync}>
+          Activer maintenant
+        </button>
+      </div>`;
+    }
+    const pending = this.sync.status === 'offline' || this.sync.status === 'error';
+    return html`<div class="sync-action" role="status">
+      <p><strong>Sauvegarde en ligne activée.</strong>${pending ? ' Elle se fera dès que le réseau le permettra.' : ''}</p>
+      <p>Votre code de sauvegarde :</p>
+      <p class="sync-code">${this.sync.displayCode}</p>
+      <p><strong>Notez-le en lieu sûr (note, e-mail, papier)</strong> : il vous servira à récupérer vos voies. Vous le retrouverez aussi dans les réglages.</p>
+    </div>`;
+  }
 
   private get shown(): Step[] {
     return knownSteps(this.steps).map((id) => TUTORIAL_STEPS[id]);
@@ -266,6 +344,7 @@ export class TutorialSheet extends LitElement {
   private startX: number | null = null;
 
   protected willUpdate(changed: Map<string, unknown>): void {
+    if (this.isConnected && this.subscribedSync !== this.sync) this.subscribeSync();
     // Chaque ouverture repart de la première étape.
     if ((changed.has('open') || changed.has('steps')) && this.open) this.index = 0;
   }

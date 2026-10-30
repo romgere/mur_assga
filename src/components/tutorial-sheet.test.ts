@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { $, $$, mount, settle } from '../test/helpers';
+import { ProgressSync } from '../lib/sync';
+import { $, $$, memoryStorage, mount, settle, testStore } from '../test/helpers';
 import type { BottomSheet } from './bottom-sheet';
 import { OPEN_HELP } from './help-sheet';
 import { RELEASE_NOTES, lineTutorial } from '../lib/release-notes';
@@ -113,5 +114,26 @@ describe('lardy-tutorial-sheet', () => {
     $(el, 'button.help').click();
     document.removeEventListener(OPEN_HELP, help);
     expect(help).toHaveBeenCalledOnce();
+  });
+
+  it('active la synchronisation depuis son étape et affiche le code', async () => {
+    const storage = memoryStorage();
+    const fetchFn = vi.fn(async (_url: RequestInfo | URL, init: RequestInit = {}) =>
+      (init.method ?? 'GET') === 'GET' ? Response.json({}, { status: 404 }) : Response.json({ rev: 1 }),
+    );
+    const el = new TutorialSheet();
+    el.steps = ['synchro'];
+    el.sync = new ProgressSync(testStore(storage), storage, fetchFn as typeof fetch, 5);
+    el.open = true;
+    await mount(el);
+    await settle(el, $<BottomSheet>(el, 'lardy-sheet'));
+    expect(heading(el)).toBe('Ne perdez pas vos voies');
+
+    $(el, 'button.enable-sync').click();
+    await vi.waitFor(() => expect(el.sync.status).toBe('synced'));
+    await settle(el);
+    expect(el.shadowRoot!.querySelector('button.enable-sync')).toBeNull();
+    expect($(el, '.sync-code').textContent).toBe(el.sync.displayCode);
+    expect(el.shadowRoot!.textContent).toContain('Notez-le en lieu sûr');
   });
 });

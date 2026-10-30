@@ -1,14 +1,39 @@
 {
   "name": "mur-assga",
   "compatibility_date": "2026-10-23",
-  // Site statique : le build Vite (dist/) est servi tel quel, sans code Worker.
+  // Le Worker ne répond qu'aux adresses /api/ (synchronisation) ; tout le
+  // reste est servi depuis le build Vite (dist/).
+  "main": "./worker/index.ts",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     // Application monopage : toute URL inconnue renvoie l'index.
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
   },
+  // Progression synchronisée entre appareils. Schéma : migrations/.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mur-assga",
+      "database_id": "7fa28371-9c06-4a3e-b82e-a8c96b3f2af9"
+    }
+  ],
   "routes": [{ "pattern": "mur-escalade-lardy.mestres.fr", "custom_domain": true }],
+  // Avec des routes, l'adresse workers.dev est désactivée et les URL de
+  // prévisualisation des PR aussi par défaut : on les réactive explicitement.
+  "preview_urls": true,
   "observability": { "enabled": true },
-  // Requis par `wrangler preview` (déploiement des branches par Workers Builds).
-  "previews": {}
+  // Prévisualisations des branches (`wrangler preview`, Workers Builds). Elles
+  // n'héritent d'aucune liaison : base D1 à part, pour ne pas écrire en production.
+  // Même schéma que la production (migrations/), à appliquer aussi sur cette base.
+  "previews": {
+    "d1_databases": [
+      {
+        "binding": "DB",
+        "database_name": "mur-assga-preview",
+        "database_id": "3248024d-bd54-43da-982c-f396f53223b6"
+      }
+    ]
+  }
 }

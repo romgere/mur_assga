@@ -1,5 +1,16 @@
 [
   {
+    "version": "1.4.0",
+    "date": "2026-10-29",
+    "notes": [
+      {
+        "text": "Sauvegarde en ligne facultative, pour retrouver vos voies en cas de perte ou de casse du téléphone : Réglages → Sauvegarde en ligne.",
+        "tutorial": ["synchro"]
+      },
+      "Pas de compte : un code de sauvegarde, à garder en lieu sûr, suffit."
+    ]
+  },
+  {
     "version": "1.3.0",
     "date": "2026-10-23",
     "notes": [
