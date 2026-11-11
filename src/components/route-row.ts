@@ -77,7 +77,7 @@ export class RouteRow extends LitElement {
       }
 
       .wall {
-        font-size: calc(12px * var(--font-scale, 1));
+        font-size: var(--font-xs);
         font-weight: 700;
         text-align: center;
         color: var(--text-muted);
@@ -92,8 +92,8 @@ export class RouteRow extends LitElement {
         background: var(--sw);
         color: var(--sw-ink);
         border: 1px solid var(--swatch-border);
-        /* Le nom de la couleur doit tenir dans la pastille : il ne grossit pas. */
-        font-size: calc(10.5px * min(var(--font-scale, 1), 1));
+        /* Le nom de la couleur doit tenir dans la pastille : taille fixe. */
+        font-size: 10.5px;
         font-weight: 800;
         letter-spacing: 0.02em;
         overflow: hidden;
@@ -106,7 +106,7 @@ export class RouteRow extends LitElement {
       }
 
       .grade {
-        font-size: calc(20px * var(--font-scale, 1));
+        font-size: var(--font-3xl);
         font-weight: 800;
         line-height: 1.1;
         white-space: nowrap;
@@ -114,7 +114,7 @@ export class RouteRow extends LitElement {
       }
 
       .wall-num small {
-        font-size: calc(13px * var(--font-scale, 1));
+        font-size: var(--font-sm);
         font-weight: 700;
         color: var(--text-muted);
       }
@@ -136,7 +136,7 @@ export class RouteRow extends LitElement {
         display: flex;
         flex-wrap: wrap;
         gap: 4px;
-        font-size: calc(12px * var(--font-scale, 1));
+        font-size: var(--font-xs);
         color: var(--text-muted);
         white-space: nowrap;
       }
@@ -166,7 +166,7 @@ export class RouteRow extends LitElement {
         border-radius: 10px;
         border: 1.5px solid var(--border);
         background: var(--surface);
-        font-size: calc(13px * var(--font-scale, 1));
+        font-size: var(--font-sm);
         font-weight: 700;
         color: var(--text-muted);
       }
@@ -224,7 +224,7 @@ export class RouteRow extends LitElement {
       .details {
         grid-column: 2 / -1;
         margin: 0;
-        font-size: calc(13px * var(--font-scale, 1));
+        font-size: var(--font-sm);
         font-style: italic;
         color: var(--text-muted);
         overflow: hidden;
@@ -256,7 +256,7 @@ export class RouteRow extends LitElement {
         align-items: center;
         justify-content: space-between;
         gap: 8px;
-        font-size: calc(12px * var(--font-scale, 1));
+        font-size: var(--font-xs);
         font-weight: 700;
         color: var(--text-muted);
       }
@@ -273,7 +273,7 @@ export class RouteRow extends LitElement {
         align-items: center;
         gap: 8px;
         min-height: 36px;
-        font-size: calc(15px * var(--font-scale, 1));
+        font-size: var(--font-lg);
       }
     `,
   ];

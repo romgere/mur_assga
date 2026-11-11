@@ -33,7 +33,7 @@ export class UpdateBanner extends LitElement {
       p {
         flex: 1 1 160px;
         margin: 0;
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
         font-weight: 600;
       }
 
@@ -45,7 +45,7 @@ export class UpdateBanner extends LitElement {
 
       .btn {
         min-height: 36px;
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
       }
 
       .info {

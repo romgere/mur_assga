@@ -35,7 +35,7 @@ export class NoteSheet extends LitElement {
     css`
       p {
         margin: 0 0 8px;
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
         color: var(--text-muted);
       }
 
@@ -72,7 +72,7 @@ export class NoteSheet extends LitElement {
         border-radius: 10px;
         border: 1.5px solid var(--border);
         background: var(--surface);
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
         font-weight: 700;
         color: var(--text-muted);
       }
@@ -93,7 +93,7 @@ export class NoteSheet extends LitElement {
       .summary {
         flex: 1;
         min-width: 0;
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
         font-style: italic;
         color: var(--text-muted);
       }
@@ -117,7 +117,7 @@ export class NoteSheet extends LitElement {
         align-items: center;
         gap: 8px;
         min-height: 32px;
-        font-size: calc(15px * var(--font-scale, 1));
+        font-size: var(--font-lg);
       }
 
       .checks input {
@@ -126,7 +126,7 @@ export class NoteSheet extends LitElement {
 
       textarea {
         min-height: 120px;
-        font-size: calc(16px * var(--font-scale, 1));
+        font-size: var(--font-base);
         background: var(--bg);
       }
 

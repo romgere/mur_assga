@@ -30,7 +30,7 @@ export class SyncPanel extends LitElement {
 
       p {
         margin: 0 0 8px;
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
         color: var(--text-muted);
       }
 
@@ -49,7 +49,7 @@ export class SyncPanel extends LitElement {
         border-radius: 10px;
         background: var(--surface-2);
         font-family: ui-monospace, Menlo, Consolas, monospace;
-        font-size: calc(13px * var(--font-scale, 1));
+        font-size: var(--font-sm);
         font-weight: 600;
         overflow-wrap: anywhere;
         user-select: all;
@@ -95,7 +95,7 @@ export class SyncPanel extends LitElement {
       }
 
       .feedback {
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
         font-weight: 600;
         color: var(--accent);
       }

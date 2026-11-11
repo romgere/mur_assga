@@ -53,14 +53,14 @@ export class BottomSheet extends LitElement {
       h2 {
         flex: 1;
         margin: 0;
-        font-size: calc(18px * var(--font-scale, 1));
+        font-size: var(--font-2xl);
       }
 
       .close {
         width: 40px;
         height: 40px;
         border-radius: 20px;
-        font-size: calc(24px * var(--font-scale, 1));
+        font-size: var(--font-5xl);
         line-height: 1;
         color: var(--text-muted);
       }

@@ -152,19 +152,53 @@
 }
 
 /*
- * Taille du texte (Réglages) : toutes les tailles de police des composants
- * sont multipliées par --font-scale. « Moyenne » = taille d'origine.
+ * Taille du texte (Réglages) : les composants n'utilisent que ces tailles.
+ * « Moyenne » = tailles d'origine ; Petite ≈ ×0,875, Grande ≈ ×1,2.
+ * --font-scale ne sert qu'aux exceptions (dimensions qui suivent le texte).
  */
 :root {
   --font-scale: 1;
+  --font-2xs: 11px;
+  --font-xs: 12px;
+  --font-sm: 13px;
+  --font-md: 14px;
+  --font-lg: 15px;
+  --font-base: 16px;
+  --font-xl: 17px;
+  --font-2xl: 18px;
+  --font-3xl: 20px;
+  --font-4xl: 22px;
+  --font-5xl: 24px;
 }
 
 :root[data-font-size='small'] {
   --font-scale: 0.875;
+  --font-2xs: 9.5px;
+  --font-xs: 10.5px;
+  --font-sm: 11.5px;
+  --font-md: 12px;
+  --font-lg: 13px;
+  --font-base: 14px;
+  --font-xl: 15px;
+  --font-2xl: 16px;
+  --font-3xl: 17.5px;
+  --font-4xl: 19px;
+  --font-5xl: 21px;
 }
 
 :root[data-font-size='large'] {
   --font-scale: 1.2;
+  --font-2xs: 13px;
+  --font-xs: 14.5px;
+  --font-sm: 15.5px;
+  --font-md: 17px;
+  --font-lg: 18px;
+  --font-base: 19px;
+  --font-xl: 20.5px;
+  --font-2xl: 21.5px;
+  --font-3xl: 24px;
+  --font-4xl: 26.5px;
+  --font-5xl: 29px;
 }
 
 html,
@@ -177,7 +211,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-size: calc(16px * var(--font-scale, 1));
+  font-size: var(--font-base);
   line-height: 1.35;
   overflow: hidden;
   overscroll-behavior: none;

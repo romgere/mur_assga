@@ -132,7 +132,7 @@ export class TutorialSheet extends LitElement {
         padding: 3px;
         border-radius: 10px;
         background: var(--bg);
-        font-size: calc(12px * var(--font-scale, 1));
+        font-size: var(--font-xs);
         font-weight: 600;
         color: var(--text-muted);
       }
@@ -156,7 +156,7 @@ export class TutorialSheet extends LitElement {
       }
 
       .demo small {
-        font-size: calc(12px * var(--font-scale, 1));
+        font-size: var(--font-xs);
         color: var(--text-muted);
       }
 
@@ -169,7 +169,7 @@ export class TutorialSheet extends LitElement {
         padding: 0 8px;
         border-radius: 10px;
         border: 1.5px solid var(--border);
-        font-size: calc(13px * var(--font-scale, 1));
+        font-size: var(--font-sm);
         font-weight: 700;
       }
 
@@ -202,12 +202,12 @@ export class TutorialSheet extends LitElement {
 
       p {
         margin: 0 0 8px;
-        font-size: calc(15px * var(--font-scale, 1));
+        font-size: var(--font-lg);
       }
 
       .link {
         color: var(--accent);
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
         font-weight: 600;
         text-decoration: underline;
       }
@@ -269,12 +269,12 @@ export class TutorialSheet extends LitElement {
 
       .sync-action p {
         margin: 0;
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
       }
 
       .sync-code {
         font-family: ui-monospace, Menlo, Consolas, monospace;
-        font-size: calc(13px * var(--font-scale, 1));
+        font-size: var(--font-sm);
         font-weight: 600;
         overflow-wrap: anywhere;
       }

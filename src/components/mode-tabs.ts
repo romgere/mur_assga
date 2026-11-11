@@ -39,7 +39,7 @@ export class ModeTabs extends LitElement {
         white-space: nowrap;
         border-radius: 9px;
         /* Les cinq onglets doivent tenir sur une ligne : grossissement limité. */
-        font-size: calc(14px * min(var(--font-scale, 1), 1.1));
+        font-size: min(var(--font-md), 15.5px);
         font-weight: 600;
         color: var(--text-muted);
       }
@@ -48,7 +48,7 @@ export class ModeTabs extends LitElement {
       @media (max-width: 359px) {
         button {
           padding: 0 4px;
-          font-size: calc(13px * min(var(--font-scale, 1), 1.1));
+          font-size: min(var(--font-sm), 14.5px);
         }
       }
 

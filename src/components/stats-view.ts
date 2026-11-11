@@ -83,7 +83,7 @@ export class StatsView extends LitElement {
         flex: 1;
         height: 34px;
         border-radius: 9px;
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
         font-weight: 600;
         color: var(--text-muted);
       }
@@ -96,7 +96,7 @@ export class StatsView extends LitElement {
 
       h2 {
         margin: 16px 0 8px;
-        font-size: calc(17px * var(--font-scale, 1));
+        font-size: var(--font-xl);
       }
 
       h2:first-child {
@@ -131,7 +131,7 @@ export class StatsView extends LitElement {
       }
 
       .tile .label {
-        font-size: calc(12px * var(--font-scale, 1));
+        font-size: var(--font-xs);
         font-weight: 600;
         line-height: 1.2;
         text-align: center;
@@ -139,7 +139,7 @@ export class StatsView extends LitElement {
       }
 
       .tile .grade {
-        font-size: calc(22px * var(--font-scale, 1));
+        font-size: var(--font-4xl);
         font-weight: 800;
         line-height: 1.1;
         color: var(--text);
@@ -159,7 +159,7 @@ export class StatsView extends LitElement {
       }
 
       .tile .sub {
-        font-size: calc(11px * var(--font-scale, 1));
+        font-size: var(--font-2xs);
         color: var(--text-muted);
       }
 
@@ -184,7 +184,7 @@ export class StatsView extends LitElement {
       .mode-head {
         display: flex;
         justify-content: space-between;
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
         font-weight: 700;
       }
 
@@ -239,7 +239,7 @@ export class StatsView extends LitElement {
         margin: 0;
         padding: 0;
         list-style: none;
-        font-size: calc(12px * var(--font-scale, 1));
+        font-size: var(--font-xs);
         color: var(--text-muted);
       }
 
@@ -274,7 +274,7 @@ export class StatsView extends LitElement {
         gap: 10px;
         min-height: 44px;
         padding: 0 10px 0 12px;
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
         text-align: left;
         color: var(--text);
       }

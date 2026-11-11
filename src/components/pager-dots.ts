@@ -45,7 +45,7 @@ export class PagerDots extends LitElement {
         border-radius: 24px;
         background: var(--surface-2);
         color: var(--text-muted);
-        font-size: calc(17px * var(--font-scale, 1));
+        font-size: var(--font-xl);
         font-weight: 700;
         font-variant-numeric: tabular-nums;
       }

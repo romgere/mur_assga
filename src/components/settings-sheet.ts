@@ -63,12 +63,12 @@ export class SettingsSheet extends LitElement {
 
       h3 {
         margin: 0 0 6px;
-        font-size: calc(15px * var(--font-scale, 1));
+        font-size: var(--font-lg);
       }
 
       p {
         margin: 0 0 8px;
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
         color: var(--text-muted);
       }
 
@@ -96,7 +96,7 @@ export class SettingsSheet extends LitElement {
       textarea {
         min-height: 90px;
         font-family: ui-monospace, Menlo, Consolas, monospace;
-        font-size: calc(12px * var(--font-scale, 1));
+        font-size: var(--font-xs);
         background: var(--bg);
       }
 
@@ -121,7 +121,7 @@ export class SettingsSheet extends LitElement {
       }
 
       .feedback {
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
         font-weight: 600;
       }
 
@@ -160,7 +160,7 @@ export class SettingsSheet extends LitElement {
       ol {
         margin: 0;
         padding-left: 22px;
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
       }
 
       ol li + li {
@@ -168,7 +168,7 @@ export class SettingsSheet extends LitElement {
       }
 
       .about {
-        font-size: calc(13px * var(--font-scale, 1));
+        font-size: var(--font-sm);
         text-align: center;
       }
 
@@ -188,7 +188,7 @@ export class SettingsSheet extends LitElement {
         align-items: center;
         gap: 6px;
         padding: 0;
-        font-size: calc(14px * var(--font-scale, 1));
+        font-size: var(--font-md);
         text-align: left;
       }
 

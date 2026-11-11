@@ -85,7 +85,7 @@ export class LardyApp extends LitElement {
         flex: 1;
         min-width: 0;
         margin: 0;
-        font-size: calc(18px * var(--font-scale, 1));
+        font-size: var(--font-2xl);
         line-height: 1.2;
         text-align: center;
       }
@@ -99,7 +99,7 @@ export class LardyApp extends LitElement {
 
       h1 small {
         display: block;
-        font-size: calc(12px * var(--font-scale, 1));
+        font-size: var(--font-xs);
         font-weight: 600;
         color: var(--text-muted);
       }
@@ -107,11 +107,11 @@ export class LardyApp extends LitElement {
       /* Très petits écrans (320 px) : titre et sous-titre sur une ligne. */
       @media (max-width: 359px) {
         h1 {
-          font-size: calc(16px * var(--font-scale, 1));
+          font-size: var(--font-base);
         }
 
         h1 small {
-          font-size: calc(11px * var(--font-scale, 1));
+          font-size: var(--font-2xs);
         }
       }
 
