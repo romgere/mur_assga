@@ -109,6 +109,7 @@ describe('API de synchronisation', () => {
       { rev: 0, data: { a: { tx: ['inconnu'] } } },
       { rev: 0, data: { a: { x: true } } },
       { rev: 0, data: { a: { n: 'x'.repeat(2001) } } },
+      { rev: 0, data: { a: { g: '9z' } } },
     ];
     for (const body of bad) expect((await call(db, 'PUT', '/2026-2027', body)).status).toBe(400);
     expect((await call(db, 'PUT', '/saison', { rev: 0, data: {} })).status).toBe(400);
@@ -136,6 +137,54 @@ describe('API de synchronisation', () => {
     expect((await call(db, 'GET', '/2026-2027')).status).toBe(404);
     expect((await call(db, 'GET', '/2027-2028')).status).toBe(404);
     expect((await call(db, 'GET', '/2026-2027', undefined, OTHER)).status).toBe(200);
+  });
+
+  describe('votes de cotation', () => {
+    const votes = (code: string | null = null, season = '2026-2027') => {
+      const headers: Record<string, string> = code ? { Authorization: `Bearer ${code}` } : {};
+      return handleApi(new Request(`https://mur.test/api/votes/${season}`, { headers }), db);
+    };
+
+    it('compte les votes des voies faites, sans code', async () => {
+      await call(db, 'PUT', '/2026-2027', {
+        rev: 0,
+        data: {
+          '1-VERTE': { t: true, g: '6a+' },
+          '1-JAUNE': { m: true, mx: ['chute'], g: '5a' },
+          // Partielle ou pas cochée : le vote ne compte pas.
+          '2-ROUGE': { t: true, tx: ['partiel'], g: '7a+' },
+          '2-ROSE': { s: true, g: '6a' },
+        },
+      });
+      await call(db, 'PUT', '/2026-2027', { rev: 0, data: { '1-VERTE': { m: true, g: '6a+' } } }, OTHER);
+      await call(db, 'PUT', '/2027-2028', { rev: 0, data: { '1-VERTE': { m: true, g: '7a' } } }, OTHER);
+
+      const response = await votes();
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ votes: { '1-VERTE': { '6a+': 2 }, '1-JAUNE': { '5a': 1 } }, mine: {} });
+    });
+
+    it('indique les votes comptés du code fourni', async () => {
+      await call(db, 'PUT', '/2026-2027', { rev: 0, data: { '1-VERTE': { t: true, g: '6b' } } });
+      await call(db, 'PUT', '/2026-2027', { rev: 0, data: { '1-VERTE': { t: true, g: '6a' } } }, OTHER);
+      expect(await (await votes(CODE)).json()).toEqual({
+        votes: { '1-VERTE': { '6b': 1, '6a': 1 } },
+        mine: { '1-VERTE': '6b' },
+      });
+    });
+
+    it('disparaissent avec la sauvegarde en ligne', async () => {
+      await call(db, 'PUT', '/2026-2027', { rev: 0, data: { '1-VERTE': { t: true, g: '6b' } } });
+      await call(db, 'DELETE', '');
+      expect(await (await votes()).json()).toEqual({ votes: {}, mine: {} });
+    });
+
+    it('refuse une saison ou un code invalide, et l’écriture', async () => {
+      expect((await votes(null, 'saison')).status).toBe(400);
+      expect((await votes('mauvais')).status).toBe(401);
+      const put = new Request('https://mur.test/api/votes/2026-2027', { method: 'PUT', body: '{}' });
+      expect((await handleApi(put, db)).status).toBe(405);
+    });
   });
 
   it('laisse les autres adresses aux fichiers statiques', async () => {

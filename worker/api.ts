@@ -12,7 +12,17 @@
  *          l'appareil s'appuie (0 : aucune). 409 + version en ligne si elle a
  *          changé entre-temps : l'appareil fusionne puis renvoie.
  *   DELETE /api/progress           → efface toutes les saisons de ce code.
+ *
+ * Cotations ressenties : le vote d'un grimpeur est le champ `g` de sa
+ * progression (une voie, un code, un vote), donc il n'existe qu'avec la
+ * sauvegarde en ligne et disparaît avec elle. Leur répartition est publique :
+ *
+ *   GET    /api/votes/<saison>     → { votes: { voie: { cotation: nombre } }, mine }
+ *          Code facultatif ; avec lui, `mine` donne les votes comptés de ce code
+ *          (voie → cotation), pour que l'appareil remplace le sien par sa
+ *          version locale, peut-être pas encore envoyée.
  */
+import { countedVote, isGrade, type GradeCounts } from '../src/lib/grades';
 
 /** Code de synchronisation normalisé : 24 caractères base32 (RFC 4648). */
 export const CODE_PATTERN = /^[A-Z2-7]{24}$/;
@@ -32,6 +42,8 @@ interface ProgressRow {
 
 export async function handleApi(request: Request, db: D1Database): Promise<Response> {
   const url = new URL(request.url);
+  const votes = /^\/api\/votes\/([^/]+)$/.exec(url.pathname);
+  if (votes) return readVotes(request, db, decodeURIComponent(votes[1]));
   const code = readCode(request);
   if (!code) return error(401, 'Code de synchronisation absent ou invalide.');
   const user = await hashCode(code);
@@ -113,6 +125,45 @@ async function write(request: Request, db: D1Database, user: string, season: str
   return json(200, { rev: base + 1, updatedAt: now });
 }
 
+/**
+ * Répartition des votes d'une saison, calculée à la lecture depuis les
+ * progressions : un vote ne compte que si la voie est faite (voir countedVote).
+ */
+async function readVotes(request: Request, db: D1Database, season: string): Promise<Response> {
+  if (request.method !== 'GET') return error(405, 'Méthode non autorisée.');
+  if (!SEASON_PATTERN.test(season)) return error(400, 'Saison invalide.');
+  // Code facultatif ici, mais un code mal formé est une erreur de l'appareil.
+  const header = request.headers.get('Authorization');
+  const code = readCode(request);
+  if (header && !code) return error(401, 'Code de synchronisation absent ou invalide.');
+  const user = code ? await hashCode(code) : null;
+
+  const { results } = await db
+    .prepare(
+      `SELECT p.user_hash AS user, j.key AS route, j.value AS entry
+       FROM progress p, json_each(p.data) j
+       WHERE p.season = ? AND json_extract(j.value, '$.g') IS NOT NULL`,
+    )
+    .bind(season)
+    .all<{ user: string; route: string; entry: string }>();
+
+  const counts: Record<string, GradeCounts> = {};
+  const mine: Record<string, string> = {};
+  for (const row of results) {
+    let grade: string | null;
+    try {
+      grade = countedVote(JSON.parse(row.entry));
+    } catch {
+      continue;
+    }
+    if (!grade) continue;
+    const route = (counts[row.route] ??= {});
+    route[grade] = (route[grade] ?? 0) + 1;
+    if (row.user === user) mine[row.route] = grade;
+  }
+  return json(200, { votes: counts, mine });
+}
+
 function read(db: D1Database, user: string, season: string): Promise<ProgressRow | null> {
   return db
     .prepare('SELECT data, rev, updated_at FROM progress WHERE user_hash = ? AND season = ?')
@@ -140,7 +191,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Contrôle de forme seulement ({"mur-COULEUR": {t, m, tx, mx, s, n}}) : les
+ * Contrôle de forme seulement ({"mur-COULEUR": {t, m, tx, mx, s, n, g}}) : les
  * voies elles-mêmes sont vérifiées par l'application, qui connaît le topo.
  */
 function isProgressMap(value: unknown): boolean {
@@ -160,6 +211,8 @@ function isProgressMap(value: unknown): boolean {
           return Array.isArray(v) && v.length <= DETAILS.size && v.every((d) => DETAILS.has(d as string));
         case 'n':
           return typeof v === 'string' && v.length <= MAX_NOTE_LENGTH;
+        case 'g':
+          return isGrade(v);
         default:
           return false;
       }

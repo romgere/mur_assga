@@ -1,8 +1,11 @@
 import type { LitElement } from 'lit';
 import { afterEach, vi } from 'vitest';
+import { GradeVotes } from '../lib/grade-votes';
+import type { GradeCounts } from '../lib/grades';
 import { ProgressStore } from '../lib/progress-store';
 import { PwaState } from '../lib/pwa';
 import { createStorage, type KeyValueStorage } from '../lib/storage';
+import { ProgressSync, SYNC_CODE_KEY } from '../lib/sync';
 import { buildTopo, type Topo, type TopoData } from '../lib/topo';
 
 /** Implémentation minimale de Storage pour simuler localStorage. */
@@ -68,6 +71,24 @@ export function memoryStorage(): KeyValueStorage {
 
 export function testStore(storage: KeyValueStorage = memoryStorage(), topo: Topo = miniTopo()): ProgressStore {
   return new ProgressStore(storage, topo);
+}
+
+export const TEST_CODE = 'ABCDEFGHIJKLMNOPQRSTUVWX';
+
+/**
+ * Votes de cotation pour les tests : `server` est la réponse de
+ * /api/votes/<saison> ; `synced` active la sauvegarde en ligne (seule à
+ * permettre de voter). Appeler refresh() pour lire le faux serveur.
+ */
+export function testVotes(
+  store: ProgressStore,
+  options: { synced?: boolean; server?: { votes: Record<string, GradeCounts>; mine?: Record<string, string> } } = {},
+): GradeVotes {
+  const storage = memoryStorage();
+  if (options.synced) storage.set(SYNC_CODE_KEY, TEST_CODE);
+  const fetchFn = vi.fn(async () => Response.json({ mine: {}, ...(options.server ?? { votes: {} }) }));
+  const sync = new ProgressSync(store, storage, fetchFn);
+  return new GradeVotes(store, sync, storage, fetchFn);
 }
 
 const mounted: HTMLElement[] = [];

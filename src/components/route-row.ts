@@ -15,7 +15,9 @@ import {
   type ProgressStore,
   type RouteProgress,
 } from '../lib/progress-store';
-import { StoreController } from '../lib/store-controller';
+import { gradeVotes, type GradeVotes } from '../lib/grade-votes';
+import type { Trend } from '../lib/grades';
+import { ChangeController, StoreController } from '../lib/store-controller';
 import { colorToken, gradeLevel, type Route } from '../lib/topo';
 import { BottomSheet } from './bottom-sheet';
 import { helpButton } from './help-sheet';
@@ -25,6 +27,13 @@ import { sharedStyles } from './shared-styles';
 export interface OpenNoteDetail {
   route: Route;
 }
+
+/** Indicateur de la cotation ressentie par les grimpeurs. */
+export const FEEL: Record<Trend, { symbol: string; label: string }> = {
+  harder: { symbol: '+', label: 'Ressentie plus dure que sa cotation' },
+  easier: { symbol: '−', label: 'Ressentie plus facile que sa cotation' },
+  same: { symbol: '=', label: 'Ressentie à sa cotation' },
+};
 
 /** Durée d'appui sur Tête / Moul. avant d'ouvrir le menu des détails. */
 export const LONG_PRESS_MS = 500;
@@ -150,6 +159,15 @@ export class RouteRow extends LitElement {
       .badge.comp {
         background: var(--accent-soft);
         color: var(--accent);
+      }
+
+      /* Avis des grimpeurs sur la cotation : plus dure, plus facile, juste. */
+      .badge.feel.harder {
+        color: var(--danger);
+      }
+
+      .badge.feel.easier {
+        color: var(--toprope);
       }
 
       .actions {
@@ -282,6 +300,7 @@ export class RouteRow extends LitElement {
   /** Mode « Difficulté » : le mur en gros, sans la cotation (déjà donnée par la page). */
   @property({ type: Boolean, attribute: 'wall-first' }) wallFirst = false;
   @property({ attribute: false }) store: ProgressStore = progressStore;
+  @property({ attribute: false }) votes: GradeVotes = gradeVotes;
 
   /** Façon de grimper dont le menu des détails est ouvert. */
   @state() private menu: ClimbMode | null = null;
@@ -296,6 +315,7 @@ export class RouteRow extends LitElement {
       () => this.store,
       (id) => id === undefined || id === this.route?.id,
     );
+    new ChangeController(this, () => this.votes);
   }
 
   connectedCallback(): void {
@@ -418,6 +438,16 @@ export class RouteRow extends LitElement {
     return parts.join(' ');
   }
 
+  /** « Ressentie + » : avis des grimpeurs, à partir de quelques votes seulement. */
+  private renderFeel() {
+    const { trend, total } = this.votes.summary(this.route);
+    if (!trend) return nothing;
+    const text = FEEL[trend];
+    return html`<span class="badge feel ${trend}" title="${text.label} (${total} avis)" aria-label="${text.label}, ${total} avis"
+      >Ressentie ${text.symbol}</span
+    >`;
+  }
+
   render() {
     const r = this.route;
     if (!r) return nothing;
@@ -442,6 +472,7 @@ export class RouteRow extends LitElement {
           ? html`<span class="grade wall-num"><small>Mur</small> ${r.wall}</span>`
           : html`<span class="grade g${gradeLevel(r.grade)}">${r.grade ?? '—'}</span>`}
         <span class="meta">
+          ${this.renderFeel()}
           ${r.competition ? html`<span class="badge comp">Compét.</span>` : nothing}
           ${r.traverse ? html`<span class="badge">Traversée</span>` : nothing}
           ${r.setter ? html`<span class="setter">${r.setter}</span>` : nothing}

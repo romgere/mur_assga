@@ -1,6 +1,7 @@
 import { registerSW } from 'virtual:pwa-register';
 import './styles/tokens.css';
 import { pwaState } from './lib/pwa';
+import { gradeVotes } from './lib/grade-votes';
 import { fetchUpdateNotes } from './lib/release-notes';
 import { progressSync } from './lib/sync';
 import { applyTheme, loadTheme } from './lib/theme';
@@ -9,6 +10,7 @@ import './components/lardy-app';
 applyTheme(loadTheme());
 pwaState.listen();
 progressSync.start();
+gradeVotes.start();
 
 // Vérifie les mises à jour au retour sur l'application et toutes les heures :
 // une application installée peut rester ouverte longtemps.

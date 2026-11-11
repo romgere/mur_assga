@@ -262,4 +262,16 @@ describe('ProgressStore : saisons', () => {
     expect(reopened.get('1-VERTE~2')).toEqual({});
     expect(reopened.get('2-ROUGE')).toEqual({ m: true });
   });
+
+  it('garde la cotation votée, ignore une cotation inconnue', () => {
+    const store = testStore();
+    store.edit('1-VERTE', { t: true, g: '6a+' });
+    expect(store.get('1-VERTE')).toEqual({ t: true, g: '6a+' });
+    store.edit('1-VERTE', { g: undefined });
+    expect(store.get('1-VERTE')).toEqual({ t: true });
+    store.importText(JSON.stringify({ '1-VERTE': { t: true, g: '6b' }, '1-JAUNE': { m: true, g: '9z' } }));
+    expect(store.get('1-VERTE')).toEqual({ t: true, g: '6b' });
+    expect(store.get('1-JAUNE')).toEqual({ m: true });
+    expect(store.importText(JSON.stringify({ '1-VERTE': { g: 6 } })).ok).toBe(false);
+  });
 });
