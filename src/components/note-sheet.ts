@@ -141,21 +141,23 @@ export class NoteSheet extends LitElement {
         color: var(--text-muted);
       }
 
+      /* Les 9 cotations sur une seule ligne, même sur un petit téléphone. */
       .choices {
         display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
+        gap: 3px;
         margin-bottom: 8px;
       }
 
       .choices button {
-        min-width: 42px;
-        height: 36px;
-        padding: 0 6px;
-        border-radius: 10px;
+        flex: 1 1 0;
+        min-width: 0;
+        height: 38px;
+        padding: 0;
+        border-radius: 8px;
         border: 1.5px solid var(--border);
         background: var(--surface);
-        font-size: 15px;
+        font-size: 13px;
+        letter-spacing: -0.02em;
         font-weight: 700;
         color: var(--text);
       }
