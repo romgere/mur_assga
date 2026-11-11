@@ -126,7 +126,7 @@ export class NoteSheet extends LitElement {
 
       textarea {
         min-height: 120px;
-        font-size: var(--font-base);
+        font-size: var(--font-lg);
         background: var(--bg);
       }
 

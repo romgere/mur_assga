@@ -106,7 +106,7 @@ export class RouteRow extends LitElement {
       }
 
       .grade {
-        font-size: var(--font-3xl);
+        font-size: var(--font-2xl);
         font-weight: 800;
         line-height: 1.1;
         white-space: nowrap;

@@ -35,7 +35,7 @@ export class ProgressCounters extends LitElement {
 
     .label {
       display: block;
-      font-size: var(--font-2xs);
+      font-size: var(--font-xs);
       font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;

@@ -139,7 +139,7 @@ export class StatsView extends LitElement {
       }
 
       .tile .grade {
-        font-size: var(--font-4xl);
+        font-size: var(--font-2xl);
         font-weight: 800;
         line-height: 1.1;
         color: var(--text);
@@ -159,7 +159,7 @@ export class StatsView extends LitElement {
       }
 
       .tile .sub {
-        font-size: var(--font-2xs);
+        font-size: var(--font-xs);
         color: var(--text-muted);
       }
 

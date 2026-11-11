@@ -34,7 +34,7 @@ export class FavoritesView extends LitElement {
 
       h2 {
         margin: 0;
-        font-size: var(--font-3xl);
+        font-size: var(--font-2xl);
       }
 
       .count {
