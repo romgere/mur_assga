@@ -35,7 +35,7 @@ export class ProgressCounters extends LitElement {
 
     .label {
       display: block;
-      font-size: 11px;
+      font-size: calc(11px * var(--font-scale, 1));
       font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
@@ -43,7 +43,7 @@ export class ProgressCounters extends LitElement {
     }
 
     .label.grade {
-      font-size: 15px;
+      font-size: calc(15px * var(--font-scale, 1));
       font-weight: 800;
       text-transform: none;
       letter-spacing: 0;
@@ -51,13 +51,13 @@ export class ProgressCounters extends LitElement {
     }
 
     .value {
-      font-size: 17px;
+      font-size: calc(17px * var(--font-scale, 1));
       font-weight: 800;
       font-variant-numeric: tabular-nums;
     }
 
     .total {
-      font-size: 13px;
+      font-size: calc(13px * var(--font-scale, 1));
       font-weight: 600;
       color: var(--text-muted);
     }
@@ -87,7 +87,7 @@ export class ProgressCounters extends LitElement {
     }
 
     .compact {
-      font-size: 13px;
+      font-size: calc(13px * var(--font-scale, 1));
       color: var(--text-muted);
       font-variant-numeric: tabular-nums;
     }

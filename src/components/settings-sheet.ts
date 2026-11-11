@@ -5,6 +5,7 @@ import { progressStore, type ImportResult, type ProgressStore } from '../lib/pro
 import { PwaController, pwaState, type InstallMode, type PwaState } from '../lib/pwa';
 import { APP_VERSION, RELEASE_NOTES } from '../lib/release-notes';
 import { progressSync, type ProgressSync } from '../lib/sync';
+import type { FontSize } from '../lib/font-size';
 import type { Theme } from '../lib/theme';
 import { requestHelp } from './help-sheet';
 import { infoIcon } from './icons';
@@ -17,6 +18,16 @@ import './sync-panel';
 export interface ThemeChangeDetail {
   theme: Theme;
 }
+
+export interface FontSizeChangeDetail {
+  fontSize: FontSize;
+}
+
+const FONT_SIZE_OPTIONS: { value: FontSize; label: string }[] = [
+  { value: 'small', label: 'Petite' },
+  { value: 'medium', label: 'Moyenne' },
+  { value: 'large', label: 'Grande' },
+];
 
 const THEME_OPTIONS: { value: Theme; label: string }[] = [
   { value: 'auto', label: 'Auto' },
@@ -32,7 +43,7 @@ export const AUTHOR_URL = 'https://mestres.fr';
 export const CLEAR_CONFIRM_MS = 4000;
 
 /**
- * Réglages : thème, installation de l'application, nouveautés de la version, sauvegarde en ligne,
+ * Réglages : thème, taille du texte, installation de l'application, nouveautés de la version, sauvegarde en ligne,
  * sauvegarde manuelle (texte JSON à copier, restauration d'un texte collé et validé ; masquées quand la
  * sauvegarde en ligne est active) et remise à zéro des voies en deux temps.
  */
@@ -52,12 +63,12 @@ export class SettingsSheet extends LitElement {
 
       h3 {
         margin: 0 0 6px;
-        font-size: 15px;
+        font-size: calc(15px * var(--font-scale, 1));
       }
 
       p {
         margin: 0 0 8px;
-        font-size: 14px;
+        font-size: calc(14px * var(--font-scale, 1));
         color: var(--text-muted);
       }
 
@@ -85,7 +96,7 @@ export class SettingsSheet extends LitElement {
       textarea {
         min-height: 90px;
         font-family: ui-monospace, Menlo, Consolas, monospace;
-        font-size: 12px;
+        font-size: calc(12px * var(--font-scale, 1));
         background: var(--bg);
       }
 
@@ -110,7 +121,7 @@ export class SettingsSheet extends LitElement {
       }
 
       .feedback {
-        font-size: 14px;
+        font-size: calc(14px * var(--font-scale, 1));
         font-weight: 600;
       }
 
@@ -149,7 +160,7 @@ export class SettingsSheet extends LitElement {
       ol {
         margin: 0;
         padding-left: 22px;
-        font-size: 14px;
+        font-size: calc(14px * var(--font-scale, 1));
       }
 
       ol li + li {
@@ -157,7 +168,7 @@ export class SettingsSheet extends LitElement {
       }
 
       .about {
-        font-size: 13px;
+        font-size: calc(13px * var(--font-scale, 1));
         text-align: center;
       }
 
@@ -177,7 +188,7 @@ export class SettingsSheet extends LitElement {
         align-items: center;
         gap: 6px;
         padding: 0;
-        font-size: 14px;
+        font-size: calc(14px * var(--font-scale, 1));
         text-align: left;
       }
 
@@ -198,6 +209,7 @@ export class SettingsSheet extends LitElement {
 
   @property({ type: Boolean }) open = false;
   @property() theme: Theme = 'auto';
+  @property() fontSize: FontSize = 'medium';
   @property({ attribute: false }) store: ProgressStore = progressStore;
   @property({ attribute: false }) pwa: PwaState = pwaState;
   @property({ attribute: false }) sync: ProgressSync = progressSync;
@@ -259,6 +271,11 @@ export class SettingsSheet extends LitElement {
   private setTheme(theme: Theme) {
     this.theme = theme;
     this.dispatchEvent(new CustomEvent<ThemeChangeDetail>('theme-change', { detail: { theme } }));
+  }
+
+  private setFontSize(fontSize: FontSize) {
+    this.fontSize = fontSize;
+    this.dispatchEvent(new CustomEvent<FontSizeChangeDetail>('font-size-change', { detail: { fontSize } }));
   }
 
   private async copy() {
@@ -379,6 +396,23 @@ export class SettingsSheet extends LitElement {
                 data-theme=${o.value}
                 aria-checked=${o.value === this.theme ? 'true' : 'false'}
                 @click=${() => this.setTheme(o.value)}
+              >
+                ${o.label}
+              </button>`,
+          )}
+        </div>
+      </section>
+
+      <section>
+        <h3 id="font-size-label">Taille du texte</h3>
+        <div class="segmented" role="radiogroup" aria-labelledby="font-size-label">
+          ${FONT_SIZE_OPTIONS.map(
+            (o) =>
+              html`<button
+                role="radio"
+                data-font-size=${o.value}
+                aria-checked=${o.value === this.fontSize ? 'true' : 'false'}
+                @click=${() => this.setFontSize(o.value)}
               >
                 ${o.label}
               </button>`,

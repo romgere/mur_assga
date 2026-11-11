@@ -44,7 +44,7 @@ export class HelpSheet extends LitElement {
     css`
       h3 {
         margin: 14px 0 6px;
-        font-size: 15px;
+        font-size: calc(15px * var(--font-scale, 1));
       }
 
       h3:first-child {
@@ -53,7 +53,7 @@ export class HelpSheet extends LitElement {
 
       p {
         margin: 0 0 6px;
-        font-size: 14px;
+        font-size: calc(14px * var(--font-scale, 1));
         color: var(--text-muted);
       }
 
@@ -77,14 +77,14 @@ export class HelpSheet extends LitElement {
         align-items: baseline;
         justify-content: space-between;
         gap: 8px;
-        font-size: 15px;
+        font-size: calc(15px * var(--font-scale, 1));
       }
 
       .done {
         flex: none;
         padding: 1px 8px;
         border-radius: 10px;
-        font-size: 12px;
+        font-size: calc(12px * var(--font-scale, 1));
         font-weight: 700;
       }
 
@@ -100,7 +100,7 @@ export class HelpSheet extends LitElement {
 
       .group {
         margin: 10px 0 0;
-        font-size: 12px;
+        font-size: calc(12px * var(--font-scale, 1));
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.04em;
@@ -119,7 +119,7 @@ export class HelpSheet extends LitElement {
         margin: 0;
         padding-left: 18px;
         list-style: disc;
-        font-size: 14px;
+        font-size: calc(14px * var(--font-scale, 1));
         color: var(--text-muted);
       }
 

@@ -5,6 +5,7 @@ import { progressStore, type ProgressStore } from '../lib/progress-store';
 import { pwaState, type PwaState } from '../lib/pwa';
 import { takeUnseenNotes } from '../lib/release-notes';
 import { storage as defaultStorage, type KeyValueStorage } from '../lib/storage';
+import { applyFontSize, loadFontSize, saveFontSize, type FontSize } from '../lib/font-size';
 import { applyTheme, loadTheme, saveTheme, type Theme } from '../lib/theme';
 import { markTutorialSeen, tutorialSeen } from '../lib/tutorial';
 import type { Route } from '../lib/topo';
@@ -16,7 +17,7 @@ import type { PageSelectDetail } from './pager-dots';
 import type { OpenNoteDetail } from './route-row';
 import type { ShowReleaseNotesDetail } from './release-notes-sheet';
 import type { PageChangeDetail, RoutePager } from './route-pager';
-import type { ThemeChangeDetail } from './settings-sheet';
+import type { FontSizeChangeDetail, ThemeChangeDetail } from './settings-sheet';
 import type { ShowRoutesDetail, StatsCountChangeDetail } from './stats-view';
 import { sharedStyles } from './shared-styles';
 import './all-routes-view';
@@ -84,7 +85,7 @@ export class LardyApp extends LitElement {
         flex: 1;
         min-width: 0;
         margin: 0;
-        font-size: 18px;
+        font-size: calc(18px * var(--font-scale, 1));
         line-height: 1.2;
         text-align: center;
       }
@@ -98,7 +99,7 @@ export class LardyApp extends LitElement {
 
       h1 small {
         display: block;
-        font-size: 12px;
+        font-size: calc(12px * var(--font-scale, 1));
         font-weight: 600;
         color: var(--text-muted);
       }
@@ -106,11 +107,11 @@ export class LardyApp extends LitElement {
       /* Très petits écrans (320 px) : titre et sous-titre sur une ligne. */
       @media (max-width: 359px) {
         h1 {
-          font-size: 16px;
+          font-size: calc(16px * var(--font-scale, 1));
         }
 
         h1 small {
-          font-size: 11px;
+          font-size: calc(11px * var(--font-scale, 1));
         }
       }
 
@@ -150,6 +151,7 @@ export class LardyApp extends LitElement {
 
   @state() private ui!: UiState;
   @state() private theme: Theme = 'auto';
+  @state() private fontSize: FontSize = 'medium';
   @state() private noteRoute: Route | null = null;
   @state() private settingsOpen = false;
   @state() private releaseNotes: ShowReleaseNotesDetail | null = null;
@@ -171,6 +173,7 @@ export class LardyApp extends LitElement {
     this.ui.wallPage = Math.min(this.ui.wallPage, this.wallPages.length - 1);
     this.ui.gradePage = Math.min(this.ui.gradePage, this.gradePages.length - 1);
     this.theme = loadTheme(this.storage);
+    this.fontSize = loadFontSize(this.storage);
     // Avant tout enregistrement : takeUnseenNotes reconnaît un nouvel utilisateur à son stockage vide.
     const unseen = takeUnseenNotes(this.storage);
     // Tutoriel à tous ceux qui ne l'ont pas vu, anciens utilisateurs compris. Il
@@ -257,6 +260,12 @@ export class LardyApp extends LitElement {
     saveTheme(this.theme, this.storage);
   }
 
+  private onFontSizeChange(e: CustomEvent<FontSizeChangeDetail>) {
+    this.fontSize = e.detail.fontSize;
+    applyFontSize(this.fontSize);
+    saveFontSize(this.fontSize, this.storage);
+  }
+
   private onShowReleaseNotes(e: CustomEvent<ShowReleaseNotesDetail>) {
     this.settingsOpen = false;
     this.releaseNotes = e.detail;
@@ -330,8 +339,10 @@ export class LardyApp extends LitElement {
         .pwa=${this.pwa}
         .open=${this.settingsOpen}
         .theme=${this.theme}
+        .fontSize=${this.fontSize}
         .store=${this.store}
         @theme-change=${this.onThemeChange}
+        @font-size-change=${this.onFontSizeChange}
         @show-release-notes=${this.onShowReleaseNotes}
         @close=${() => (this.settingsOpen = false)}
       ></lardy-settings-sheet>
