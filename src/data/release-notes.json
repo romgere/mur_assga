@@ -4,7 +4,7 @@
     "date": "2026-11-11",
     "notes": [
       "Cotation ressentie : donnez votre cotation d’une voie faite (bouton crayon), avec la sauvegarde en ligne activée.",
-      "Un indicateur « Ressentie + / − / = » montre, à partir de 3 avis, si les grimpeurs trouvent la voie plus dure, plus facile ou juste.",
+      "Une flèche à côté de la cotation montre, à partir de 3 avis, si les grimpeurs trouvent la voie plus dure, plus facile ou juste.",
       "Le détail de la voie montre la répartition des votes."
     ]
   },

@@ -200,7 +200,7 @@ describe('lardy-route-row', () => {
     await el.votes.refresh();
     await el.updateComplete;
     const badge = $(el, '.feel');
-    expect(badge.textContent!.trim()).toBe('Ressentie −');
+    expect(badge.parentElement!.classList.contains('grade-line')).toBe(true);
     expect(badge.classList.contains('easier')).toBe(true);
     expect(badge.getAttribute('aria-label')).toBe('Ressentie plus facile que sa cotation, 3 avis');
   });

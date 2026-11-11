@@ -39,8 +39,9 @@ worker, sécurité) dans [`public/_headers`](public/_headers).
 - **Cotation ressentie** (feuille de détails, bouton crayon) : chaque grimpeur
   donne sa cotation d'une voie qu'il a faite, à ±3 crans de la cotation
   officielle. Voter demande la sauvegarde en ligne (un vote par code) ; la
-  répartition des votes est visible de tous. Un badge « Ressentie + / − / = »
-  compare la médiane des votes à la cotation officielle, à partir de 3 avis
+  répartition des votes est visible de tous. Une flèche à côté de la
+  cotation (rouge vers le haut : plus dure, verte vers le bas : plus facile,
+  « = » : juste) compare la médiane des votes à la cotation officielle, à partir de 3 avis
   (voir [Cotations ressenties](#cotations-ressenties)).
 - Favoris, notes par voie (méthode…), thème Auto / Clair / Sombre.
 - Sauvegarde et restauration par copier-coller d'un texte JSON, et remise à

@@ -21,7 +21,7 @@ import { ChangeController, StoreController } from '../lib/store-controller';
 import { colorToken, gradeLevel, type Route } from '../lib/topo';
 import { BottomSheet } from './bottom-sheet';
 import { helpButton } from './help-sheet';
-import { noteIcon, starIcon } from './icons';
+import { noteIcon, starIcon, trendIcon } from './icons';
 import { sharedStyles } from './shared-styles';
 
 export interface OpenNoteDetail {
@@ -29,10 +29,10 @@ export interface OpenNoteDetail {
 }
 
 /** Indicateur de la cotation ressentie par les grimpeurs. */
-export const FEEL: Record<Trend, { symbol: string; label: string }> = {
-  harder: { symbol: '+', label: 'Ressentie plus dure que sa cotation' },
-  easier: { symbol: '−', label: 'Ressentie plus facile que sa cotation' },
-  same: { symbol: '=', label: 'Ressentie à sa cotation' },
+export const FEEL: Record<Trend, { label: string }> = {
+  harder: { label: 'Ressentie plus dure que sa cotation' },
+  easier: { label: 'Ressentie plus facile que sa cotation' },
+  same: { label: 'Ressentie à sa cotation' },
 };
 
 /** Durée d'appui sur Tête / Moul. avant d'ouvrir le menu des détails. */
@@ -161,13 +161,24 @@ export class RouteRow extends LitElement {
         color: var(--accent);
       }
 
+      .grade-line {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+
       /* Avis des grimpeurs sur la cotation : plus dure, plus facile, juste. */
-      .badge.feel.harder {
+      .feel {
+        display: inline-flex;
+        color: var(--text-muted);
+      }
+
+      .feel.harder {
         color: var(--danger);
       }
 
-      .badge.feel.easier {
-        color: var(--toprope);
+      .feel.easier {
+        color: var(--accent);
       }
 
       .actions {
@@ -438,14 +449,12 @@ export class RouteRow extends LitElement {
     return parts.join(' ');
   }
 
-  /** « Ressentie + » : avis des grimpeurs, à partir de quelques votes seulement. */
+  /** Flèche de tendance à côté de la cotation : avis des grimpeurs, à partir de quelques votes. */
   private renderFeel() {
     const { trend, total } = this.votes.summary(this.route);
     if (!trend) return nothing;
-    const text = FEEL[trend];
-    return html`<span class="badge feel ${trend}" title="${text.label} (${total} avis)" aria-label="${text.label}, ${total} avis"
-      >Ressentie ${text.symbol}</span
-    >`;
+    const label = `${FEEL[trend].label}, ${total} avis`;
+    return html`<span class="feel ${trend}" role="img" title=${label} aria-label=${label}>${trendIcon(trend)}</span>`;
   }
 
   render() {
@@ -468,11 +477,13 @@ export class RouteRow extends LitElement {
         ${this.showWall && !this.wallFirst ? html`<span class="wall">Mur ${r.wall}</span>` : nothing}
       </span>
       <div class="info">
-        ${this.wallFirst
-          ? html`<span class="grade wall-num"><small>Mur</small> ${r.wall}</span>`
-          : html`<span class="grade g${gradeLevel(r.grade)}">${r.grade ?? '—'}</span>`}
-        <span class="meta">
+        <span class="grade-line">
+          ${this.wallFirst
+            ? html`<span class="grade wall-num"><small>Mur</small> ${r.wall}</span>`
+            : html`<span class="grade g${gradeLevel(r.grade)}">${r.grade ?? '—'}</span>`}
           ${this.renderFeel()}
+        </span>
+        <span class="meta">
           ${r.competition ? html`<span class="badge comp">Compét.</span>` : nothing}
           ${r.traverse ? html`<span class="badge">Traversée</span>` : nothing}
           ${r.setter ? html`<span class="setter">${r.setter}</span>` : nothing}

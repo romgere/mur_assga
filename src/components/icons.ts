@@ -72,3 +72,24 @@ export const sortIcon = html`<svg viewBox="0 0 24 24" width="18" height="18" ari
     stroke-linejoin="round"
   />
 </svg>`;
+
+/** Tendance de la cotation ressentie : plus dure (monte), plus facile (descend), juste. */
+export const trendIcon = (trend: 'harder' | 'easier' | 'same') => html`<svg
+  viewBox="0 0 24 24"
+  width="20"
+  height="20"
+  aria-hidden="true"
+>
+  <path
+    d=${trend === 'harder'
+      ? 'M3 17l6-6 4 4 8-8M15 7h6v6'
+      : trend === 'easier'
+        ? 'M3 7l6 6 4-4 8 8M15 17h6v-6'
+        : 'M5 9h14M5 15h14'}
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>`;
