@@ -40,7 +40,7 @@ export const GRADE_SCALE = [
 ] as const;
 
 /** Nombre de crans proposés de part et d'autre de la cotation officielle. */
-export const VOTE_SPAN = 3;
+export const VOTE_SPAN = 4;
 /** En dessous, l'indicateur ne s'affiche pas : un ou deux avis ne disent rien. */
 export const MIN_VOTES = 3;
 

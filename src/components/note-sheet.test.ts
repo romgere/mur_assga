@@ -156,7 +156,7 @@ describe('lardy-note-sheet', () => {
     it('montre la répartition des votes à tous, sans vote possible sans sauvegarde en ligne', async () => {
       const el = await feelSheet(false);
       expect($(el, '.feel h3').textContent).toContain('2 avis');
-      expect($$(el, '.bars .count').map((c) => c.textContent)).toEqual(['0', '0', '0', '1', '1', '0', '0']);
+      expect($$(el, '.bars .count').map((c) => c.textContent)).toEqual(['0', '0', '0', '0', '1', '1', '0', '0', '0']);
       expect(choices(el)).toHaveLength(0);
       expect($(el, '.feel').textContent).toContain('activez la sauvegarde en ligne');
     });
@@ -169,10 +169,10 @@ describe('lardy-note-sheet', () => {
 
     it('vote, met à jour la répartition et enregistre avec la note', async () => {
       const el = await feelSheet(true);
-      expect(choices(el).map((b) => b.textContent!.trim())).toEqual(['5b+', '5c', '5c+', '6a', '6a+', '6b', '6b+']);
-      choices(el)[5].click();
+      expect(choices(el).map((b) => b.textContent!.trim())).toEqual(['5b', '5b+', '5c', '5c+', '6a', '6a+', '6b', '6b+', '6c']);
+      choices(el)[6].click();
       await el.updateComplete;
-      expect(choices(el)[5].getAttribute('aria-pressed')).toBe('true');
+      expect(choices(el)[6].getAttribute('aria-pressed')).toBe('true');
       expect($(el, '.feel h3').textContent).toContain('3 avis');
       expect($(el, '.feel h3').textContent).toContain('plus dure');
       $(el, 'button.save').click();
@@ -186,8 +186,8 @@ describe('lardy-note-sheet', () => {
       await el.updateComplete;
       el.route = route;
       await el.updateComplete;
-      expect(choices(el)[3].getAttribute('aria-pressed')).toBe('true');
-      choices(el)[3].click();
+      expect(choices(el)[4].getAttribute('aria-pressed')).toBe('true');
+      choices(el)[4].click();
       await el.updateComplete;
       $(el, 'button.save').click();
       expect(el.store.get(route.id)).toEqual({ t: true });

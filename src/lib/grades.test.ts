@@ -10,10 +10,10 @@ describe('cotations ressenties', () => {
     expect([...ranks].sort((a, b) => a - b)).toEqual(ranks);
   });
 
-  it('propose la cotation officielle à ±3 crans, bornée à l’échelle', () => {
-    expect(voteChoices('6a')).toEqual(['5b+', '5c', '5c+', '6a', '6a+', '6b', '6b+']);
-    expect(voteChoices('3')).toEqual(['3', '3+', '4', '4+']);
-    expect(voteChoices(GRADE_SCALE[GRADE_SCALE.length - 1])).toHaveLength(4);
+  it('propose la cotation officielle à ±4 crans, bornée à l’échelle', () => {
+    expect(voteChoices('6a')).toEqual(['5b', '5b+', '5c', '5c+', '6a', '6a+', '6b', '6b+', '6c']);
+    expect(voteChoices('3')).toEqual(['3', '3+', '4', '4+', '5a']);
+    expect(voteChoices(GRADE_SCALE[GRADE_SCALE.length - 1])).toHaveLength(5);
     expect(voteChoices(undefined)).toEqual([]);
   });
 

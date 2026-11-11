@@ -37,7 +37,7 @@ worker, sécurité) dans [`public/_headers`](public/_headers).
   utilisateurs d'avant le tutoriel), qu'on peut passer, et à revoir depuis
   Réglages → Aide.
 - **Cotation ressentie** (feuille de détails, bouton crayon) : chaque grimpeur
-  donne sa cotation d'une voie qu'il a faite, à ±3 crans de la cotation
+  donne sa cotation d'une voie qu'il a faite, à ±4 crans de la cotation
   officielle. Voter demande la sauvegarde en ligne (un vote par code) ; la
   répartition des votes est visible de tous. Une flèche à côté de la
   cotation (rouge vers le haut : plus dure, verte vers le bas : plus facile,
