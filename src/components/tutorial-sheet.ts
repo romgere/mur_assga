@@ -2,7 +2,7 @@ import { LitElement, css, html, nothing, type TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { progressSync, type ProgressSync } from '../lib/sync';
 import { requestHelp } from './help-sheet';
-import { gearIcon, noteIcon, starIcon, syncIcon } from './icons';
+import { gearIcon, noteIcon, starIcon, syncIcon, trendIcon } from './icons';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
 
@@ -63,7 +63,19 @@ export const TUTORIAL_STEPS: Record<string, Step> = {
     title: 'Favoris et notes',
     art: html`<span class="icon star">${starIcon(true)}</span><span class="icon">${noteIcon}</span>`,
     body: () => html`<p>L’étoile ajoute la voie à vos favoris, pour garder vos projets sous la main.</p>
-      <p>Le crayon ouvre tous les détails de la voie et une note personnelle (cotation ressentie, méthode, passage clé…).</p>`,
+      <p>Le crayon ouvre tous les détails de la voie et une note personnelle (méthode, passage clé…).</p>`,
+  },
+  cotation: {
+    title: 'Cotation ressentie',
+    art: html`<span class="demo"
+        ><span class="grade">6a<span class="trend harder">${trendIcon('harder')}</span></span><small>Plus dure</small></span
+      >
+      <span class="demo"
+        ><span class="chips"><span>6a</span><span class="on">6a+</span><span>6b</span></span><small>Votre avis</small></span
+      >`,
+    body: () => html`<p>Une voie vous a paru plus dure ou plus facile que sa cotation ? Dans le détail de la voie (crayon), touchez la cotation que vous lui donnez, puis Enregistrer.</p>
+      <p>Une flèche à côté de la cotation résume l’avis des grimpeurs : <strong class="harder">rouge</strong> si elle est jugée plus dure, <strong class="easier">verte</strong> si elle est jugée plus facile. Le détail montre la répartition des votes.</p>
+      <p class="small">Pour voter, il faut avoir fait la voie et activé la sauvegarde en ligne.</p>`,
   },
   synchro: {
     title: 'Ne perdez pas vos voies',
@@ -81,7 +93,7 @@ export const TUTORIAL_STEPS: Record<string, Step> = {
 };
 
 /** Tutoriel de prise en main, montré au premier lancement. */
-export const ONBOARDING: string[] = ['bienvenue', 'navigation', 'cocher', 'favoris', 'synchro', 'reglages'];
+export const ONBOARDING: string[] = ['bienvenue', 'navigation', 'cocher', 'favoris', 'cotation', 'synchro', 'reglages'];
 
 /** Identifiants connus de cette version, dans l'ordre donné. */
 export function knownSteps(ids: string[]): string[] {
@@ -184,6 +196,53 @@ export class TutorialSheet extends LitElement {
         border-color: var(--toprope);
         border-style: dashed;
         color: var(--toprope);
+      }
+
+      .grade {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        font-size: var(--font-2xl);
+        font-weight: 800;
+        color: var(--g6);
+      }
+
+      .trend.harder,
+      .harder {
+        color: var(--danger);
+      }
+
+      .easier {
+        color: var(--accent);
+      }
+
+      .trend {
+        display: inline-flex;
+      }
+
+      .chips {
+        display: flex;
+        gap: 3px;
+      }
+
+      .chips span {
+        padding: 6px 8px;
+        border-radius: 8px;
+        border: 1.5px solid var(--border);
+        background: var(--surface);
+        font-size: var(--font-sm);
+        font-weight: 700;
+      }
+
+      .chips .on {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-ink);
+      }
+
+      p.small {
+        font-size: var(--font-md);
+        color: var(--text-muted);
       }
 
       .icon {
