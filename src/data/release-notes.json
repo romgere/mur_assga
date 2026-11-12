@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.5.0",
+    "date": "2026-11-11",
+    "notes": [
+      "Taille du texte réglable (petite, moyenne ou grande) : Réglages → Taille du texte.",
+      "Boutons des murs et des cotations, en bas de l’écran, plus grands et plus faciles à toucher."
+    ]
+  },
+  {
     "version": "1.4.0",
     "date": "2026-10-29",
     "notes": [

@@ -36,7 +36,8 @@ worker, sécurité) dans [`public/_headers`](public/_headers).
 - Tutoriel de prise en main au premier lancement (y compris pour les
   utilisateurs d'avant le tutoriel), qu'on peut passer, et à revoir depuis
   Réglages → Aide.
-- Favoris, notes par voie (cotation ressentie…), thème Auto / Clair / Sombre.
+- Favoris, notes par voie (cotation ressentie…), thème Auto / Clair / Sombre,
+  taille du texte Petite / Moyenne / Grande.
 - Sauvegarde et restauration par copier-coller d'un texte JSON, et remise à
   zéro des voies avec confirmation.
 - Sauvegarde en ligne facultative (Réglages → Sauvegarde en ligne), pour
@@ -51,6 +52,7 @@ Les données restent dans le navigateur (`localStorage`) :
 | `lardy.progress.<saison>`  | `{"mur-COULEUR": {t, m, tx, mx, s, n}}` (voir ci-dessous)        |
 | `lardy2026.ui`             | mode, page courante de chaque mode, filtres, filtre des stats    |
 | `lardy2026.theme`          | `auto`, `light` ou `dark`                                         |
+| `lardy2026.fontSize`       | `small`, `medium` (défaut) ou `large`                            |
 | `lardy2026.version`        | dernière version dont les nouveautés ont été vues                |
 | `lardy2026.tutorial`       | `1` une fois le tutoriel passé ou terminé                        |
 | `lardy.sync.code`          | code de sauvegarde en ligne, absent si elle est désactivée      |

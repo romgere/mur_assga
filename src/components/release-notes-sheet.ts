@@ -35,12 +35,12 @@ export class ReleaseNotesSheet extends LitElement {
 
       h3 {
         margin: 0 0 6px;
-        font-size: 15px;
+        font-size: var(--font-lg);
       }
 
       h3 small {
         margin-left: 6px;
-        font-size: 13px;
+        font-size: var(--font-sm);
         font-weight: 400;
         color: var(--text-muted);
       }
@@ -48,7 +48,7 @@ export class ReleaseNotesSheet extends LitElement {
       ul {
         margin: 0;
         padding-left: 22px;
-        font-size: 14px;
+        font-size: var(--font-md);
       }
 
       li + li {
@@ -59,7 +59,7 @@ export class ReleaseNotesSheet extends LitElement {
         display: block;
         margin-top: 2px;
         color: var(--accent);
-        font-size: 14px;
+        font-size: var(--font-md);
         font-weight: 600;
         text-decoration: underline;
       }
