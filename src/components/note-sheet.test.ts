@@ -155,10 +155,28 @@ describe('lardy-note-sheet', () => {
 
     it('montre la répartition des votes à tous, sans vote possible sans sauvegarde en ligne', async () => {
       const el = await feelSheet(false);
-      expect($(el, '.feel h3').textContent).toContain('2 avis');
+      // Repliée par défaut : une ligne avec le nombre d'avis, la répartition s'ouvre au toucher.
+      const trend = $<HTMLButtonElement>(el, 'button.trend');
+      expect(trend.textContent).toContain('2 avis');
+      expect(trend.getAttribute('aria-expanded')).toBe('false');
+      expect(el.shadowRoot!.querySelector('.bars')).toBeNull();
+      trend.click();
+      await el.updateComplete;
+      expect(trend.getAttribute('aria-expanded')).toBe('true');
       expect($$(el, '.bars .count').map((c) => c.textContent)).toEqual(['0', '0', '0', '0', '1', '1', '0', '0', '0']);
       expect(choices(el)).toHaveLength(0);
       expect($(el, '.feel').textContent).toContain('activez la sauvegarde en ligne');
+    });
+
+    it('indique l’absence d’avis, sans détail à ouvrir', async () => {
+      const el = new NoteSheet();
+      el.store = testStore();
+      el.votes = testVotes(el.store);
+      await mount(el);
+      el.route = route;
+      await settle(el, $<BottomSheet>(el, 'lardy-sheet'));
+      expect($(el, 'p.trend').textContent).toBe('Aucun avis pour l’instant');
+      expect(el.shadowRoot!.querySelector('button.trend')).toBeNull();
     });
 
     it('demande de cocher la voie avant de voter', async () => {
@@ -173,8 +191,9 @@ describe('lardy-note-sheet', () => {
       choices(el)[6].click();
       await el.updateComplete;
       expect(choices(el)[6].getAttribute('aria-pressed')).toBe('true');
-      expect($(el, '.feel h3').textContent).toContain('3 avis');
-      expect($(el, '.feel h3').textContent).toContain('plus dure');
+      expect($(el, '.trend').textContent).toContain('3 avis');
+      expect($(el, '.trend').textContent).toContain('plus dure');
+      expect($(el, '.trend .feel-icon.harder')).not.toBeNull();
       $(el, 'button.save').click();
       expect(el.store.get(route.id)).toEqual({ t: true, g: '6b' });
     });

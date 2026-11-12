@@ -42,6 +42,18 @@ describe('lardy-settings-sheet', () => {
     expect($(el, '[data-theme="dark"]').getAttribute('aria-checked')).toBe('true');
   });
 
+  it('sélectionne la taille du texte (moyenne par défaut) et émet font-size-change', async () => {
+    const el = await settings();
+    expect($(el, '[data-font-size="medium"]').getAttribute('aria-checked')).toBe('true');
+    const spy = vi.fn();
+    el.addEventListener('font-size-change', (e) => spy((e as CustomEvent).detail.fontSize));
+    $(el, '[data-font-size="large"]').click();
+    await el.updateComplete;
+    expect(spy).toHaveBeenCalledWith('large');
+    expect($(el, '[data-font-size="large"]').getAttribute('aria-checked')).toBe('true');
+    expect($(el, '[data-font-size="medium"]').getAttribute('aria-checked')).toBe('false');
+  });
+
   it('affiche la sauvegarde JSON et la copie', async () => {
     const el = await settings();
     const text = field(el, 'export').value;

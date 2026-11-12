@@ -4,10 +4,12 @@ import { pwaState } from './lib/pwa';
 import { gradeVotes } from './lib/grade-votes';
 import { fetchUpdateNotes } from './lib/release-notes';
 import { progressSync } from './lib/sync';
+import { applyFontSize, loadFontSize } from './lib/font-size';
 import { applyTheme, loadTheme } from './lib/theme';
 import './components/lardy-app';
 
 applyTheme(loadTheme());
+applyFontSize(loadFontSize());
 pwaState.listen();
 progressSync.start();
 gradeVotes.start();

@@ -130,6 +130,18 @@ describe('lardy-app', () => {
     document.documentElement.removeAttribute('data-theme');
   });
 
+  it('applique et mémorise la taille du texte', async () => {
+    const storage = memoryStorage();
+    const el = await app(storage);
+    const settings = $<SettingsSheet>(el, 'lardy-settings-sheet');
+    settings.dispatchEvent(new CustomEvent('font-size-change', { detail: { fontSize: 'large' } }));
+    await settle(el);
+    expect(document.documentElement.getAttribute('data-font-size')).toBe('large');
+    expect(storage.get('lardy2026.fontSize')).toBe('large');
+    expect(settings.fontSize).toBe('large');
+    document.documentElement.removeAttribute('data-font-size');
+  });
+
   it('n’affiche pas de nouveautés à la première visite', async () => {
     const el = await app();
     expect($<ReleaseNotesSheet>(el, 'lardy-release-notes-sheet').open).toBe(false);

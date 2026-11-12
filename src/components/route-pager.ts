@@ -62,7 +62,7 @@ export class RoutePager extends LitElement {
 
       h2 {
         margin: 0;
-        font-size: 20px;
+        font-size: var(--font-2xl);
       }
     `,
   ];

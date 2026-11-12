@@ -26,10 +26,10 @@ export class PagerDots extends LitElement {
 
       nav {
         display: flex;
-        gap: 4px;
+        gap: 6px;
         overflow-x: auto;
         scrollbar-width: none;
-        padding: 6px var(--gutter-right) 6px var(--gutter-left);
+        padding: 8px var(--gutter-right) 8px var(--gutter-left);
       }
 
       nav::-webkit-scrollbar {
@@ -39,13 +39,13 @@ export class PagerDots extends LitElement {
       button {
         position: relative;
         flex: 1 0 auto;
-        min-width: 32px;
-        height: 36px;
-        padding: 0 6px;
-        border-radius: 18px;
+        min-width: calc(44px * var(--font-scale, 1));
+        height: calc(48px * var(--font-scale, 1));
+        padding: 0 10px;
+        border-radius: 24px;
         background: var(--surface-2);
         color: var(--text-muted);
-        font-size: 13px;
+        font-size: var(--font-xl);
         font-weight: 700;
         font-variant-numeric: tabular-nums;
       }
@@ -57,10 +57,10 @@ export class PagerDots extends LitElement {
 
       .dot {
         position: absolute;
-        top: 3px;
-        right: 3px;
-        width: 8px;
-        height: 8px;
+        top: 4px;
+        right: 4px;
+        width: 10px;
+        height: 10px;
         border-radius: 50%;
       }
 

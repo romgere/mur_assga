@@ -63,7 +63,7 @@ export class AllRoutesView extends LitElement {
         display: flex;
         flex-direction: column;
         gap: 2px;
-        font-size: 12px;
+        font-size: var(--font-xs);
         font-weight: 600;
         color: var(--text-muted);
       }
@@ -82,7 +82,7 @@ export class AllRoutesView extends LitElement {
       select {
         width: 100%;
         color: var(--text);
-        font-size: 15px;
+        font-size: var(--font-lg);
       }
 
       .chips {
@@ -99,7 +99,7 @@ export class AllRoutesView extends LitElement {
         border-radius: 17px;
         border: 1px solid var(--border);
         background: var(--surface);
-        font-size: 14px;
+        font-size: var(--font-md);
         font-weight: 600;
         color: var(--text-muted);
       }
@@ -114,7 +114,7 @@ export class AllRoutesView extends LitElement {
         flex-direction: row;
         align-items: center;
         gap: 4px;
-        font-size: 14px;
+        font-size: var(--font-md);
       }
 
       label.sort svg {
@@ -128,7 +128,7 @@ export class AllRoutesView extends LitElement {
 
       .reset {
         margin-left: auto;
-        font-size: 14px;
+        font-size: var(--font-md);
         font-weight: 600;
         color: var(--accent);
         min-height: 34px;
@@ -137,7 +137,7 @@ export class AllRoutesView extends LitElement {
       .count {
         margin: 0;
         padding: 0 var(--gutter-right) 6px var(--gutter-left);
-        font-size: 13px;
+        font-size: var(--font-sm);
         color: var(--text-muted);
       }
 

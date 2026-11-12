@@ -15,13 +15,16 @@ import {
   type RouteProgress,
 } from '../lib/progress-store';
 import { gradeVotes, type GradeVotes } from '../lib/grade-votes';
-import { GRADE_SCALE, countedVote, summarizeVotes, voteChoices } from '../lib/grades';
+import { trendIcon } from './icons';
+import { GRADE_SCALE, MIN_VOTES, countedVote, summarizeVotes, voteChoices } from '../lib/grades';
 import { ChangeController } from '../lib/store-controller';
 import type { Route } from '../lib/topo';
 import { helpButton } from './help-sheet';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
-import { FEEL } from './route-row';
+
+/** Tendance des votes, en court pour tenir sur une ligne. */
+const SHORT = { harder: 'Ressentie plus dure', easier: 'Ressentie plus facile', same: 'Ressentie juste' } as const;
 
 const MODES: { mode: ClimbMode; label: string; cls: string }[] = [
   { mode: 't', label: 'Tête', cls: 'lead' },
@@ -40,7 +43,7 @@ export class NoteSheet extends LitElement {
     css`
       p {
         margin: 0 0 8px;
-        font-size: 14px;
+        font-size: var(--font-md);
         color: var(--text-muted);
       }
 
@@ -77,7 +80,7 @@ export class NoteSheet extends LitElement {
         border-radius: 10px;
         border: 1.5px solid var(--border);
         background: var(--surface);
-        font-size: 14px;
+        font-size: var(--font-md);
         font-weight: 700;
         color: var(--text-muted);
       }
@@ -98,7 +101,7 @@ export class NoteSheet extends LitElement {
       .summary {
         flex: 1;
         min-width: 0;
-        font-size: 14px;
+        font-size: var(--font-md);
         font-style: italic;
         color: var(--text-muted);
       }
@@ -122,7 +125,7 @@ export class NoteSheet extends LitElement {
         align-items: center;
         gap: 8px;
         min-height: 32px;
-        font-size: 15px;
+        font-size: var(--font-lg);
       }
 
       .checks input {
@@ -131,14 +134,43 @@ export class NoteSheet extends LitElement {
 
       .feel h3 {
         margin: 4px 0 6px;
-        font-size: 15px;
+        font-size: var(--font-lg);
       }
 
-      .feel h3 small {
-        display: block;
-        font-size: 13px;
-        font-weight: 400;
+      /* Tendance des votes sur une ligne ; la répartition s'ouvre au besoin. */
+      .trend {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+        min-height: 36px;
+        margin: 0 0 6px;
+        padding: 0;
+        border: 0;
+        background: none;
+        text-align: left;
+        font-size: var(--font-md);
         color: var(--text-muted);
+      }
+
+      .trend .feel-icon {
+        display: inline-flex;
+        color: var(--text-muted);
+      }
+
+      .trend .feel-icon.harder {
+        color: var(--danger);
+      }
+
+      .trend .feel-icon.easier {
+        color: var(--accent);
+      }
+
+      .trend .toggle-text {
+        margin-left: auto;
+        white-space: nowrap;
+        font-weight: 700;
+        color: var(--accent);
       }
 
       /* Les 9 cotations sur une seule ligne, même sur un petit téléphone. */
@@ -156,7 +188,7 @@ export class NoteSheet extends LitElement {
         border-radius: 8px;
         border: 1.5px solid var(--border);
         background: var(--surface);
-        font-size: 13px;
+        font-size: var(--font-sm);
         letter-spacing: -0.02em;
         font-weight: 700;
         color: var(--text);
@@ -178,7 +210,7 @@ export class NoteSheet extends LitElement {
         align-items: center;
         gap: 3px 8px;
         margin: 0 0 10px;
-        font-size: 13px;
+        font-size: var(--font-sm);
       }
 
       .bars .grade {
@@ -212,7 +244,7 @@ export class NoteSheet extends LitElement {
 
       textarea {
         min-height: 120px;
-        font-size: 16px;
+        font-size: var(--font-lg);
         background: var(--bg);
       }
 
@@ -235,6 +267,8 @@ export class NoteSheet extends LitElement {
   @state() private draft = '';
   /** Cotation ressentie votée, enregistrée avec la note. */
   @state() private vote: string | undefined;
+  /** Répartition des votes dépliée (repliée à chaque ouverture de la feuille). */
+  @state() private votesOpen = false;
   /** Tête, moulinette et leurs détails, enregistrés avec la note. */
   @state() private ascents: RouteProgress = {};
 
@@ -248,6 +282,7 @@ export class NoteSheet extends LitElement {
       const { t, m, tx, mx, n, g } = this.store.get(this.route.id);
       this.draft = n ?? '';
       this.vote = g;
+      this.votesOpen = false;
       this.ascents = { t, m, tx, mx };
     }
   }
@@ -364,23 +399,34 @@ export class NoteSheet extends LitElement {
         )}
       </div>`;
     }
+    let trendText: string;
+    if (!total) trendText = 'Aucun avis pour l’instant';
+    else if (trend) trendText = `${SHORT[trend]} · ${total} avis`;
+    else trendText = `${total} avis · tendance à partir de ${MIN_VOTES}`;
     return html`<section class="feel" aria-label="Cotation ressentie">
-      <h3>
-        Cotation ressentie
-        <small
-          >${total ? `${total} avis` : 'aucun avis'}${trend ? html` · ${FEEL[trend].label.toLowerCase()}` : ''}</small
-        >
-      </h3>
+      <h3>Cotation ressentie</h3>
       ${ask}
       ${total
-        ? html`<div class="bars" role="list" aria-label="Répartition des votes">
-            ${shown.map(
-              (g) => html`<span class="grade ${g === r.grade ? 'official' : ''}" role="listitem">${g}</span>
-                <span class="bar"><span style="width: ${((counts[g] ?? 0) / max) * 100}%"></span></span>
-                <span class="count">${counts[g] ?? 0}</span>`,
-            )}
-          </div>`
-        : ''}
+        ? html`<button
+              class="trend"
+              aria-expanded=${this.votesOpen ? 'true' : 'false'}
+              aria-controls="votes"
+              @click=${() => (this.votesOpen = !this.votesOpen)}
+            >
+              ${trend ? html`<span class="feel-icon ${trend}">${trendIcon(trend)}</span>` : ''}
+              <span class="trend-text">${trendText}</span>
+              <span class="toggle-text">${this.votesOpen ? 'Masquer ▴' : 'Détail ▾'}</span>
+            </button>
+            ${this.votesOpen
+              ? html`<div class="bars" id="votes" role="list" aria-label="Répartition des votes">
+                  ${shown.map(
+                    (g) => html`<span class="grade ${g === r.grade ? 'official' : ''}" role="listitem">${g}</span>
+                      <span class="bar"><span style="width: ${((counts[g] ?? 0) / max) * 100}%"></span></span>
+                      <span class="count">${counts[g] ?? 0}</span>`,
+                  )}
+                </div>`
+              : ''}`
+        : html`<p class="trend">${trendText}</p>`}
     </section>`;
   }
 }

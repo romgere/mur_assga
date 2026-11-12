@@ -151,6 +151,43 @@
   box-sizing: border-box;
 }
 
+/*
+ * Taille du texte (Réglages) : les composants n'utilisent que ces six tailles
+ * (xs : petites mentions, sm : secondaire, md : texte courant, lg : titres de
+ * section et champs, xl : titres, 2xl : cotations et titres de page).
+ * Petite ≈ ×0,875, Grande ≈ ×1,2 de la taille Moyenne.
+ * --font-scale ne sert qu'aux exceptions (dimensions qui suivent le texte).
+ */
+:root {
+  --font-scale: 1;
+  --font-xs: 12px;
+  --font-sm: 13px;
+  --font-md: 14px;
+  --font-lg: 16px;
+  --font-xl: 18px;
+  --font-2xl: 22px;
+}
+
+:root[data-font-size='small'] {
+  --font-scale: 0.875;
+  --font-xs: 10.5px;
+  --font-sm: 11.5px;
+  --font-md: 12px;
+  --font-lg: 14px;
+  --font-xl: 16px;
+  --font-2xl: 19px;
+}
+
+:root[data-font-size='large'] {
+  --font-scale: 1.2;
+  --font-xs: 14.5px;
+  --font-sm: 15.5px;
+  --font-md: 17px;
+  --font-lg: 19px;
+  --font-xl: 21.5px;
+  --font-2xl: 26.5px;
+}
+
 html,
 body {
   height: 100%;
@@ -161,7 +198,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-size: 16px;
+  font-size: var(--font-lg);
   line-height: 1.35;
   overflow: hidden;
   overscroll-behavior: none;
