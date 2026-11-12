@@ -36,7 +36,14 @@ worker, sécurité) dans [`public/_headers`](public/_headers).
 - Tutoriel de prise en main au premier lancement (y compris pour les
   utilisateurs d'avant le tutoriel), qu'on peut passer, et à revoir depuis
   Réglages → Aide.
-- Favoris, notes par voie (cotation ressentie…), thème Auto / Clair / Sombre,
+- **Cotation ressentie** (feuille de détails, bouton crayon) : chaque grimpeur
+  donne sa cotation d'une voie qu'il a faite, à ±4 crans de la cotation
+  officielle. Voter demande la sauvegarde en ligne (un vote par code) ; la
+  répartition des votes est visible de tous. Une flèche à côté de la
+  cotation (rouge vers le haut : plus dure, verte vers le bas : plus facile,
+  « = » : juste) compare la médiane des votes à la cotation officielle, à partir de 3 avis
+  (voir [Cotations ressenties](#cotations-ressenties)).
+- Favoris, notes par voie (méthode…), thème Auto / Clair / Sombre,
   taille du texte Petite / Moyenne / Grande.
 - Sauvegarde et restauration par copier-coller d'un texte JSON, et remise à
   zéro des voies avec confirmation.
@@ -49,7 +56,7 @@ Les données restent dans le navigateur (`localStorage`) :
 
 | Clé                        | Contenu                                                          |
 | -------------------------- | ---------------------------------------------------------------- |
-| `lardy.progress.<saison>`  | `{"mur-COULEUR": {t, m, tx, mx, s, n}}` (voir ci-dessous)        |
+| `lardy.progress.<saison>`  | `{"mur-COULEUR": {t, m, tx, mx, s, n, g}}` (voir ci-dessous)     |
 | `lardy2026.ui`             | mode, page courante de chaque mode, filtres, filtre des stats    |
 | `lardy2026.theme`          | `auto`, `light` ou `dark`                                         |
 | `lardy2026.fontSize`       | `small`, `medium` (défaut) ou `large`                            |
@@ -57,10 +64,12 @@ Les données restent dans le navigateur (`localStorage`) :
 | `lardy2026.tutorial`       | `1` une fois le tutoriel passé ou terminé                        |
 | `lardy.sync.code`          | code de sauvegarde en ligne, absent si elle est désactivée      |
 | `lardy.sync.<saison>`      | révision en ligne, progression à cette révision, envoi en attente |
+| `lardy.votes.<saison>`     | dernière répartition des cotations ressenties lue en ligne       |
 
 Dans la progression : `t` / `m` = faite en tête / en moulinette, `tx` / `mx` =
 détails de cette ascension (liste de codes `avue`, `flash`, `chute`, `repos`,
-`partiel` ; absent = enchaînée proprement), `s` = favori, `n` = note. Les détails sont des champs
+`partiel` ; absent = enchaînée proprement), `s` = favori, `n` = note, `g` =
+cotation ressentie votée. Les détails sont des champs
 ajoutés : les données sans détails restent valides telles quelles. Les
 sauvegardes sont en version 3 ; les versions 1 et 2 s'importent toujours.
 
@@ -88,6 +97,7 @@ son nouveau téléphone. Le Worker ([`worker/`](worker)) l'attend en
 | `GET /api/progress/<saison>`    | `{ rev, data, updatedAt }`, 404 si rien n'est enregistré        |
 | `PUT /api/progress/<saison>`    | envoie `{ rev, data }` ; 409 + version en ligne si `rev` a changé |
 | `DELETE /api/progress`          | efface toutes les saisons du code                               |
+| `GET /api/votes/<saison>`       | `{ votes, mine }` : cotations ressenties (code facultatif)      |
 
 Le `localStorage` reste la référence (l'application marche hors ligne) :
 chaque modification part 2 secondes plus tard, et la version en ligne est
@@ -106,6 +116,23 @@ Garde-fous contre la perte de voies :
   un message, au lieu de les remplacer par une progression vide.
 - Les voies inconnues de la version installée (topo plus récent sur un autre
   appareil) sont renvoyées telles quelles, jamais supprimées.
+
+### Cotations ressenties
+
+Le vote d'un grimpeur est le champ `g` de sa progression : il part et revient
+avec la sauvegarde en ligne (un code, un vote par voie, même sur plusieurs
+appareils) et disparaît quand on l'efface. Pas de table ni de migration : le
+Worker calcule la répartition à la lecture (`json_each` sur la table
+`progress`). Un vote ne compte que si la voie est faite (tête ou moulinette,
+pas partielle) et si la cotation fait partie de l'échelle de
+[`src/lib/grades.ts`](src/lib/grades.ts), plus fine que celle du topo (5c+,
+6a+…). `GET /api/votes/<saison>` est public ; avec le code, `mine` indique les
+votes de ce code tels que le serveur les compte, et l'application les remplace
+par son état local (vote pas encore envoyé). L'indicateur compare la médiane
+des votes à la cotation officielle : « + » ou « − » à partir d'un cran
+d'écart, rien sous 3 avis. La répartition est relue au lancement, au retour
+sur l'application et après chaque envoi de la progression, et gardée en local
+pour le hors ligne.
 
 La base D1 `mur-assga` est déclarée dans [`wrangler.jsonc`](wrangler.jsonc) ;
 son schéma est dans [`migrations/`](migrations). Pour une nouvelle migration :

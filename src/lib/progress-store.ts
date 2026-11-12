@@ -1,3 +1,4 @@
+import { isGrade } from './grades';
 import { storage as defaultStorage, readJson, writeJson, type KeyValueStorage } from './storage';
 import { topo as defaultTopo, type Route, type Topo } from './topo';
 
@@ -19,6 +20,7 @@ export const MAX_NOTE_LENGTH = 2000;
  * État d'une voie : t = tête, m = moulinette, s = favori (star), n = note.
  * tx / mx : détails de l'ascension en tête / en moulinette, codes de
  * DETAILS (["chute", "repos"]) ; absents = enchaînée proprement.
+ * g : cotation ressentie votée (voir grades.ts), envoyée avec la sauvegarde en ligne.
  */
 export interface RouteProgress {
   t?: boolean;
@@ -27,6 +29,7 @@ export interface RouteProgress {
   mx?: Detail[];
   s?: boolean;
   n?: string;
+  g?: string;
 }
 
 export type ProgressMap = Record<string, RouteProgress>;
@@ -193,7 +196,7 @@ export function isDone(p: RouteProgress | undefined): boolean {
 }
 
 function isEmpty(p: RouteProgress): boolean {
-  return !p.t && !p.m && !p.s && !p.n;
+  return !p.t && !p.m && !p.s && !p.n && !p.g;
 }
 
 /** Nettoie une entrée : ne garde que les champs utiles, supprime les valeurs vides. */
@@ -207,6 +210,7 @@ function compact(p: RouteProgress): RouteProgress {
   if (mx.length) out.mx = mx;
   if (p.s) out.s = true;
   if (p.n) out.n = p.n;
+  if (isGrade(p.g)) out.g = p.g;
   return out;
 }
 
@@ -347,7 +351,7 @@ export class ProgressStore extends EventTarget {
   /**
    * Accepte soit une sauvegarde complète ({app, version, season, progress}) de
    * la saison affichée, soit
-   * directement la table {"mur-COULEUR": {t, m, tx, mx, s, n}}. Les voies qui
+   * directement la table {"mur-COULEUR": {t, m, tx, mx, s, n, g}}. Les voies qui
    * n'existent plus dans le topo sont ignorées, comme les détails
    * inconnus ; un type invalide rejette tout.
    */
@@ -400,6 +404,9 @@ export class ProgressStore extends EventTarget {
       if (v.n !== undefined && typeof v.n !== 'string') {
         return { ok: false, message: `Note invalide pour la voie « ${id} ».` };
       }
+      if (v.g !== undefined && typeof v.g !== 'string') {
+        return { ok: false, message: `Cotation ressentie invalide pour la voie « ${id} ».` };
+      }
       if (!known.has(id)) {
         ignored++;
         continue;
@@ -411,6 +418,7 @@ export class ProgressStore extends EventTarget {
         mx: v.mx as unknown[] as Detail[] | undefined,
         s: v.s as boolean | undefined,
         n: typeof v.n === 'string' ? v.n.slice(0, MAX_NOTE_LENGTH) : undefined,
+        g: v.g as string | undefined,
       });
       if (!isEmpty(entry)) data[id] = entry;
     }

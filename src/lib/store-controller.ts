@@ -41,3 +41,36 @@ export class StoreController implements ReactiveController {
     this.subscribed.addEventListener(ProgressChangeEvent.type, this.onChange);
   }
 }
+
+/** Repeint un composant à chaque événement « change » d'une source (votes, synchro…). */
+export class ChangeController implements ReactiveController {
+  private subscribed?: EventTarget;
+
+  constructor(
+    private readonly host: ReactiveControllerHost,
+    private readonly getTarget: () => EventTarget,
+  ) {
+    host.addController(this);
+  }
+
+  private onChange = () => this.host.requestUpdate();
+
+  hostConnected(): void {
+    this.subscribe();
+  }
+
+  hostUpdate(): void {
+    if (this.subscribed && this.subscribed !== this.getTarget()) this.subscribe();
+  }
+
+  hostDisconnected(): void {
+    this.subscribed?.removeEventListener('change', this.onChange);
+    this.subscribed = undefined;
+  }
+
+  private subscribe(): void {
+    this.subscribed?.removeEventListener('change', this.onChange);
+    this.subscribed = this.getTarget();
+    this.subscribed.addEventListener('change', this.onChange);
+  }
+}

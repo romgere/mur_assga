@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { $, miniTopo, mount, testStore } from '../test/helpers';
+import { $, miniTopo, mount, testStore, testVotes } from '../test/helpers';
 import { LONG_PRESS_MS, RouteRow } from './route-row';
 
 const topo = miniTopo();
@@ -189,4 +189,20 @@ describe('lardy-route-row', () => {
       expect(el.shadowRoot!.querySelector('.menu')).toBeNull();
     });
   });
+
+  it('indique la cotation ressentie à partir de 3 avis, et suit les votes', async () => {
+    const el = new RouteRow();
+    el.route = route('1-VERTE');
+    el.store = testStore();
+    el.votes = testVotes(el.store, { server: { votes: { '1-VERTE': { '5c+': 2, '6a': 1 } } } });
+    await mount(el);
+    expect(el.shadowRoot!.querySelector('.feel')).toBeNull();
+    await el.votes.refresh();
+    await el.updateComplete;
+    const badge = $(el, '.feel');
+    expect(badge.parentElement!.classList.contains('grade-line')).toBe(true);
+    expect(badge.classList.contains('easier')).toBe(true);
+    expect(badge.getAttribute('aria-label')).toBe('Ressentie plus facile que sa cotation, 3 avis');
+  });
 });
+
