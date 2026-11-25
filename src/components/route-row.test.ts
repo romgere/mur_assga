@@ -33,6 +33,16 @@ describe('lardy-route-row', () => {
     expect($(trav, '.wall').textContent).toBe('Mur 2');
   });
 
+  it('affiche le badge « New » d’une voie rouverte (rev ≥ 2)', async () => {
+    expect((await row()).shadowRoot!.querySelector('.new')).toBeNull();
+    const el = new RouteRow();
+    el.route = { ...route('1-VERTE'), rev: 2 };
+    el.store = testStore();
+    await mount(el);
+    expect($(el, '.new').textContent).toBe('New');
+    expect($(el, '.star').getAttribute('aria-label')).toBe('Favori, voie verte new 6a mur 1');
+  });
+
   it('en mode wall-first, affiche le mur en gros et pas la cotation', async () => {
     const el = await row('2-ROUGE', true, true);
     expect($(el, '.grade').textContent).toBe('Mur 2');

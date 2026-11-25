@@ -2,7 +2,7 @@
   "season": "2026-2027",
   "title": "Topo Lardy 2026-2027",
   "club": "ASSGA Escalade",
-  "updated": "2026-04-03",
+  "updated": "2026-11-25",
   "grades": ["4+", "5a", "5a+", "5b", "5b+", "5c", "6a", "6b", "6b+", "6c", "6c+", "7a", "7a+", "7b", "7b+", "7c"],
   "walls": [
     {
@@ -28,7 +28,7 @@
       "routes": [
         { "color": "VERTE", "grade": "7b", "setter": "L" },
         { "color": "JAUNE", "grade": "5c", "setter": "L" },
-        { "color": "VIOLETTE", "grade": "5a", "setter": "LD" },
+        { "color": "VIOLETTE", "grade": "6a", "rev": 2 },
         { "color": "BLANCHE", "grade": "6b+", "competition": true }
       ]
     },

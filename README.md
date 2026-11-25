@@ -240,7 +240,8 @@ saison. Deux cas de renouvellement :
 - **Voie rouverte en cours de saison** (même couleur, même mur) : ajouter
   `"rev": 2` à la voie (puis 3, 4… aux réouvertures suivantes). Sa clé
   devient `mur-COULEUR~2` : elle repart de zéro, les autres voies gardent leur
-  progression. Retirer `rev` en début de saison suivante.
+  progression. Elle porte le badge « New » (« violette new » dans les textes).
+  Retirer `rev` en début de saison suivante.
 
 Le fichier est vérifié au chargement (cotation inconnue, voie en double…) et
 par les tests : lancer `npm test` après chaque modification.
