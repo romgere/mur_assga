@@ -11,7 +11,7 @@ export interface RouteData {
    * Révision de la voie : à incrémenter (2, 3…) quand une voie est rouverte
    * en cours de saison avec la même couleur sur le même mur, pour repartir
    * d'une progression vierge sur cette voie seulement. Une voie révisée
-   * porte le badge « New ».
+   * porte la pastille « NEW ».
    */
   rev?: number;
 }
@@ -92,7 +92,7 @@ export function buildTopo(data: TopoData): Topo {
 
 export const topo: Topo = buildTopo(rawTopo as TopoData);
 
-/** Voie rouverte en cours de saison (révision 2 ou plus) : badge « New ». */
+/** Voie rouverte en cours de saison (révision 2 ou plus) : pastille « NEW ». */
 export function isNewRoute(route: RouteData): boolean {
   return (route.rev ?? 1) > 1;
 }

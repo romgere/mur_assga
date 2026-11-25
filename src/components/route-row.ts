@@ -79,6 +79,7 @@ export class RouteRow extends LitElement {
       }
 
       .color {
+        position: relative;
         display: flex;
         flex-direction: column;
         align-items: stretch;
@@ -90,6 +91,24 @@ export class RouteRow extends LitElement {
         font-weight: 700;
         text-align: center;
         color: var(--text-muted);
+      }
+
+      /* Pastille « NEW » à cheval sur le coin de la pastille de couleur. */
+      .new {
+        position: absolute;
+        top: -7px;
+        right: -9px;
+        z-index: 1;
+        padding: 1px 4px;
+        border-radius: 999px;
+        background: var(--new);
+        color: var(--new-ink);
+        border: 1.5px solid var(--surface);
+        font-size: 9px;
+        font-weight: 900;
+        line-height: 1.2;
+        letter-spacing: 0.04em;
+        pointer-events: none;
       }
 
       .swatch {
@@ -155,11 +174,6 @@ export class RouteRow extends LitElement {
         border-radius: 4px;
         background: var(--surface-2);
         font-weight: 700;
-      }
-
-      .badge.new {
-        background: var(--accent);
-        color: var(--accent-ink);
       }
 
       .badge.comp {
@@ -480,6 +494,7 @@ export class RouteRow extends LitElement {
     return html`<div class="row ${isDone(p) ? 'done' : ''}">
       <span class="color">
         <span class="swatch" style=${styleMap(swatch)}>${r.color}</span>
+        ${isNewRoute(r) ? html`<span class="new" aria-hidden="true">NEW</span>` : nothing}
         ${this.showWall && !this.wallFirst ? html`<span class="wall">Mur ${r.wall}</span>` : nothing}
       </span>
       <div class="info">
@@ -490,7 +505,6 @@ export class RouteRow extends LitElement {
           ${this.renderFeel()}
         </span>
         <span class="meta">
-          ${isNewRoute(r) ? html`<span class="badge new">New</span>` : nothing}
           ${r.competition ? html`<span class="badge comp">Compét.</span>` : nothing}
           ${r.traverse ? html`<span class="badge">Traversée</span>` : nothing}
           ${r.setter ? html`<span class="setter">${r.setter}</span>` : nothing}

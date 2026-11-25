@@ -27,6 +27,9 @@
   --toprope: #285f9e;
   --toprope-ink: #ffffff;
   --star: #d69a00;
+  /* Pastille « NEW » des voies rouvertes : couleur réservée, bien visible. */
+  --new: #e03a00;
+  --new-ink: #ffffff;
   --dot-complete: #3f7d1d;
   --dot-partial: #d69a00;
 
@@ -89,6 +92,8 @@
     --toprope: #6fa8ec;
     --toprope-ink: #08182b;
     --star: #ffc93c;
+    --new: #ff7a3d;
+    --new-ink: #2a0d00;
     --dot-complete: #8cc65e;
     --dot-partial: #ffc93c;
 
@@ -129,6 +134,8 @@
   --toprope: #6fa8ec;
   --toprope-ink: #08182b;
   --star: #ffc93c;
+  --new: #ff7a3d;
+  --new-ink: #2a0d00;
   --dot-complete: #8cc65e;
   --dot-partial: #ffc93c;
 

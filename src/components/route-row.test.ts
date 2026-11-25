@@ -39,7 +39,7 @@ describe('lardy-route-row', () => {
     el.route = { ...route('1-VERTE'), rev: 2 };
     el.store = testStore();
     await mount(el);
-    expect($(el, '.new').textContent).toBe('New');
+    expect($(el, '.color .new').textContent).toBe('NEW');
     expect($(el, '.star').getAttribute('aria-label')).toBe('Favori, voie verte new 6a mur 1');
   });
 
