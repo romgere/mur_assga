@@ -96,17 +96,22 @@ export class RouteRow extends LitElement {
       /* Pastille « NEW » à cheval sur le coin de la pastille de couleur. */
       .new {
         position: absolute;
-        top: -7px;
-        right: -9px;
+        top: -8px;
+        right: -10px;
         z-index: 1;
-        padding: 1px 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        height: 18px;
+        padding: 0 6px;
         border-radius: 999px;
         background: var(--new);
         color: var(--new-ink);
         border: 1.5px solid var(--surface);
-        font-size: 9px;
+        font-size: 11px;
         font-weight: 900;
-        line-height: 1.2;
+        line-height: 1;
         letter-spacing: 0.04em;
         pointer-events: none;
       }
