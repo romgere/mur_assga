@@ -18,7 +18,7 @@ import {
 import { gradeVotes, type GradeVotes } from '../lib/grade-votes';
 import type { Trend } from '../lib/grades';
 import { ChangeController, StoreController } from '../lib/store-controller';
-import { colorToken, gradeLevel, type Route } from '../lib/topo';
+import { colorToken, gradeLevel, isNewRoute, routeName, type Route } from '../lib/topo';
 import { BottomSheet } from './bottom-sheet';
 import { helpButton } from './help-sheet';
 import { noteIcon, starIcon, trendIcon } from './icons';
@@ -79,6 +79,7 @@ export class RouteRow extends LitElement {
       }
 
       .color {
+        position: relative;
         display: flex;
         flex-direction: column;
         align-items: stretch;
@@ -90,6 +91,29 @@ export class RouteRow extends LitElement {
         font-weight: 700;
         text-align: center;
         color: var(--text-muted);
+      }
+
+      /* Pastille « NEW » à cheval sur le coin de la pastille de couleur. */
+      .new {
+        position: absolute;
+        top: -8px;
+        right: -10px;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        height: 18px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: var(--new);
+        color: var(--new-ink);
+        border: 1.5px solid var(--surface);
+        font-size: 11px;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: 0.04em;
+        pointer-events: none;
       }
 
       .swatch {
@@ -443,7 +467,7 @@ export class RouteRow extends LitElement {
   /** Description complète pour les lecteurs d'écran (« voie verte 6a, mur 1 »). */
   private get label(): string {
     const r = this.route;
-    const parts = [`voie ${r.color.toLowerCase()}`];
+    const parts = [`voie ${routeName(r)}`];
     if (r.grade) parts.push(r.grade);
     if (r.traverse) parts.push('traversée');
     parts.push(`mur ${r.wall}`);
@@ -475,6 +499,7 @@ export class RouteRow extends LitElement {
     return html`<div class="row ${isDone(p) ? 'done' : ''}">
       <span class="color">
         <span class="swatch" style=${styleMap(swatch)}>${r.color}</span>
+        ${isNewRoute(r) ? html`<span class="new" aria-hidden="true">NEW</span>` : nothing}
         ${this.showWall && !this.wallFirst ? html`<span class="wall">Mur ${r.wall}</span>` : nothing}
       </span>
       <div class="info">

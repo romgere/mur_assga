@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { miniTopoData } from '../test/helpers';
-import { buildTopo, colorToken, gradeLevel, topo } from './topo';
+import { buildTopo, colorToken, gradeLevel, isNewRoute, routeName, topo } from './topo';
 
 describe('topo.json', () => {
   it('contient les 16 murs et 65 voies du topo 2026', () => {
@@ -77,6 +77,20 @@ describe('buildTopo', () => {
 });
 
 describe('utilitaires', () => {
+  it('routeName ajoute « new » aux voies rouvertes', () => {
+    expect(isNewRoute({ color: 'VIOLETTE' })).toBe(false);
+    expect(isNewRoute({ color: 'VIOLETTE', rev: 1 })).toBe(false);
+    expect(routeName({ color: 'VIOLETTE' })).toBe('violette');
+    expect(routeName({ color: 'VIOLETTE', rev: 2 })).toBe('violette new');
+  });
+
+  it('la violette du mur 3 est la nouvelle voie 6a', () => {
+    const ids = topo.routes.filter((r) => r.wall === 3).map((r) => r.id);
+    expect(ids).toContain('3-VIOLETTE~2');
+    expect(ids).not.toContain('3-VIOLETTE');
+    expect(topo.routes.find((r) => r.id === '3-VIOLETTE~2')!.grade).toBe('6a');
+  });
+
   it('colorToken met en minuscules sans accents', () => {
     expect(colorToken('VIOLETTE')).toBe('violette');
     expect(colorToken('ÉCRUE')).toBe('ecrue');

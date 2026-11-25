@@ -18,7 +18,7 @@ import { gradeVotes, type GradeVotes } from '../lib/grade-votes';
 import { trendIcon } from './icons';
 import { GRADE_SCALE, MIN_VOTES, countedVote, summarizeVotes, voteChoices } from '../lib/grades';
 import { ChangeController } from '../lib/store-controller';
-import type { Route } from '../lib/topo';
+import { routeName, type Route } from '../lib/topo';
 import { helpButton } from './help-sheet';
 import { sharedStyles } from './shared-styles';
 import './bottom-sheet';
@@ -315,7 +315,7 @@ export class NoteSheet extends LitElement {
 
   render() {
     const r = this.route;
-    const heading = r ? `Mur ${r.wall} · ${r.color.toLowerCase()} ${r.grade ?? 'traversée'}` : '';
+    const heading = r ? `Mur ${r.wall} · ${routeName(r)} ${r.grade ?? 'traversée'}` : '';
     const hasNote = !!(r && this.store.get(r.id).n);
     const a = this.ascents;
     return html`<lardy-sheet .open=${!!r} heading=${heading} @close=${this.close}>
