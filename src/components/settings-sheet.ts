@@ -476,7 +476,7 @@ export class SettingsSheet extends LitElement {
       <section class="about">
         <p>${this.store.topo.club} · ${this.store.topo.title}</p>
         <p class="credits">
-          Vibe codé avec <span role="img" aria-label="amour">❤️</span> par
+          Clau-codé avec <span role="img" aria-label="amour">❤️</span> par
           <a href=${AUTHOR_URL} target="_blank" rel="noopener">Jérôme</a> -
           <a href=${REPO_URL} target="_blank" rel="noopener">Contribuer</a>
         </p>

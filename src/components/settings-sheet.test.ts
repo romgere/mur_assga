@@ -151,7 +151,7 @@ describe('lardy-settings-sheet', () => {
     const el = await settings();
     expect($(el, '.about').textContent).not.toContain('topo du');
     const credits = $(el, '.credits');
-    expect(credits.textContent!.replace(/\s+/g, ' ')).toContain('Vibe codé avec ❤️ par Jérôme - Contribuer');
+    expect(credits.textContent!.replace(/\s+/g, ' ')).toContain('Clau-codé avec ❤️ par Jérôme - Contribuer');
     const [author, repo] = [...credits.querySelectorAll('a')];
     expect(author.textContent).toBe('Jérôme');
     expect(author.getAttribute('href')).toBe(AUTHOR_URL);
